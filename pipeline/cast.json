@@ -30,7 +30,8 @@
      "stability": 0.6
     }
    },
-   "source": "chosen for the registry"
+   "source": "chosen for the registry",
+   "faces": "ok 2026-11-27: talk, smile, scared and terrified all change the face"
   },
   "allan": {
    "name": "Allan",
@@ -48,7 +49,8 @@
      "stability": 0.6
     }
    },
-   "source": "the-door: cast id allan with the officer costume"
+   "source": "the-door: cast id allan with the officer costume",
+   "faces": "ok 2026-11-27: talk, smile, scared and terrified all change the face"
   },
   "lawrence": {
    "name": "Lawrence",
@@ -64,11 +66,12 @@
      "speed": 1.1
     }
    },
-   "source": "the-door: cast id me, the narrator voice"
+   "source": "the-door: cast id me, the narrator voice",
+   "faces": "ok 2026-11-27: talk, smile, scared and terrified all change the face"
   },
   "sharath": {
    "name": "Sharath",
-   "look": "man, dark hair, blue jacket, red trousers (bundle Mike Kerr)",
+   "look": "man, black hair, blue jacket, blue trousers, faceted style (bundle Mike Kerr)",
    "avatar": {
     "rig": "avatar",
     "bundle": 749
@@ -81,7 +84,8 @@
      "stability": 0.6
     }
    },
-   "source": "the-door: cast id sharath with the officer costume; he had no lines there, so the voice was chosen for the registry"
+   "source": "the-door: cast id sharath with the officer costume; he had no lines there, so the voice was chosen for the registry",
+   "faces": "FAIL 2026-11-27: the face does not move (talk, smile, scared, terrified all identical); needs a head with face controls"
   },
   "jesslyn": {
    "name": "Jesslyn",
@@ -98,7 +102,8 @@
      "stability": 0.7
     }
    },
-   "source": "the-door: cast id jesslyn with the dispatcher costume"
+   "source": "the-door: cast id jesslyn with the dispatcher costume",
+   "faces": "FAIL 2026-11-27: the face does not move; the Studio owner is replacing the head"
   },
   "agni": {
    "name": "Agni",
@@ -131,7 +136,8 @@
      "stability": 0.6
     }
    },
-   "source": "chosen for the registry"
+   "source": "chosen for the registry",
+   "faces": "ok 2026-11-27: talk, smile, scared and terrified all change the face"
   }
  },
  "costumes": {

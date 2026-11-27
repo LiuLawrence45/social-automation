@@ -2,7 +2,15 @@
 
   python -m pipeline.cast list                         the pool and the costumes
   python -m pipeline.cast expand --job J [--narrator ID] [--write]   what the story's cast becomes; --write puts it in the job
-  python -m pipeline.cast sheet --out J [--ids a,b]    a small job that shows the pool, for pipeline.preview
+  python -m pipeline.cast sheet --out J [--ids a,b] [--faces]   a small job that shows the pool, for pipeline.preview
+  python -m pipeline.cast faces --job J [--ids a,b]    after previewing a --faces job: does every member's face move?
+
+A member is usable only when its face acts: python -m pipeline.cast sheet --out J --faces, voice and timeline
+for J, pipeline.preview --job J --shots <the ids it printed> --at 0.5, then python -m pipeline.cast faces --job J
+writes J/preview/faces.jpg: a row per member; columns neutral, talk, smile, scared, terrified. Look at it: a
+row whose five pictures show the same face is an avatar that cannot act, and it is not usable until its head
+is replaced. (Comparing pixels does not settle it: the camera follows the head, so the frame shifts a little
+between shots.)
 
 The pool lives in pipeline/cast.json. A script names a member by its lowercase id as a speaker (willow,
 lawrence) and that speaker gets the member's voice and avatar with nothing else written. story.json may
@@ -38,6 +46,7 @@ import copy
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -49,6 +58,7 @@ NARRATOR = "narrator"
 ID = re.compile(r"^[a-z][a-z0-9_]*$")
 SPEAKER_KEYS = ("voice_id", "voice_name", "settings", "process")
 CASTING_KEYS = ("is", "as", "costume", "effect", "stock", "avatar", "voice")
+FACES = ("talk", "smile", "scared", "terrified")
 MACHINE_WORDS = ("machine", "kiosk", "screen reader", "computer", "automated", "system", "speaker", "announcement", "terminal", "robot", "assistant")
 
 
@@ -396,24 +406,55 @@ def write_job(job: Path, registry: Optional[Dict[str, Any]] = None, narrator: Op
     return expanded
 
 
-def sheet_job(out: Path, ids: Optional[List[str]] = None, registry: Optional[Dict[str, Any]] = None, set_name: str = "street",
-              anchor: str = "sidewalk_mid", pose: str = "explain") -> List[str]:
-    """Write a job (story.json, shotlist.json) with one full-figure shot per member, for pipeline.preview."""
+def sheet_job(out: Path, ids: Optional[List[str]] = None, registry: Optional[Dict[str, Any]] = None, faces: Optional[List[str]] = None,
+              set_name: str = "street", anchor: str = "sidewalk_mid", pose: str = "explain") -> List[str]:
+    """Write a job (story.json, shotlist.json) that shows the pool, for pipeline.preview; returns its shot ids.
+
+    Without faces: one full-figure shot per member, named by its id. With faces: one close-up per member and face,
+    named <id>_<face>, with a neutral one first, standing still with blinking off so only the face differs."""
     registry = registry or load_registry()
     ids = ids or list(registry["characters"])
     for name in ids:
         _require(name in registry["characters"], "%r is not a pool member" % name)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
+    shots = []
+    for name in ids:
+        word = registry["characters"][name]["name"] + "."
+        if not faces:
+            shots.append({"id": name, "text": word, "set": set_name, "time": "day",
+                          "cast": [{"who": name, "at": anchor, "facing": 180, "pose": pose, "face": "neutral"}],
+                          "camera": {"on": name, "type": "wide", "frame": "full", "yaw": 18, "move": "static", "locked": True}})
+            continue
+        for face in ["neutral"] + [face for face in faces if face != "neutral"]:
+            shots.append({"id": "%s_%s" % (name, face), "text": word, "set": set_name, "time": "day",
+                          "cast": [{"who": name, "at": anchor, "facing": 180, "pose": "still", "face": face, "blink": False}],
+                          "camera": {"on": name, "type": "close", "frame": "close", "yaw": 12, "move": "static", "locked": True}})
     story = {"version": 1, "slug": "cast-sheet", "title": "Cast sheet", "source": {"kind": "original", "note": "the cast pool, one shot each; no story"},
              "names": [registry["characters"][name]["name"] for name in ids], "display_overrides": {}, "voice": {"provider": "say", "target_wpm": 200},
-             "script": " ".join(registry["characters"][name]["name"] + "." for name in ids)}
-    shots = [{"id": name, "text": registry["characters"][name]["name"] + ".", "set": set_name, "time": "day",
-              "cast": [{"who": name, "at": anchor, "facing": 180, "pose": pose, "face": "neutral"}],
-              "camera": {"on": name, "type": "wide", "frame": "full", "yaw": 18, "move": "static", "locked": True}} for name in ids]
+             "script": " ".join(shot["text"] for shot in shots)}
     _dump(out / "story.json", story)
     _dump(out / "shotlist.json", {"version": 1, "cast": {name: registry["characters"][name]["avatar"] for name in ids}, "shots": shots})
-    return ids
+    return [shot["id"] for shot in shots]
+
+
+def faces_sheet(preview: Path, ids: List[str], faces: List[str], out: Path, moment: int = 50) -> Path:
+    """One picture of the previewed close-ups: a row per member, a column per face, cropped to the head."""
+    from .edit import ffmpeg_bin
+    columns = ["neutral"] + [face for face in faces if face != "neutral"]
+    files = [Path(preview) / ("%s_%s" % (name, face)) / ("%s_%s_%03d.png" % (name, face, moment)) for name in ids for face in columns]
+    missing = [str(path) for path in files if not path.is_file()]
+    _require(not missing, "preview frames missing (run pipeline.preview on the --faces job first): %s" % ", ".join(missing[:3]))
+    command = [ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y"]
+    for path in files:
+        command += ["-i", str(path)]
+    crops = "".join("[%d]crop=iw*0.6:ih*0.4:iw*0.2:ih*0.12[c%d];" % (index, index) for index in range(len(files)))
+    rows = "".join("%shstack=inputs=%d[r%d];" % ("".join("[c%d]" % (row * len(columns) + column) for column in range(len(columns))), len(columns), row)
+                   for row in range(len(ids)))
+    stack = "%svstack=inputs=%d" % ("".join("[r%d]" % row for row in range(len(ids))), len(ids)) if len(ids) > 1 else "[r0]copy"
+    done = subprocess.run(command + ["-filter_complex", crops + rows + stack, "-q:v", "3", str(out)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    _require(done.returncode == 0, "cannot build %s: %s" % (out, done.stderr.decode("utf-8", "replace")[:300]))
+    return out
 
 
 def _dump(path: Path, value: Any) -> None:
@@ -434,6 +475,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     sheet = sub.add_parser("sheet")
     sheet.add_argument("--out", required=True, type=Path)
     sheet.add_argument("--ids", help="comma separated pool ids (default: all)")
+    sheet.add_argument("--faces", action="store_true", help="close-ups of every member with each of %s" % ", ".join(FACES))
+    moved = sub.add_parser("faces")
+    moved.add_argument("--job", required=True, type=Path)
+    moved.add_argument("--ids", help="comma separated pool ids (default: all)")
     args = parser.parse_args(argv)
     try:
         registry = load_registry(args.registry)
@@ -448,8 +493,14 @@ def main(argv: Optional[List[str]] = None) -> int:
                 print("stock   %-11s %s" % (group, ", ".join(str(choice.get("voice_name")) for choice in choices)))
             return 0
         if args.command == "sheet":
-            ids = sheet_job(args.out.expanduser(), [piece.strip() for piece in args.ids.split(",") if piece.strip()] if args.ids else None, registry)
+            ids = sheet_job(args.out.expanduser(), [piece.strip() for piece in args.ids.split(",") if piece.strip()] if args.ids else None, registry,
+                            list(FACES) if args.faces else None)
             print("wrote %s: shots %s" % (args.out, ",".join(ids)))
+            return 0
+        if args.command == "faces":
+            ids = [piece.strip() for piece in args.ids.split(",") if piece.strip()] if args.ids else list(registry["characters"])
+            out = faces_sheet(args.job.expanduser() / "preview", ids, list(FACES), args.job.expanduser() / "preview" / "faces.jpg")
+            print("%s: rows %s; columns neutral, %s. A row with one face five times cannot act." % (out, ", ".join(ids), ", ".join(FACES)))
             return 0
         job = args.job.expanduser()
         if args.write:
