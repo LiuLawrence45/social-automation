@@ -179,7 +179,13 @@ end
 
 function BUILD.flashlight(m, spec)
 	part(m, { 0.3, 0.3, 1.1 }, CFrame.new(), "#1c1c1f", { material = Enum.Material.Metal })
-	local lens = part(m, { 0.36, 0.36, 0.1 }, CFrame.new(0, 0, -0.6), "#fff6d8", { material = Enum.Material.Neon, shadow = false })
+	-- glow: how bright the lens itself looks (1 a bare glowing lens, 0 a dark one); the beam is unchanged. A torch
+	-- pointed towards the camera wants a low glow, or the lens blooms into a white blob.
+	local glow = spec.glow == nil and 1 or math.clamp(spec.glow, 0, 1)
+	local lens = part(m, { 0.36, 0.36, 0.1 }, CFrame.new(0, 0, -0.6), "#fff6d8", { material = glow >= 0.999 and Enum.Material.Neon or Enum.Material.SmoothPlastic, shadow = false })
+	if glow < 0.999 then
+		lens.Color = Color3.fromRGB(40, 38, 34):Lerp(Color3.fromRGB(255, 246, 216), glow)
+	end
 	local beam = Instance.new("SpotLight")
 	beam.Face = Enum.NormalId.Front
 	beam.Angle = spec.angle or 50
