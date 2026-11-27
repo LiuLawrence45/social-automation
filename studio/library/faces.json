@@ -1,0 +1,188 @@
+{
+ "neutral": {
+  "eyes": "open",
+  "brows": [
+   0,
+   0,
+   0
+  ],
+  "mouth": "small"
+ },
+ "calm": {
+  "eyes": "open",
+  "brows": [
+   0,
+   0,
+   0
+  ],
+  "mouth": "smile"
+ },
+ "happy": {
+  "eyes": "open",
+  "brows": [
+   4,
+   4,
+   -4
+  ],
+  "mouth": "smile",
+  "blush": true
+ },
+ "joy": {
+  "eyes": "happy",
+  "brows": [
+   4,
+   4,
+   -6
+  ],
+  "mouth": "grin",
+  "blush": true
+ },
+ "laugh": {
+  "eyes": "happy",
+  "brows": [
+   0,
+   0,
+   -6
+  ],
+  "mouth": "grin"
+ },
+ "sad": {
+  "eyes": "open",
+  "brows": [
+   16,
+   16,
+   2
+  ],
+  "mouth": "frown"
+ },
+ "down": {
+  "eyes": "half",
+  "brows": [
+   14,
+   14,
+   4
+  ],
+  "mouth": "line"
+ },
+ "cry": {
+  "eyes": "closed",
+  "brows": [
+   20,
+   20,
+   2
+  ],
+  "mouth": "frown",
+  "tears": true
+ },
+ "tearful": {
+  "eyes": "open",
+  "brows": [
+   16,
+   16,
+   0
+  ],
+  "mouth": "smile",
+  "tears": true
+ },
+ "shock": {
+  "eyes": "wide",
+  "brows": [
+   6,
+   6,
+   -12
+  ],
+  "mouth": "o"
+ },
+ "surprised": {
+  "eyes": "wide",
+  "brows": [
+   4,
+   4,
+   -10
+  ],
+  "mouth": "small"
+ },
+ "worried": {
+  "eyes": "open",
+  "brows": [
+   18,
+   18,
+   0
+  ],
+  "mouth": "line"
+ },
+ "suspicious": {
+  "eyes": "squint",
+  "brows": [
+   -14,
+   6,
+   2
+  ],
+  "mouth": "line"
+ },
+ "angry": {
+  "eyes": "squint",
+  "brows": [
+   -18,
+   -18,
+   6
+  ],
+  "mouth": "frown"
+ },
+ "tired": {
+  "eyes": "half",
+  "brows": [
+   8,
+   8,
+   4
+  ],
+  "mouth": "o"
+ },
+ "sleepy": {
+  "eyes": "closed",
+  "brows": [
+   0,
+   0,
+   2
+  ],
+  "mouth": "small"
+ },
+ "thinking": {
+  "eyes": "open",
+  "brows": [
+   -6,
+   10,
+   -2
+  ],
+  "mouth": "small"
+ },
+ "shy": {
+  "eyes": "half",
+  "brows": [
+   14,
+   14,
+   0
+  ],
+  "mouth": "small",
+  "blush": true
+ },
+ "talk": {
+  "eyes": "open",
+  "brows": [
+   2,
+   2,
+   -2
+  ],
+  "mouth": "o"
+ },
+ "warm": {
+  "eyes": "happy",
+  "brows": [
+   6,
+   6,
+   -4
+  ],
+  "mouth": "smile",
+  "blush": true
+ }
+}

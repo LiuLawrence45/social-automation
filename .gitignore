@@ -12,3 +12,5 @@ output/
 *.mp3
 *.rbxl
 *.rbxlx
+*.egg-info/
+uv.lock

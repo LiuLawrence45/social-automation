@@ -1,0 +1,113 @@
+{
+ "young_man": {
+  "skin": "#f2c79b",
+  "hair": "short",
+  "hair_color": "#5b3a21",
+  "shirt": "#3f7fd9",
+  "shirt_style": "hoodie",
+  "pants": "#3b4252",
+  "shoes": "#f4f4f4"
+ },
+ "old_woman": {
+  "skin": "#f6d7b8",
+  "hair": "bun",
+  "hair_color": "#dcdce2",
+  "brow_color": "#a9a9b2",
+  "glasses": true,
+  "glasses_color": "#7a4a78",
+  "shirt": "#b58ad6",
+  "shirt_style": "cardigan",
+  "detail_color": "#fff5e6",
+  "skirt": "#6d4c8a",
+  "pants": "#e9d6c0",
+  "shoes": "#6b4a2b",
+  "scale": 0.92
+ },
+ "manager": {
+  "skin": "#e2b48c",
+  "hair": "balding",
+  "hair_color": "#6b6b6b",
+  "brow_color": "#6b6b6b",
+  "moustache": "#6b6b6b",
+  "shirt": "#7a8798",
+  "shirt_style": "tie",
+  "detail_color": "#c0392b",
+  "pants": "#2f3640",
+  "shoes": "#1c1c1c"
+ },
+ "friend": {
+  "skin": "#f7d1b0",
+  "hair": "ponytail",
+  "hair_color": "#f2762e",
+  "shirt": "#57c26a",
+  "shirt_style": "stripes",
+  "detail_color": "#ffffff",
+  "pants": "#34495e",
+  "sleeves": false,
+  "shoes": "#e2574c"
+ },
+ "kid": {
+  "skin": "#f2c79b",
+  "hair": "spiky",
+  "hair_color": "#2b2b2b",
+  "shirt": "#ffb300",
+  "shirt_style": "badge",
+  "detail_color": "#e2574c",
+  "pants": "#2d6cdf",
+  "sleeves": false,
+  "scale": 0.68
+ },
+ "neighbor_a": {
+  "skin": "#c68c5a",
+  "hair": "long",
+  "hair_color": "#1f1f1f",
+  "shirt": "#d94f70",
+  "shirt_style": "buttons",
+  "detail_color": "#ffffff",
+  "pants": "#2f3640"
+ },
+ "neighbor_b": {
+  "skin": "#f6d7b8",
+  "hair": "cap",
+  "hair_color": "#7a4a2a",
+  "hat_color": "#e67e22",
+  "shirt": "#4a5568",
+  "shirt_style": "badge",
+  "detail_color": "#f4d35e",
+  "pants": "#6b4a2b"
+ },
+ "vendor": {
+  "skin": "#d9a273",
+  "hair": "cap",
+  "hair_color": "#3a2a1a",
+  "hat_color": "#2e8b57",
+  "moustache": "#3a2a1a",
+  "shirt": "#ffffff",
+  "shirt_style": "apron",
+  "detail_color": "#2e8b57",
+  "pants": "#5a4632",
+  "sleeves": false
+ },
+ "son": {
+  "skin": "#f6d7b8",
+  "hair": "short",
+  "hair_color": "#6b4a2b",
+  "shirt": "#c0392b",
+  "shirt_style": "buttons",
+  "detail_color": "#ffffff",
+  "pants": "#2f3640"
+ },
+ "coworker": {
+  "skin": "#e2b48c",
+  "hair": "short",
+  "hair_color": "#111111",
+  "shirt": "#f4f4f4",
+  "shirt_style": "tie",
+  "detail_color": "#2e86c1",
+  "pants": "#2f3640"
+ },
+ "shadow": {
+  "silhouette": "#141414",
+  "hair": "bun"
+ }
+}
