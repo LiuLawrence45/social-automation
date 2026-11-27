@@ -280,7 +280,7 @@ local function bodyPoint(model, cfs, name, side, offset, scale)
 	if offset then
 		out += cf:VectorToWorldSpace(Vector3.new(offset[1] * mirror, offset[2], offset[3]) * scale)
 	end
-	return out, cf:VectorToWorldSpace(normal)
+	return out, cf:VectorToWorldSpace(normal), partName
 end
 
 local function axesOf(cf)
@@ -409,12 +409,15 @@ local POLES = {
 local STAND_OFF = { 0, 0.12, 0.25, 0.4 }
 local ARM_KEEPS_OUT_OF = { "Head", "UpperTorso", "LowerTorso", "LeftUpperLeg", "RightUpperLeg", "LeftLowerLeg", "RightLowerLeg" }
 
-local function armCost(model, joints, side, target)
+local function armCost(model, joints, side, target, touches)
 	local skeleton = M.skeleton(model)
 	local cfs = M.solve(model, joints)
 	local word, other = WORD[side], WORD[side == "R" and "L" or "R"]
 	local clip = 0
 	local function against(limb, name)
+		if name == touches and limb == word .. "Hand" then
+			return
+		end
 		clip += M.overlap(cfs[limb], skeleton[limb].size * 0.82, cfs[name], skeleton[name].size * 0.82)
 	end
 	for _, limb in ipairs({ word .. "LowerArm", word .. "Hand" }) do
@@ -435,14 +438,15 @@ local function armCost(model, joints, side, target)
 	return 6 * clip + 1.5 * math.max(0, elbowUp - allowed)
 end
 
-local function chooseArm(model, joints, side, target, facing, normal, scale)
+-- touches: the body part the hand is meant to rest on, which the hand itself may therefore press against.
+local function chooseArm(model, joints, side, target, facing, normal, scale, touches)
 	local best, bestCost = { pole = POLES[1], off = 0 }, math.huge
 	for step, off in ipairs(normal and STAND_OFF or { 0 }) do
 		local point = normal and target + normal * (off * scale) or target
 		for index, pole in ipairs(POLES) do
 			local trial = table.clone(joints)
 			local short = reachArm(model, trial, side, point, facing, pole)
-			local cost = armCost(model, trial, side, point) + short * 2 + 0.012 * (index - 1) + 0.5 * off + 0.001 * step
+			local cost = armCost(model, trial, side, point, touches) + short * 2 + 0.012 * (index - 1) + 0.5 * off + 0.001 * step
 			if cost < bestCost then
 				best, bestCost = { pole = pole, off = off }, cost
 			end
@@ -560,9 +564,9 @@ function M.jointsAt(lib, model, info, ctx, u)
 			if item.amount > 0.001 then
 				local reach = type(item.reach) == "table" and item.reach or { to = item.reach }
 				local solved = M.solve(model, joints)
-				local point, facing, normal
+				local point, facing, normal, touches
 				if type(reach.to) == "string" and POINTS[reach.to] then
-					point, normal = bodyPoint(model, solved, reach.to, reach.side or side, reach.offset, scale)
+					point, normal, touches = bodyPoint(model, solved, reach.to, reach.side or side, reach.offset, scale)
 					facing = reach.palm and solved.UpperTorso:VectorToWorldSpace(Vector3.new(reach.palm[1], reach.palm[2], reach.palm[3]).Unit) or -normal
 				else
 					local world = ctx.place(reach.to)
@@ -579,7 +583,7 @@ function M.jointsAt(lib, model, info, ctx, u)
 				end
 				local chosen = info.poles[side][item.reach]
 				if not chosen then
-					chosen = reach.elbow and { pole = reach.elbow, off = 0 } or chooseArm(model, joints, side, point, facing, normal, scale)
+					chosen = reach.elbow and { pole = reach.elbow, off = 0 } or chooseArm(model, joints, side, point, facing, normal, scale, touches)
 					info.poles[side][item.reach] = chosen
 				end
 				if normal then
@@ -596,7 +600,7 @@ function M.jointsAt(lib, model, info, ctx, u)
 						mixed[index] = euler(M.jointCFrame(mixed[index]):Lerp(M.jointCFrame(got[index]), item.amount / total))
 					end
 				end
-				points[side] = { point = root:PointToWorldSpace(point), name = type(reach.to) == "string" and reach.to or "place", touch = reach.touch,
+				points[side] = { point = root:PointToWorldSpace(point), name = type(reach.to) == "string" and reach.to or "place", touch = reach.touch, part = touches,
 					tolerance = reach.tolerance, short = short, active = item.amount > 0.98 }
 			end
 		end

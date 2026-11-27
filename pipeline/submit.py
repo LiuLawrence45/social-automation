@@ -8,7 +8,9 @@
 A fixer never writes into the main job's files. send copies the named shots (taken from the working copy's
 shotlist.json), the copy's poses.json and its sets/<set>.luau into a new folder under <main job>/submissions/,
 written elsewhere first and moved into place whole (a set file the copy did not change is left out). merge applies pending submissions in order: each shot
-replaces the shot of the same id (its id, set and words may not change), poses are added to <main job>/poses.json,
+replaces the shot of the same id (its id, set and words may not change; a camera the sender changed is locked, so
+the camera judge keeps it, and report "judge_cameras" lists the re-staged shots whose camera the sender left
+alone), poses are added to <main job>/poses.json,
 set files to <main job>/sets/. <main job>/submissions/groups.json says which group may send which shots and
 which set files; a pose may not redefine one that another group or the library already defines differently.
 """
@@ -167,6 +169,8 @@ def command_merge(args: argparse.Namespace) -> Dict[str, Any]:
                 report["changed"].append(shot["id"])
                 if shot.get("camera") != current.get("camera"):
                     report["camera_changed"].append(shot["id"])
+                    if isinstance(shot.get("camera"), dict):
+                        shot = dict(shot, camera=dict(shot["camera"], locked=True))
                 if {k: v for k, v in shot.items() if k != "camera"} != {k: v for k, v in current.items() if k != "camera"}:
                     report["staging_changed"].append(shot["id"])
             shotlist["shots"][position[shot["id"]]] = shot
@@ -192,6 +196,8 @@ def command_merge(args: argparse.Namespace) -> Dict[str, Any]:
             write(main / "submissions" / "pose_owners.json", owners)
     for key in ("changed", "camera_changed", "staging_changed", "sets", "poses"):
         report[key] = sorted(set(report[key]), key=lambda value: position.get(value, 0))
+    report["judge_cameras"] = [shot_id for shot_id in report["staging_changed"] if shot_id not in report["camera_changed"]
+                               and not (shotlist["shots"][position[shot_id]].get("camera") or {}).get("locked")]
     return report
 
 

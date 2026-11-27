@@ -14,6 +14,9 @@ local SIDES = { L = "Left", R = "Right" }
 local SHRINK = 0.72
 local DEPTH = 0.07
 local SOFT_DEPTH = 0.5
+-- A hand resting on the part of its own body it was sent to (a mouth, a chest) presses against it: the boxes
+-- are squarer than a face or a ribcage, so that much overlap is contact and not passing through.
+local REST_DEPTH = 0.3
 local SOFT = { "pillow", "mattress", "cushion" }
 local COVER = { "blanket", "duvet" }
 local SUPPORT_MARGIN = 0.14
@@ -184,7 +187,7 @@ function M.check(stage, index, camera, samples)
 			metrics.seen = anySeen
 
 			-- A hand that holds a prop or has a named target is busy; what it may touch is not clipping.
-			local busy, touching = {}, {}
+			local busy, touching, resting = {}, {}, {}
 			for _, hold in ipairs(entry.holds or {}) do
 				busy[hold.hand or "R"] = "prop"
 			end
@@ -201,6 +204,9 @@ function M.check(stage, index, camera, samples)
 					if off > (reach.tolerance or REACH_TOLERANCE) * scale then
 						issue("hand_off_target", side .. ":" .. tostring(reach.name), hand.seen, off)
 					end
+				end
+				if reach.part then
+					resting[SIDES[side] .. "Hand->" .. reach.part] = true
 				end
 				if reach.touch then
 					touching[SIDES[side] .. "Hand"] = true
@@ -240,7 +246,8 @@ function M.check(stage, index, camera, samples)
 				local a, b = parts[pair[1]], parts[pair[2]]
 				if a and b then
 					local depth = overlap(a.cf, a.size * SHRINK, b.cf, b.size * SHRINK)
-					if depth > DEPTH * scale then
+					local limit = resting[pair[1] .. "->" .. pair[2]] and REST_DEPTH or DEPTH
+					if depth > limit * scale then
 						issue("clip_self", pair[1] .. "->" .. pair[2], a.seen or b.seen, depth)
 					end
 				end

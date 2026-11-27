@@ -61,8 +61,10 @@ def test_send_then_merge_replaces_only_the_named_shots_and_reports_what_changed(
     assert run("merge", "--job", main) == 0
     report = json.loads(capsys.readouterr().out)
     assert report["changed"] == ["a1", "a2"] and report["staging_changed"] == ["a1"] and report["camera_changed"] == ["a2"]
+    assert report["judge_cameras"] == ["a1"]
     merged = shots_of(main)
-    assert merged["a1"]["cast"][0]["pose"] == "listen" and merged["a2"]["camera"]["from"] == "corridor"
+    assert merged["a1"]["cast"][0]["pose"] == "listen" and merged["a2"]["camera"] == {"from": "corridor", "type": "wide", "locked": True}
+    assert "locked" not in merged["a1"]["camera"]
     assert "cast" not in merged["b1"]
     assert run("merge", "--job", main) == 0
     assert json.loads(capsys.readouterr().out)["merged"] == []
