@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "shots.json",
+  "type": "object",
+  "required": [
+    "version",
+    "fps",
+    "width",
+    "height",
+    "content_start",
+    "content_end",
+    "shots"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "fps": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "width": {
+      "const": 1080
+    },
+    "height": {
+      "const": 1920
+    },
+    "content_start": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Time in video.mp4 where the story starts"
+    },
+    "content_end": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "start",
+          "end"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end": {
+            "type": "number",
+            "minimum": 0
+          },
+          "word_start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "word_end": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "set": {
+            "type": "string"
+          },
+          "emphasis": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
