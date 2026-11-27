@@ -101,3 +101,16 @@ def test_load_timeline_applies_the_judge_choice(tmp_path):
     (tmp_path / "judge.json").write_text(json.dumps({"shots": [{"id": "a", "chosen": {"camera": {"on": "me", "yaw": 40}}}]}))
     assert [s["camera"] for s in render.load_timeline(tmp_path)["shots"]] == [{"on": "me", "yaw": 40}, {"from": "wide"}]
     assert render.load_timeline(tmp_path, judged=False)["shots"][0]["camera"] == {"on": "me"}
+
+
+def test_a_timeline_built_from_an_older_shot_list_is_refused(tmp_path):
+    import hashlib
+    import json
+
+    (tmp_path / "shotlist.json").write_text('{"shots": []}')
+    built = hashlib.sha1((tmp_path / "shotlist.json").read_bytes()).hexdigest()
+    (tmp_path / "timeline.json").write_text(json.dumps({"fps": 30, "shots": [], "built_from": {"shotlist_sha1": built}}))
+    assert render.load_timeline(tmp_path)["shots"] == []
+    (tmp_path / "shotlist.json").write_text('{"shots": [{"id": "a"}]}')
+    with pytest.raises(render.RenderError, match="pipeline.story timeline"):
+        render.load_timeline(tmp_path)

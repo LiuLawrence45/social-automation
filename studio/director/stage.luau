@@ -277,7 +277,23 @@ function M:overlayAvatar(entry, state)
 			table.insert(keys, key)
 		end
 	end
-	table.insert(layers, { content = Avatar.clip(keys, { full = not (info.upper and entry.based), linear = info.dense, model = entry.model }), normalized = true, priority = Enum.AnimationPriority.Action4 })
+	-- Every shot states the whole face: a control this shot's faces leave alone is set to rest, or the smile or
+	-- the shut eyes of the shot before would stay on. The eyelids are left to the blink where there is one.
+	local controls = {}
+	if not entry.model:GetAttribute("Faceless") then
+		local blinks = spec.blink ~= false and not closesEyes
+		local seen = {}
+		for _, face in pairs(self.lib.expressions) do
+			for control, value in pairs(face) do
+				if type(value) == "number" and not seen[control] and not (blinks and (control == "LeftEyeClosed" or control == "RightEyeClosed")) then
+					seen[control] = true
+					table.insert(controls, control)
+				end
+			end
+		end
+		table.sort(controls)
+	end
+	table.insert(layers, { content = Avatar.clip(keys, { full = not (info.upper and entry.based), linear = info.dense, model = entry.model, controls = controls }), normalized = true, priority = Enum.AnimationPriority.Action4 })
 	if spec.blink ~= false and not closesEyes and not entry.model:GetAttribute("Faceless") then
 		table.insert(layers, { content = Avatar.clip(BLINK), speed = 1, phase = Util.hash(spec.who .. "blink"), priority = Enum.AnimationPriority.Action3 })
 	end

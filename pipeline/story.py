@@ -7,6 +7,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import re
@@ -269,6 +270,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             return 0
         words = load_json(job / "words.json")
         timeline = build_timeline(story, shotlist, words, args.fps, args.tail)
+        timeline["built_from"] = {"shotlist_sha1": hashlib.sha1((job / "shotlist.json").read_bytes()).hexdigest()}
         with open(job / "timeline.json", "w", encoding="utf-8") as handle:
             json.dump(timeline, handle, indent=1)
         lengths = [shot["end"] - shot["start"] for shot in timeline["shots"]]

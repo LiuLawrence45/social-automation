@@ -262,7 +262,7 @@ function M.clip(keys, options)
 	options = options or {}
 	local scale = options.model and options.model:GetScale() or 1
 	scale = math.floor(scale * 1000 + 0.5) / 1000
-	local signature = HttpService:JSONEncode({ keys, options.full or false, options.linear or false, scale })
+	local signature = HttpService:JSONEncode({ keys, options.full or false, options.linear or false, scale, options.controls or false })
 	if clips[signature] then
 		return clips[signature]
 	end
@@ -282,6 +282,9 @@ function M.clip(keys, options)
 		for name in pairs(key.face or {}) do
 			controls[name] = true
 		end
+	end
+	for _, name in ipairs(options.controls or {}) do
+		controls[name] = true
 	end
 	local sequence = Instance.new("KeyframeSequence")
 	sequence.Loop = false
