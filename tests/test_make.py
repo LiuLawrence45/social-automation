@@ -33,7 +33,7 @@ class Fake:
                               {"speaker": "kiosk", "name": "Kiosk", "kind": "voice", "role": "the machine", "voice": {"gender": "female", "processing": "none"}}],
                      "sound_cues": [{"line": 1, "at": "start", "kind": "sfx", "prompt": "A beep.", "seconds": 1.0}]}
             (job / "story.json").write_text(json.dumps(story), encoding="utf-8")
-            (job / "script_judge.json").write_text(json.dumps({"passed": True}), encoding="utf-8")
+            (job / "script_judge.json").write_text(json.dumps({"version": 1, "stopped": "passed", "spent_usd": 0.06}), encoding="utf-8")
             with open(env["WRITER_LEDGER"], "a", encoding="utf-8") as handle:
                 handle.write(json.dumps({"cost_usd": 0.06}) + "\n")
         elif module == "pipeline.voice":
@@ -320,7 +320,7 @@ def test_writer_is_called_from_its_own_checkout_with_its_own_ledger(tmp_path):
     assert run(job, fake, "--story", str(text), "--writer", str(writer), "--narrator", "allan", "--to", "cast") == 0
     assert fake.calls[0][:2] == ["pipeline.writer", "write"] and fake.envs[0]["cwd"] == str(writer)
     assert fake.envs[0]["WRITER_LEDGER"] == str(job.resolve() / "writer_ledger.jsonl")
-    assert state_of(job)["stages"]["script"]["spend_usd"] == pytest.approx(0.06)
+    assert state_of(job)["stages"]["script"]["spend_usd"] == pytest.approx(0.06) and "script judge passed" in state_of(job)["stages"]["script"]["note"]
     story = json.loads((job / "story.json").read_text(encoding="utf-8"))
     assert story["voice"]["voice_name"] == "Adam" and story["casting"]["narrator"] == "allan" and "judge" in story
     assert json.loads((job / "cast.json").read_text(encoding="utf-8"))["members"]["kiosk"]["auto"] is True

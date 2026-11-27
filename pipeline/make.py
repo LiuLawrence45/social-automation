@@ -441,7 +441,7 @@ class Make:
                 cost = sum(float(row.get("cost_usd") or 0.0) for row in rows)
                 ledger_add(self.job, "script", cost, {"calls": len(rows), "ledger": ledger.name})
                 judged = read_json(self.job / "script_judge.json", {}) or {}
-                note = "written by pipeline.writer from %s (%d model calls); script judge %s" % (source.name, len(rows), "passed" if judged.get("passed") else "did not pass: read script_judge.json")
+                note = "written by pipeline.writer from %s (%d model calls); script judge %s" % (source.name, len(rows), "passed" if judged.get("stopped") == "passed" else "stopped on: %s (read script_judge.json)" % (judged.get("stopped") or "no verdict recorded"))
         elif not target.is_file():
             raise Failed("no story: pass --story FILE (a story.json with lines, or a story text or record for the writer)")
         story = read_json(target, None)

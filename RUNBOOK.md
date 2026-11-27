@@ -56,7 +56,7 @@ A stage is skipped when it finished and nothing it reads has changed since, so a
 
 | stage | who | what it does | writes | it is right when |
 |---|---|---|---|---|
-| script | code | copies the story, or calls the writer; adds the house settings for the camera judge, the mix and the quality judges when the story has none | story.json | the run line says copied or written; for a written script, script_judge.json says passed |
+| script | code | copies the story, or calls the writer; adds the house settings for the camera judge, the mix and the quality judges when the story has none | story.json | the run line says copied or written; for a written script it says script judge passed, and you read script.md |
 | cast | code | pipeline.cast: the narrator's voice at the narrating pace, a voice for every speaker, the members' avatars | cast.json, voices in story.json | cast.json names the members you expect; anyone marked auto was chosen for you: listen after the voice stage and override in story.json casting |
 | voice | code | pipeline.voice: narration and word timings | narration.wav, words.json, voice_report.json | you listened to narration.wav; final_wpm in voice_report.json is near the target (215 to 235) |
 | shots | AGENT | you write the sets and shotlist.json (section 5.1, 5.2); the stage then puts the members' avatars in the cast and builds the timeline | shotlist.json, timeline.json | the stage prints the number of shots and the sets |
@@ -227,6 +227,9 @@ pipeline.make, while other agents were using Studio; the camera times include wa
 | render | 60 s for 304 frames (5.5 frames a second) | 18 s for 63 frames, 8 shots kept | none |
 | edit | 4.0 s | 4.0 s | none |
 | quality (gemini-3.8-flash) | 246 s, 104 calls, 10 shots | 99 s, 21 calls, the changed shots | $0.465, $0.122 |
+
+The script writer, called through this program on a 100-word story text with --seconds 20: 47 s, 4 model calls,
+$0.084, script judge passed.
 
 In all: 1054 s of machine time and $0.705, with four stops for an agent (the defaults, the camera variety, two fix
 requests). Per shot that is about $0.006 for a camera and $0.047 for a first quality pass.
