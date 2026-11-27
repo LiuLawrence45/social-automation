@@ -703,8 +703,8 @@ def chosen_cameras(job: Path) -> Dict[str, Dict[str, Any]]:
     """
     doc = _load_judge(Path(job))
     timeline = read_json(Path(job) / "timeline.json", required=False) or {}
-    locked = {shot["id"] for shot in timeline.get("shots", []) if is_locked(shot)}
-    return {e["id"]: e["chosen"]["camera"] for e in doc.get("shots", []) if e.get("chosen") and e["id"] not in locked}
+    own = {shot["id"]: shot.get("camera") for shot in timeline.get("shots", []) if is_locked(shot)}
+    return {e["id"]: own.get(e["id"], e["chosen"]["camera"]) for e in doc.get("shots", []) if e.get("chosen")}
 
 
 def video_rubric(rubric: Dict[str, Any]) -> Dict[str, Any]:
