@@ -1,0 +1,9550 @@
+{
+ "version": 1,
+ "note": "Derived statistics from the shorts backlog. No transcript text. Top quarter means a short's views beat at least 75% of its own channel's listed shorts.",
+ "corpus": {
+  "shorts": 501,
+  "transcribed": 501,
+  "annotated": 501,
+  "stories": 349,
+  "channels": 54,
+  "ranked": 342
+ },
+ "all": {
+  "n": 349,
+  "numeric": {
+   "seconds": {
+    "n": 349,
+    "median": 57.0,
+    "mean": 82.711,
+    "p25": 42.0,
+    "p75": 127.0,
+    "p10": 30.0,
+    "p90": 156.4
+   },
+   "words": {
+    "n": 349,
+    "median": 232.0,
+    "mean": 325.983,
+    "p25": 144.0,
+    "p75": 501.0,
+    "p10": 80.0,
+    "p90": 690.4
+   },
+   "wpm": {
+    "n": 349,
+    "median": 242.1,
+    "mean": 229.486,
+    "p25": 204.5,
+    "p75": 263.3,
+    "p10": 157.74,
+    "p90": 278.04
+   },
+   "sentences": {
+    "n": 349,
+    "median": 24.0,
+    "mean": 37.461,
+    "p25": 15.0,
+    "p75": 57.0,
+    "p10": 10.0,
+    "p90": 83.4
+   },
+   "sentence_mean": {
+    "n": 349,
+    "median": 8.84,
+    "mean": 11.8,
+    "p25": 7.22,
+    "p75": 11.4,
+    "p10": 5.81,
+    "p90": 15.622
+   },
+   "sentence_median": {
+    "n": 349,
+    "median": 7.0,
+    "mean": 10.116,
+    "p25": 6.0,
+    "p75": 9.0,
+    "p10": 5.0,
+    "p90": 13.0
+   },
+   "sentence_p90": {
+    "n": 349,
+    "median": 14.0,
+    "mean": 16.745,
+    "p25": 11.8,
+    "p75": 17.2,
+    "p10": 9.68,
+    "p90": 21.0
+   },
+   "sentence_max": {
+    "n": 349,
+    "median": 23.0,
+    "mean": 47.562,
+    "p25": 17.0,
+    "p75": 39.0,
+    "p10": 13.0,
+    "p90": 121.2
+   },
+   "short_sentence_share": {
+    "n": 349,
+    "median": 0.333,
+    "mean": 0.326,
+    "p25": 0.2,
+    "p75": 0.433,
+    "p10": 0.0,
+    "p90": 0.576
+   },
+   "first_sentence_words": {
+    "n": 349,
+    "median": 12.0,
+    "mean": 15.596,
+    "p25": 8.0,
+    "p75": 15.0,
+    "p10": 6.0,
+    "p90": 19.0
+   },
+   "premise_words": {
+    "n": 349,
+    "median": 18.0,
+    "mean": 24.9,
+    "p25": 13.0,
+    "p75": 28.0,
+    "p10": 11.0,
+    "p90": 41.0
+   },
+   "premise_seconds": {
+    "n": 349,
+    "median": 4.64,
+    "mean": 6.359,
+    "p25": 3.28,
+    "p75": 6.74,
+    "p10": 2.54,
+    "p90": 11.232
+   },
+   "last_sentence_words": {
+    "n": 349,
+    "median": 9.0,
+    "mean": 23.842,
+    "p25": 5.0,
+    "p75": 15.0,
+    "p10": 3.0,
+    "p90": 60.2
+   },
+   "grade": {
+    "n": 349,
+    "median": 2.92,
+    "mean": 4.099,
+    "p25": 1.98,
+    "p75": 4.37,
+    "p10": 1.284,
+    "p90": 6.182
+   },
+   "long_word_share": {
+    "n": 349,
+    "median": 0.041,
+    "mean": 0.047,
+    "p25": 0.032,
+    "p75": 0.057,
+    "p10": 0.023,
+    "p90": 0.079
+   },
+   "letters_per_word": {
+    "n": 349,
+    "median": 4.05,
+    "mean": 4.119,
+    "p25": 3.94,
+    "p75": 4.27,
+    "p10": 3.828,
+    "p90": 4.53
+   },
+   "question_share": {
+    "n": 349,
+    "median": 0.011,
+    "mean": 0.044,
+    "p25": 0.0,
+    "p75": 0.056,
+    "p10": 0.0,
+    "p90": 0.143
+   },
+   "beats": {
+    "n": 349,
+    "median": 9.0,
+    "mean": 8.261,
+    "p25": 8.0,
+    "p75": 9.0,
+    "p10": 7.0,
+    "p90": 9.0
+   },
+   "turn_position": {
+    "n": 341,
+    "median": 0.584,
+    "mean": 0.571,
+    "p25": 0.45,
+    "p75": 0.697,
+    "p10": 0.293,
+    "p90": 0.839
+   },
+   "dialogue_share": {
+    "n": 349,
+    "median": 0.04,
+    "mean": 0.124,
+    "p25": 0.012,
+    "p75": 0.095,
+    "p10": 0.0,
+    "p90": 0.308
+   },
+   "speech_lines": {
+    "n": 349,
+    "median": 3.0,
+    "mean": 5.65,
+    "p25": 1.0,
+    "p75": 8.0,
+    "p10": 0.0,
+    "p90": 15.0
+   },
+   "speech_per_100_words": {
+    "n": 349,
+    "median": 0.93,
+    "mean": 2.789,
+    "p25": 0.32,
+    "p75": 2.28,
+    "p10": 0.0,
+    "p90": 6.752
+   },
+   "speech_line_words": {
+    "n": 279,
+    "median": 4.2,
+    "mean": 4.517,
+    "p25": 3.33,
+    "p75": 5.31,
+    "p10": 2.734,
+    "p90": 6.622
+   },
+   "speech_line_max": {
+    "n": 279,
+    "median": 7.0,
+    "mean": 7.563,
+    "p25": 5.0,
+    "p75": 10.0,
+    "p10": 3.0,
+    "p90": 12.2
+   },
+   "first_speech_position": {
+    "n": 278,
+    "median": 0.281,
+    "mean": 0.316,
+    "p25": 0.123,
+    "p75": 0.479,
+    "p10": 0.0,
+    "p90": 0.665
+   },
+   "speakers": {
+    "n": 349,
+    "median": 2.0,
+    "mean": 2.003,
+    "p25": 1.0,
+    "p75": 3.0,
+    "p10": 0.0,
+    "p90": 4.0
+   },
+   "named": {
+    "n": 349,
+    "median": 1.0,
+    "mean": 1.04,
+    "p25": 0.0,
+    "p75": 1.0,
+    "p10": 0.0,
+    "p90": 3.0
+   },
+   "voices": {
+    "n": 349,
+    "median": 2.0,
+    "mean": 2.166,
+    "p25": 1.0,
+    "p75": 3.0,
+    "p10": 1.0,
+    "p90": 4.0
+   },
+   "other_voice_share": {
+    "n": 349,
+    "median": 0.056,
+    "mean": 0.184,
+    "p25": 0.0,
+    "p75": 0.167,
+    "p10": 0.0,
+    "p90": 0.449
+   },
+   "title_words": {
+    "n": 349,
+    "median": 6.0,
+    "mean": 5.894,
+    "p25": 4.0,
+    "p75": 7.0,
+    "p10": 2.0,
+    "p90": 9.0
+   }
+  },
+  "categorical": {
+   "genre": {
+    "n": 349,
+    "values": {
+     "scary": {
+      "count": 160,
+      "share": 0.458
+     },
+     "comedy": {
+      "count": 75,
+      "share": 0.215
+     },
+     "rule_world": {
+      "count": 68,
+      "share": 0.195
+     },
+     "drama": {
+      "count": 23,
+      "share": 0.066
+     },
+     "wholesome": {
+      "count": 14,
+      "share": 0.04
+     },
+     "mystery": {
+      "count": 8,
+      "share": 0.023
+     },
+     "other": {
+      "count": 1,
+      "share": 0.003
+     }
+    }
+   },
+   "format": {
+    "n": 349,
+    "values": {
+     "narrated": {
+      "count": 318,
+      "share": 0.911
+     },
+     "acted": {
+      "count": 26,
+      "share": 0.074
+     },
+     "mixed": {
+      "count": 5,
+      "share": 0.014
+     }
+    }
+   },
+   "person": {
+    "n": 349,
+    "values": {
+     "first": {
+      "count": 227,
+      "share": 0.65
+     },
+     "third": {
+      "count": 83,
+      "share": 0.238
+     },
+     "second": {
+      "count": 25,
+      "share": 0.072
+     },
+     "mixed": {
+      "count": 14,
+      "share": 0.04
+     }
+    }
+   },
+   "tense": {
+    "n": 349,
+    "values": {
+     "past": {
+      "count": 295,
+      "share": 0.845
+     },
+     "present": {
+      "count": 52,
+      "share": 0.149
+     },
+     "mixed": {
+      "count": 2,
+      "share": 0.006
+     }
+    }
+   },
+   "hook": {
+    "n": 349,
+    "values": {
+     "rule": {
+      "count": 211,
+      "share": 0.605
+     },
+     "event": {
+      "count": 47,
+      "share": 0.135
+     },
+     "claim": {
+      "count": 32,
+      "share": 0.092
+     },
+     "question": {
+      "count": 28,
+      "share": 0.08
+     },
+     "character": {
+      "count": 10,
+      "share": 0.029
+     },
+     "confession": {
+      "count": 8,
+      "share": 0.023
+     },
+     "other": {
+      "count": 7,
+      "share": 0.02
+     },
+     "warning": {
+      "count": 6,
+      "share": 0.017
+     }
+    }
+   },
+   "ending": {
+    "n": 349,
+    "values": {
+     "twist": {
+      "count": 105,
+      "share": 0.301
+     },
+     "cliffhanger": {
+      "count": 68,
+      "share": 0.195
+     },
+     "cta": {
+      "count": 60,
+      "share": 0.172
+     },
+     "resolution": {
+      "count": 52,
+      "share": 0.149
+     },
+     "punchline": {
+      "count": 41,
+      "share": 0.117
+     },
+     "open": {
+      "count": 10,
+      "share": 0.029
+     },
+     "loop": {
+      "count": 8,
+      "share": 0.023
+     },
+     "moral": {
+      "count": 5,
+      "share": 0.014
+     }
+    }
+   },
+   "opener": {
+    "n": 349,
+    "values": {
+     "other": {
+      "count": 164,
+      "share": 0.47
+     },
+     "in this town": {
+      "count": 90,
+      "share": 0.258
+     },
+     "in this world": {
+      "count": 70,
+      "share": 0.201
+     },
+     "in this/my ...": {
+      "count": 14,
+      "share": 0.04
+     },
+     "in my town": {
+      "count": 7,
+      "share": 0.02
+     },
+     "in this city": {
+      "count": 3,
+      "share": 0.009
+     },
+     "in this school": {
+      "count": 1,
+      "share": 0.003
+     }
+    }
+   },
+   "last_line_spoken": {
+    "n": 349,
+    "values": {
+     "False": {
+      "count": 254,
+      "share": 0.728
+     },
+     "True": {
+      "count": 95,
+      "share": 0.272
+     }
+    }
+   },
+   "loops": {
+    "n": 349,
+    "values": {
+     "False": {
+      "count": 333,
+      "share": 0.954
+     },
+     "True": {
+      "count": 16,
+      "share": 0.046
+     }
+    }
+   },
+   "viewer_address": {
+    "n": 349,
+    "values": {
+     "False": {
+      "count": 226,
+      "share": 0.648
+     },
+     "True": {
+      "count": 123,
+      "share": 0.352
+     }
+    }
+   },
+   "scary": {
+    "n": 349,
+    "values": {
+     "False": {
+      "count": 187,
+      "share": 0.536
+     },
+     "True": {
+      "count": 162,
+      "share": 0.464
+     }
+    }
+   },
+   "has_speech": {
+    "n": 349,
+    "values": {
+     "True": {
+      "count": 279,
+      "share": 0.799
+     },
+     "False": {
+      "count": 70,
+      "share": 0.201
+     }
+    }
+   },
+   "multi_voice": {
+    "n": 349,
+    "values": {
+     "True": {
+      "count": 202,
+      "share": 0.579
+     },
+     "False": {
+      "count": 147,
+      "share": 0.421
+     }
+    }
+   },
+   "narrator_synthetic": {
+    "n": 349,
+    "values": {
+     "False": {
+      "count": 192,
+      "share": 0.55
+     },
+     "True": {
+      "count": 157,
+      "share": 0.45
+     }
+    }
+   },
+   "music": {
+    "n": 349,
+    "values": {
+     "True": {
+      "count": 311,
+      "share": 0.891
+     },
+     "False": {
+      "count": 38,
+      "share": 0.109
+     }
+    }
+   },
+   "sound_effects": {
+    "n": 349,
+    "values": {
+     "many": {
+      "count": 244,
+      "share": 0.699
+     },
+     "few": {
+      "count": 81,
+      "share": 0.232
+     },
+     "none": {
+      "count": 24,
+      "share": 0.069
+     }
+    }
+   },
+   "gore": {
+    "n": 349,
+    "values": {
+     "0": {
+      "count": 211,
+      "share": 0.605
+     },
+     "1": {
+      "count": 125,
+      "share": 0.358
+     },
+     "2": {
+      "count": 13,
+      "share": 0.037
+     }
+    }
+   },
+   "title_emoji": {
+    "n": 349,
+    "values": {
+     "True": {
+      "count": 207,
+      "share": 0.593
+     },
+     "False": {
+      "count": 142,
+      "share": 0.407
+     }
+    }
+   },
+   "title_opener": {
+    "n": 349,
+    "values": {
+     "in this": {
+      "count": 64,
+      "share": 0.183
+     },
+     "what if": {
+      "count": 19,
+      "share": 0.054
+     },
+     "other": {
+      "count": 15,
+      "share": 0.043
+     },
+     "we live": {
+      "count": 7,
+      "share": 0.02
+     },
+     "nobody can": {
+      "count": 7,
+      "share": 0.02
+     },
+     "he could": {
+      "count": 7,
+      "share": 0.02
+     },
+     "if you": {
+      "count": 6,
+      "share": 0.017
+     },
+     "everyone has": {
+      "count": 6,
+      "share": 0.017
+     },
+     "the world": {
+      "count": 4,
+      "share": 0.011
+     },
+     "the boy": {
+      "count": 4,
+      "share": 0.011
+     },
+     "this roblox": {
+      "count": 3,
+      "share": 0.009
+     },
+     "my crush": {
+      "count": 3,
+      "share": 0.009
+     }
+    }
+   }
+  },
+  "speech_line_length": {
+   "n": 1972,
+   "median": 4.0,
+   "mean": 4.471,
+   "p25": 2.0,
+   "p75": 6.0,
+   "p10": 1.0,
+   "p90": 8.0
+  },
+  "speech_intro": {
+   "none": 0.721,
+   "before": 0.15,
+   "after": 0.13
+  },
+  "devices": {
+   "planted object": 170,
+   "repeated line": 129,
+   "rule broken": 105,
+   "countdown": 44,
+   "twist reveal": 31,
+   "rule world": 27,
+   "false relief": 22,
+   "reveal": 21,
+   "callback": 21,
+   "wrong detail": 20,
+   "reversal": 17,
+   "callback ending": 9,
+   "rule loophole": 9,
+   "impostor voice": 8,
+   "underdog": 7
+  },
+  "beat_sequences": {
+   "hook > world > character > problem > escalation > turn > climax > aftermath > ending": 9,
+   "hook > world > attempt > escalation > turn > climax > aftermath > ending": 7,
+   "hook > world > problem > attempt > turn > escalation > climax > aftermath > ending": 6,
+   "hook > world > character > problem > attempt > turn > climax > aftermath > ending": 5,
+   "hook > problem > attempt > escalation > turn > climax > aftermath > ending": 5,
+   "hook > world > character > problem > escalation > turn > climax > ending": 5,
+   "hook > world > problem > escalation > attempt > turn > climax > aftermath > ending": 5,
+   "hook > world > character > problem > attempt > escalation > climax > turn > ending": 4
+  },
+  "beat_use": {
+   "hook": 0.997,
+   "turn": 0.977,
+   "climax": 0.88,
+   "problem": 0.868,
+   "escalation": 0.837,
+   "world": 0.728,
+   "attempt": 0.725,
+   "ending": 0.725,
+   "aftermath": 0.602,
+   "character": 0.504,
+   "cta": 0.244
+  },
+  "speech_in_other_voice": {
+   "n": 279,
+   "median": 0.5,
+   "mean": 0.481,
+   "p25": 0.0,
+   "p75": 0.931,
+   "p10": 0.0,
+   "p90": 1.0
+  }
+ },
+ "by_genre": {
+  "scary": {
+   "n": 160,
+   "numeric": {
+    "seconds": {
+     "n": 160,
+     "median": 59.5,
+     "mean": 86.281,
+     "p25": 39.5,
+     "p75": 136.0,
+     "p10": 23.0,
+     "p90": 156.3
+    },
+    "words": {
+     "n": 160,
+     "median": 251.5,
+     "mean": 338.25,
+     "p25": 136.0,
+     "p75": 526.0,
+     "p10": 61.0,
+     "p90": 686.6
+    },
+    "wpm": {
+     "n": 160,
+     "median": 236.65,
+     "mean": 227.49,
+     "p25": 205.15,
+     "p75": 262.55,
+     "p10": 159.4,
+     "p90": 275.46
+    },
+    "sentences": {
+     "n": 160,
+     "median": 25.5,
+     "mean": 37.456,
+     "p25": 13.75,
+     "p75": 63.25,
+     "p10": 7.0,
+     "p90": 81.0
+    },
+    "sentence_mean": {
+     "n": 160,
+     "median": 9.185,
+     "mean": 14.124,
+     "p25": 7.588,
+     "p75": 11.473,
+     "p10": 6.313,
+     "p90": 16.008
+    },
+    "sentence_median": {
+     "n": 160,
+     "median": 8.0,
+     "mean": 12.438,
+     "p25": 6.0,
+     "p75": 9.0,
+     "p10": 5.0,
+     "p90": 12.5
+    },
+    "sentence_p90": {
+     "n": 160,
+     "median": 14.05,
+     "mean": 18.661,
+     "p25": 11.8,
+     "p75": 17.25,
+     "p10": 10.0,
+     "p90": 21.07
+    },
+    "sentence_max": {
+     "n": 160,
+     "median": 24.0,
+     "mean": 54.844,
+     "p25": 17.0,
+     "p75": 67.0,
+     "p10": 13.0,
+     "p90": 135.7
+    },
+    "short_sentence_share": {
+     "n": 160,
+     "median": 0.31,
+     "mean": 0.302,
+     "p25": 0.182,
+     "p75": 0.411,
+     "p10": 0.0,
+     "p90": 0.505
+    },
+    "first_sentence_words": {
+     "n": 160,
+     "median": 11.0,
+     "mean": 18.45,
+     "p25": 7.0,
+     "p75": 15.0,
+     "p10": 6.0,
+     "p90": 20.1
+    },
+    "premise_words": {
+     "n": 160,
+     "median": 19.0,
+     "mean": 28.769,
+     "p25": 15.0,
+     "p75": 31.0,
+     "p10": 11.0,
+     "p90": 47.7
+    },
+    "premise_seconds": {
+     "n": 160,
+     "median": 5.24,
+     "mean": 7.658,
+     "p25": 3.665,
+     "p75": 7.67,
+     "p10": 2.54,
+     "p90": 12.793
+    },
+    "last_sentence_words": {
+     "n": 160,
+     "median": 10.0,
+     "mean": 28.144,
+     "p25": 5.0,
+     "p75": 18.0,
+     "p10": 3.0,
+     "p90": 70.2
+    },
+    "grade": {
+     "n": 160,
+     "median": 3.185,
+     "mean": 5.108,
+     "p25": 2.158,
+     "p75": 4.553,
+     "p10": 1.63,
+     "p90": 6.3
+    },
+    "long_word_share": {
+     "n": 160,
+     "median": 0.043,
+     "mean": 0.049,
+     "p25": 0.033,
+     "p75": 0.06,
+     "p10": 0.023,
+     "p90": 0.083
+    },
+    "letters_per_word": {
+     "n": 160,
+     "median": 4.07,
+     "mean": 4.159,
+     "p25": 3.98,
+     "p75": 4.303,
+     "p10": 3.89,
+     "p90": 4.581
+    },
+    "question_share": {
+     "n": 160,
+     "median": 0.0,
+     "mean": 0.038,
+     "p25": 0.0,
+     "p75": 0.035,
+     "p10": 0.0,
+     "p90": 0.099
+    },
+    "beats": {
+     "n": 160,
+     "median": 9.0,
+     "mean": 8.025,
+     "p25": 7.0,
+     "p75": 9.0,
+     "p10": 6.0,
+     "p90": 9.0
+    },
+    "turn_position": {
+     "n": 153,
+     "median": 0.575,
+     "mean": 0.572,
+     "p25": 0.457,
+     "p75": 0.684,
+     "p10": 0.331,
+     "p90": 0.839
+    },
+    "dialogue_share": {
+     "n": 160,
+     "median": 0.031,
+     "mean": 0.087,
+     "p25": 0.0,
+     "p75": 0.071,
+     "p10": 0.0,
+     "p90": 0.16
+    },
+    "speech_lines": {
+     "n": 160,
+     "median": 2.5,
+     "mean": 5.025,
+     "p25": 0.0,
+     "p75": 7.0,
+     "p10": 0.0,
+     "p90": 13.1
+    },
+    "speech_per_100_words": {
+     "n": 160,
+     "median": 0.735,
+     "mean": 2.15,
+     "p25": 0.0,
+     "p75": 1.812,
+     "p10": 0.0,
+     "p90": 3.802
+    },
+    "speech_line_words": {
+     "n": 114,
+     "median": 4.015,
+     "mean": 4.349,
+     "p25": 3.173,
+     "p75": 5.0,
+     "p10": 2.515,
+     "p90": 6.0
+    },
+    "speech_line_max": {
+     "n": 114,
+     "median": 6.0,
+     "mean": 7.096,
+     "p25": 4.0,
+     "p75": 9.0,
+     "p10": 3.0,
+     "p90": 11.0
+    },
+    "first_speech_position": {
+     "n": 113,
+     "median": 0.29,
+     "mean": 0.324,
+     "p25": 0.138,
+     "p75": 0.486,
+     "p10": 0.03,
+     "p90": 0.64
+    },
+    "speakers": {
+     "n": 160,
+     "median": 2.0,
+     "mean": 1.944,
+     "p25": 0.0,
+     "p75": 3.0,
+     "p10": 0.0,
+     "p90": 5.0
+    },
+    "named": {
+     "n": 160,
+     "median": 1.0,
+     "mean": 1.206,
+     "p25": 0.0,
+     "p75": 2.0,
+     "p10": 0.0,
+     "p90": 3.0
+    },
+    "voices": {
+     "n": 160,
+     "median": 2.0,
+     "mean": 2.144,
+     "p25": 1.0,
+     "p75": 3.0,
+     "p10": 1.0,
+     "p90": 4.0
+    },
+    "other_voice_share": {
+     "n": 160,
+     "median": 0.024,
+     "mean": 0.202,
+     "p25": 0.0,
+     "p75": 0.145,
+     "p10": 0.0,
+     "p90": 0.361
+    },
+    "title_words": {
+     "n": 160,
+     "median": 6.0,
+     "mean": 5.631,
+     "p25": 4.0,
+     "p75": 7.0,
+     "p10": 2.0,
+     "p90": 9.0
+    }
+   },
+   "categorical": {
+    "genre": {
+     "n": 160,
+     "values": {
+      "scary": {
+       "count": 160,
+       "share": 1.0
+      }
+     }
+    },
+    "format": {
+     "n": 160,
+     "values": {
+      "narrated": {
+       "count": 153,
+       "share": 0.956
+      },
+      "acted": {
+       "count": 6,
+       "share": 0.037
+      },
+      "mixed": {
+       "count": 1,
+       "share": 0.006
+      }
+     }
+    },
+    "person": {
+     "n": 160,
+     "values": {
+      "first": {
+       "count": 105,
+       "share": 0.656
+      },
+      "third": {
+       "count": 41,
+       "share": 0.256
+      },
+      "second": {
+       "count": 8,
+       "share": 0.05
+      },
+      "mixed": {
+       "count": 6,
+       "share": 0.037
+      }
+     }
+    },
+    "tense": {
+     "n": 160,
+     "values": {
+      "past": {
+       "count": 144,
+       "share": 0.9
+      },
+      "present": {
+       "count": 15,
+       "share": 0.094
+      },
+      "mixed": {
+       "count": 1,
+       "share": 0.006
+      }
+     }
+    },
+    "hook": {
+     "n": 160,
+     "values": {
+      "rule": {
+       "count": 106,
+       "share": 0.662
+      },
+      "event": {
+       "count": 17,
+       "share": 0.106
+      },
+      "claim": {
+       "count": 14,
+       "share": 0.087
+      },
+      "other": {
+       "count": 6,
+       "share": 0.037
+      },
+      "character": {
+       "count": 5,
+       "share": 0.031
+      },
+      "question": {
+       "count": 5,
+       "share": 0.031
+      },
+      "confession": {
+       "count": 4,
+       "share": 0.025
+      },
+      "warning": {
+       "count": 3,
+       "share": 0.019
+      }
+     }
+    },
+    "ending": {
+     "n": 160,
+     "values": {
+      "twist": {
+       "count": 54,
+       "share": 0.338
+      },
+      "cliffhanger": {
+       "count": 51,
+       "share": 0.319
+      },
+      "cta": {
+       "count": 31,
+       "share": 0.194
+      },
+      "resolution": {
+       "count": 10,
+       "share": 0.062
+      },
+      "open": {
+       "count": 8,
+       "share": 0.05
+      },
+      "loop": {
+       "count": 3,
+       "share": 0.019
+      },
+      "punchline": {
+       "count": 3,
+       "share": 0.019
+      }
+     }
+    },
+    "opener": {
+     "n": 160,
+     "values": {
+      "other": {
+       "count": 65,
+       "share": 0.406
+      },
+      "in this town": {
+       "count": 55,
+       "share": 0.344
+      },
+      "in this world": {
+       "count": 33,
+       "share": 0.206
+      },
+      "in this city": {
+       "count": 3,
+       "share": 0.019
+      },
+      "in this/my ...": {
+       "count": 2,
+       "share": 0.013
+      },
+      "in my town": {
+       "count": 2,
+       "share": 0.013
+      }
+     }
+    },
+    "last_line_spoken": {
+     "n": 160,
+     "values": {
+      "False": {
+       "count": 123,
+       "share": 0.769
+      },
+      "True": {
+       "count": 37,
+       "share": 0.231
+      }
+     }
+    },
+    "loops": {
+     "n": 160,
+     "values": {
+      "False": {
+       "count": 152,
+       "share": 0.95
+      },
+      "True": {
+       "count": 8,
+       "share": 0.05
+      }
+     }
+    },
+    "viewer_address": {
+     "n": 160,
+     "values": {
+      "False": {
+       "count": 88,
+       "share": 0.55
+      },
+      "True": {
+       "count": 72,
+       "share": 0.45
+      }
+     }
+    },
+    "scary": {
+     "n": 160,
+     "values": {
+      "True": {
+       "count": 160,
+       "share": 1.0
+      }
+     }
+    },
+    "has_speech": {
+     "n": 160,
+     "values": {
+      "True": {
+       "count": 114,
+       "share": 0.713
+      },
+      "False": {
+       "count": 46,
+       "share": 0.287
+      }
+     }
+    },
+    "multi_voice": {
+     "n": 160,
+     "values": {
+      "True": {
+       "count": 84,
+       "share": 0.525
+      },
+      "False": {
+       "count": 76,
+       "share": 0.475
+      }
+     }
+    },
+    "narrator_synthetic": {
+     "n": 160,
+     "values": {
+      "False": {
+       "count": 84,
+       "share": 0.525
+      },
+      "True": {
+       "count": 76,
+       "share": 0.475
+      }
+     }
+    },
+    "music": {
+     "n": 160,
+     "values": {
+      "True": {
+       "count": 143,
+       "share": 0.894
+      },
+      "False": {
+       "count": 17,
+       "share": 0.106
+      }
+     }
+    },
+    "sound_effects": {
+     "n": 160,
+     "values": {
+      "many": {
+       "count": 122,
+       "share": 0.762
+      },
+      "few": {
+       "count": 25,
+       "share": 0.156
+      },
+      "none": {
+       "count": 13,
+       "share": 0.081
+      }
+     }
+    },
+    "gore": {
+     "n": 160,
+     "values": {
+      "0": {
+       "count": 77,
+       "share": 0.481
+      },
+      "1": {
+       "count": 77,
+       "share": 0.481
+      },
+      "2": {
+       "count": 6,
+       "share": 0.037
+      }
+     }
+    },
+    "title_emoji": {
+     "n": 160,
+     "values": {
+      "True": {
+       "count": 104,
+       "share": 0.65
+      },
+      "False": {
+       "count": 56,
+       "share": 0.35
+      }
+     }
+    },
+    "title_opener": {
+     "n": 160,
+     "values": {
+      "in this": {
+       "count": 43,
+       "share": 0.269
+      },
+      "other": {
+       "count": 11,
+       "share": 0.069
+      },
+      "nobody can": {
+       "count": 5,
+       "share": 0.031
+      },
+      "this roblox": {
+       "count": 3,
+       "share": 0.019
+      },
+      "if you": {
+       "count": 3,
+       "share": 0.019
+      },
+      "imagine if": {
+       "count": 2,
+       "share": 0.013
+      },
+      "everyone has": {
+       "count": 2,
+       "share": 0.013
+      },
+      "roblox creepypasta": {
+       "count": 2,
+       "share": 0.013
+      },
+      "what if": {
+       "count": 2,
+       "share": 0.013
+      },
+      "everyone had": {
+       "count": 1,
+       "share": 0.006
+      },
+      "hot potato": {
+       "count": 1,
+       "share": 0.006
+      },
+      "you can": {
+       "count": 1,
+       "share": 0.006
+      }
+     }
+    }
+   },
+   "speech_line_length": {
+    "n": 804,
+    "median": 4.0,
+    "mean": 4.167,
+    "p25": 2.0,
+    "p75": 5.0,
+    "p10": 1.0,
+    "p90": 7.0
+   },
+   "speech_intro": {
+    "none": 0.709,
+    "after": 0.154,
+    "before": 0.137
+   },
+   "devices": {
+    "planted object": 83,
+    "rule broken": 70,
+    "repeated line": 56,
+    "countdown": 21,
+    "twist reveal": 20,
+    "wrong detail": 16,
+    "false relief": 14,
+    "rule world": 10,
+    "impostor voice": 7,
+    "reveal": 6,
+    "callback": 4,
+    "unseen presence": 3,
+    "viewer question": 3,
+    "rule reversal": 3,
+    "creepy reveal": 2
+   },
+   "beat_sequences": {
+    "hook > world > character > problem > escalation > turn > climax > ending": 5,
+    "hook > world > character > problem > escalation > turn > climax > aftermath > ending": 4,
+    "hook > world > character > problem > attempt > turn > climax > aftermath > ending": 4,
+    "hook > world > character > problem > attempt > escalation > climax > turn > ending": 3,
+    "hook > world > character > problem > attempt > escalation > turn > climax > ending": 2,
+    "hook > problem > escalation > attempt > turn > climax > aftermath > cta": 2,
+    "hook > world > character > problem > escalation > attempt > climax > turn > ending": 2,
+    "hook > world > problem > escalation > turn > climax > aftermath > ending > cta": 2
+   },
+   "beat_use": {
+    "hook": 1.0,
+    "turn": 0.981,
+    "problem": 0.863,
+    "climax": 0.844,
+    "escalation": 0.794,
+    "world": 0.75,
+    "attempt": 0.656,
+    "ending": 0.637,
+    "aftermath": 0.537,
+    "character": 0.512,
+    "cta": 0.3
+   },
+   "speech_in_other_voice": {
+    "n": 114,
+    "median": 0.5,
+    "mean": 0.472,
+    "p25": 0.0,
+    "p75": 0.935,
+    "p10": 0.0,
+    "p90": 1.0
+   }
+  },
+  "comedy": {
+   "n": 75,
+   "numeric": {
+    "seconds": {
+     "n": 75,
+     "median": 50.0,
+     "mean": 53.107,
+     "p25": 38.5,
+     "p75": 59.0,
+     "p10": 27.8,
+     "p90": 77.2
+    },
+    "words": {
+     "n": 75,
+     "median": 158.0,
+     "mean": 182.093,
+     "p25": 109.5,
+     "p75": 227.5,
+     "p10": 80.0,
+     "p90": 278.6
+    },
+    "wpm": {
+     "n": 75,
+     "median": 208.0,
+     "mean": 208.232,
+     "p25": 156.15,
+     "p75": 266.65,
+     "p10": 128.0,
+     "p90": 289.42
+    },
+    "sentences": {
+     "n": 75,
+     "median": 18.0,
+     "mean": 22.8,
+     "p25": 14.0,
+     "p75": 26.0,
+     "p10": 11.4,
+     "p90": 41.2
+    },
+    "sentence_mean": {
+     "n": 75,
+     "median": 7.04,
+     "mean": 9.844,
+     "p25": 5.51,
+     "p75": 13.155,
+     "p10": 4.372,
+     "p90": 18.706
+    },
+    "sentence_median": {
+     "n": 75,
+     "median": 6.0,
+     "mean": 8.8,
+     "p25": 5.0,
+     "p75": 12.0,
+     "p10": 4.0,
+     "p90": 15.0
+    },
+    "sentence_p90": {
+     "n": 75,
+     "median": 12.0,
+     "mean": 14.747,
+     "p25": 9.6,
+     "p75": 18.35,
+     "p10": 7.28,
+     "p90": 25.8
+    },
+    "sentence_max": {
+     "n": 75,
+     "median": 17.0,
+     "mean": 25.56,
+     "p25": 12.0,
+     "p75": 23.5,
+     "p10": 11.0,
+     "p90": 59.0
+    },
+    "short_sentence_share": {
+     "n": 75,
+     "median": 0.385,
+     "mean": 0.367,
+     "p25": 0.136,
+     "p75": 0.579,
+     "p10": 0.0,
+     "p90": 0.693
+    },
+    "first_sentence_words": {
+     "n": 75,
+     "median": 12.0,
+     "mean": 12.28,
+     "p25": 9.0,
+     "p75": 16.0,
+     "p10": 4.0,
+     "p90": 19.0
+    },
+    "premise_words": {
+     "n": 75,
+     "median": 15.0,
+     "mean": 18.987,
+     "p25": 12.0,
+     "p75": 22.5,
+     "p10": 9.0,
+     "p90": 34.6
+    },
+    "premise_seconds": {
+     "n": 75,
+     "median": 4.12,
+     "mean": 4.863,
+     "p25": 3.13,
+     "p75": 5.14,
+     "p10": 2.504,
+     "p90": 8.596
+    },
+    "last_sentence_words": {
+     "n": 75,
+     "median": 8.0,
+     "mean": 14.88,
+     "p25": 5.0,
+     "p75": 12.5,
+     "p10": 3.0,
+     "p90": 24.4
+    },
+    "grade": {
+     "n": 75,
+     "median": 2.39,
+     "mean": 3.048,
+     "p25": 1.205,
+     "p75": 3.925,
+     "p10": 0.406,
+     "p90": 7.09
+    },
+    "long_word_share": {
+     "n": 75,
+     "median": 0.036,
+     "mean": 0.041,
+     "p25": 0.027,
+     "p75": 0.054,
+     "p10": 0.013,
+     "p90": 0.071
+    },
+    "letters_per_word": {
+     "n": 75,
+     "median": 3.95,
+     "mean": 3.985,
+     "p25": 3.82,
+     "p75": 4.155,
+     "p10": 3.68,
+     "p90": 4.35
+    },
+    "question_share": {
+     "n": 75,
+     "median": 0.061,
+     "mean": 0.086,
+     "p25": 0.0,
+     "p75": 0.145,
+     "p10": 0.0,
+     "p90": 0.2
+    },
+    "beats": {
+     "n": 75,
+     "median": 8.0,
+     "mean": 8.253,
+     "p25": 8.0,
+     "p75": 9.0,
+     "p10": 7.0,
+     "p90": 9.0
+    },
+    "turn_position": {
+     "n": 74,
+     "median": 0.623,
+     "mean": 0.609,
+     "p25": 0.466,
+     "p75": 0.753,
+     "p10": 0.341,
+     "p90": 0.831
+    },
+    "dialogue_share": {
+     "n": 75,
+     "median": 0.086,
+     "mean": 0.297,
+     "p25": 0.036,
+     "p75": 0.566,
+     "p10": 0.01,
+     "p90": 1.0
+    },
+    "speech_lines": {
+     "n": 75,
+     "median": 5.0,
+     "mean": 7.653,
+     "p25": 2.0,
+     "p75": 12.0,
+     "p10": 1.0,
+     "p90": 15.0
+    },
+    "speech_per_100_words": {
+     "n": 75,
+     "median": 2.12,
+     "mean": 6.368,
+     "p25": 0.855,
+     "p75": 10.745,
+     "p10": 0.38,
+     "p90": 18.36
+    },
+    "speech_line_words": {
+     "n": 68,
+     "median": 4.465,
+     "mean": 4.625,
+     "p25": 3.5,
+     "p75": 5.5,
+     "p10": 2.976,
+     "p90": 6.586
+    },
+    "speech_line_max": {
+     "n": 68,
+     "median": 7.0,
+     "mean": 8.176,
+     "p25": 5.75,
+     "p75": 11.0,
+     "p10": 4.0,
+     "p90": 12.3
+    },
+    "first_speech_position": {
+     "n": 68,
+     "median": 0.119,
+     "mean": 0.18,
+     "p25": 0.0,
+     "p75": 0.281,
+     "p10": 0.0,
+     "p90": 0.391
+    },
+    "speakers": {
+     "n": 75,
+     "median": 2.0,
+     "mean": 2.053,
+     "p25": 1.0,
+     "p75": 3.0,
+     "p10": 1.0,
+     "p90": 3.6
+    },
+    "named": {
+     "n": 75,
+     "median": 0.0,
+     "mean": 0.6,
+     "p25": 0.0,
+     "p75": 1.0,
+     "p10": 0.0,
+     "p90": 2.0
+    },
+    "voices": {
+     "n": 75,
+     "median": 2.0,
+     "mean": 2.333,
+     "p25": 1.0,
+     "p75": 3.0,
+     "p10": 1.0,
+     "p90": 4.0
+    },
+    "other_voice_share": {
+     "n": 75,
+     "median": 0.154,
+     "mean": 0.3,
+     "p25": 0.0,
+     "p75": 0.481,
+     "p10": 0.0,
+     "p90": 0.915
+    },
+    "title_words": {
+     "n": 75,
+     "median": 6.0,
+     "mean": 6.413,
+     "p25": 5.0,
+     "p75": 8.0,
+     "p10": 2.4,
+     "p90": 10.6
+    }
+   },
+   "categorical": {
+    "genre": {
+     "n": 75,
+     "values": {
+      "comedy": {
+       "count": 75,
+       "share": 1.0
+      }
+     }
+    },
+    "format": {
+     "n": 75,
+     "values": {
+      "narrated": {
+       "count": 52,
+       "share": 0.693
+      },
+      "acted": {
+       "count": 19,
+       "share": 0.253
+      },
+      "mixed": {
+       "count": 4,
+       "share": 0.053
+      }
+     }
+    },
+    "person": {
+     "n": 75,
+     "values": {
+      "first": {
+       "count": 47,
+       "share": 0.627
+      },
+      "second": {
+       "count": 17,
+       "share": 0.227
+      },
+      "third": {
+       "count": 6,
+       "share": 0.08
+      },
+      "mixed": {
+       "count": 5,
+       "share": 0.067
+      }
+     }
+    },
+    "tense": {
+     "n": 75,
+     "values": {
+      "past": {
+       "count": 39,
+       "share": 0.52
+      },
+      "present": {
+       "count": 35,
+       "share": 0.467
+      },
+      "mixed": {
+       "count": 1,
+       "share": 0.013
+      }
+     }
+    },
+    "hook": {
+     "n": 75,
+     "values": {
+      "event": {
+       "count": 23,
+       "share": 0.307
+      },
+      "question": {
+       "count": 22,
+       "share": 0.293
+      },
+      "claim": {
+       "count": 10,
+       "share": 0.133
+      },
+      "rule": {
+       "count": 10,
+       "share": 0.133
+      },
+      "confession": {
+       "count": 4,
+       "share": 0.053
+      },
+      "warning": {
+       "count": 3,
+       "share": 0.04
+      },
+      "character": {
+       "count": 2,
+       "share": 0.027
+      },
+      "other": {
+       "count": 1,
+       "share": 0.013
+      }
+     }
+    },
+    "ending": {
+     "n": 75,
+     "values": {
+      "punchline": {
+       "count": 26,
+       "share": 0.347
+      },
+      "twist": {
+       "count": 19,
+       "share": 0.253
+      },
+      "cta": {
+       "count": 18,
+       "share": 0.24
+      },
+      "cliffhanger": {
+       "count": 5,
+       "share": 0.067
+      },
+      "loop": {
+       "count": 4,
+       "share": 0.053
+      },
+      "resolution": {
+       "count": 2,
+       "share": 0.027
+      },
+      "moral": {
+       "count": 1,
+       "share": 0.013
+      }
+     }
+    },
+    "opener": {
+     "n": 75,
+     "values": {
+      "other": {
+       "count": 68,
+       "share": 0.907
+      },
+      "in this town": {
+       "count": 4,
+       "share": 0.053
+      },
+      "in my town": {
+       "count": 3,
+       "share": 0.04
+      }
+     }
+    },
+    "last_line_spoken": {
+     "n": 75,
+     "values": {
+      "False": {
+       "count": 42,
+       "share": 0.56
+      },
+      "True": {
+       "count": 33,
+       "share": 0.44
+      }
+     }
+    },
+    "loops": {
+     "n": 75,
+     "values": {
+      "False": {
+       "count": 69,
+       "share": 0.92
+      },
+      "True": {
+       "count": 6,
+       "share": 0.08
+      }
+     }
+    },
+    "viewer_address": {
+     "n": 75,
+     "values": {
+      "False": {
+       "count": 46,
+       "share": 0.613
+      },
+      "True": {
+       "count": 29,
+       "share": 0.387
+      }
+     }
+    },
+    "scary": {
+     "n": 75,
+     "values": {
+      "False": {
+       "count": 75,
+       "share": 1.0
+      }
+     }
+    },
+    "has_speech": {
+     "n": 75,
+     "values": {
+      "True": {
+       "count": 68,
+       "share": 0.907
+      },
+      "False": {
+       "count": 7,
+       "share": 0.093
+      }
+     }
+    },
+    "multi_voice": {
+     "n": 75,
+     "values": {
+      "True": {
+       "count": 54,
+       "share": 0.72
+      },
+      "False": {
+       "count": 21,
+       "share": 0.28
+      }
+     }
+    },
+    "narrator_synthetic": {
+     "n": 75,
+     "values": {
+      "False": {
+       "count": 47,
+       "share": 0.627
+      },
+      "True": {
+       "count": 28,
+       "share": 0.373
+      }
+     }
+    },
+    "music": {
+     "n": 75,
+     "values": {
+      "True": {
+       "count": 60,
+       "share": 0.8
+      },
+      "False": {
+       "count": 15,
+       "share": 0.2
+      }
+     }
+    },
+    "sound_effects": {
+     "n": 75,
+     "values": {
+      "many": {
+       "count": 45,
+       "share": 0.6
+      },
+      "few": {
+       "count": 23,
+       "share": 0.307
+      },
+      "none": {
+       "count": 7,
+       "share": 0.093
+      }
+     }
+    },
+    "gore": {
+     "n": 75,
+     "values": {
+      "0": {
+       "count": 55,
+       "share": 0.733
+      },
+      "1": {
+       "count": 15,
+       "share": 0.2
+      },
+      "2": {
+       "count": 5,
+       "share": 0.067
+      }
+     }
+    },
+    "title_emoji": {
+     "n": 75,
+     "values": {
+      "False": {
+       "count": 38,
+       "share": 0.507
+      },
+      "True": {
+       "count": 37,
+       "share": 0.493
+      }
+     }
+    },
+    "title_opener": {
+     "n": 75,
+     "values": {
+      "what if": {
+       "count": 17,
+       "share": 0.227
+      },
+      "other": {
+       "count": 3,
+       "share": 0.04
+      },
+      "quem vai": {
+       "count": 2,
+       "share": 0.027
+      },
+      "i became": {
+       "count": 2,
+       "share": 0.027
+      },
+      "how parents": {
+       "count": 2,
+       "share": 0.027
+      },
+      "my crush": {
+       "count": 2,
+       "share": 0.027
+      },
+      "i asked": {
+       "count": 1,
+       "share": 0.013
+      },
+      "i flirt": {
+       "count": 1,
+       "share": 0.013
+      },
+      "when i": {
+       "count": 1,
+       "share": 0.013
+      },
+      "my teacher": {
+       "count": 1,
+       "share": 0.013
+      },
+      "i spawned": {
+       "count": 1,
+       "share": 0.013
+      },
+      "sneeze swaps": {
+       "count": 1,
+       "share": 0.013
+      }
+     }
+    }
+   },
+   "speech_line_length": {
+    "n": 574,
+    "median": 4.0,
+    "mean": 4.679,
+    "p25": 2.0,
+    "p75": 6.0,
+    "p10": 1.0,
+    "p90": 9.0
+   },
+   "speech_intro": {
+    "none": 0.873,
+    "before": 0.125,
+    "after": 0.002
+   },
+   "devices": {
+    "planted object": 27,
+    "repeated line": 26,
+    "reveal": 8,
+    "twist reveal": 7,
+    "countdown": 7,
+    "reversal": 5,
+    "rule broken": 5,
+    "callback": 4,
+    "rule world": 4,
+    "false relief": 3,
+    "running gag": 3,
+    "escalating absurdity": 3,
+    "punchline reveal": 3,
+    "escalating numbers": 3,
+    "dramatic irony": 2
+   },
+   "beat_sequences": {
+    "hook > world > attempt > escalation > turn > climax > aftermath > ending": 5,
+    "hook > problem > attempt > escalation > turn > climax > aftermath > ending": 5,
+    "hook > problem > attempt > escalation > climax > turn > aftermath > ending": 2,
+    "hook > problem > attempt > escalation > turn > climax > ending": 2,
+    "hook > world > attempt > escalation > problem > turn > climax > ending": 1,
+    "hook > world > problem > attempt > escalation > character > climax > turn > cta": 1,
+    "hook > cta > problem > turn > attempt > climax > climax > aftermath > ending": 1,
+    "hook > problem > attempt > escalation > escalation > attempt > climax > turn > ending": 1
+   },
+   "beat_use": {
+    "hook": 1.0,
+    "turn": 0.973,
+    "escalation": 0.947,
+    "climax": 0.893,
+    "attempt": 0.827,
+    "problem": 0.813,
+    "ending": 0.747,
+    "world": 0.56,
+    "aftermath": 0.547,
+    "cta": 0.32,
+    "character": 0.267
+   },
+   "speech_in_other_voice": {
+    "n": 68,
+    "median": 0.593,
+    "mean": 0.525,
+    "p25": 0.0,
+    "p75": 0.93,
+    "p10": 0.0,
+    "p90": 1.0
+   }
+  },
+  "rule_world": {
+   "n": 68,
+   "numeric": {
+    "seconds": {
+     "n": 68,
+     "median": 118.0,
+     "mean": 108.868,
+     "p25": 57.75,
+     "p75": 145.5,
+     "p10": 47.7,
+     "p90": 171.0
+    },
+    "words": {
+     "n": 68,
+     "median": 448.5,
+     "mean": 451.824,
+     "p25": 237.75,
+     "p75": 640.75,
+     "p10": 197.9,
+     "p90": 746.0
+    },
+    "wpm": {
+     "n": 68,
+     "median": 257.05,
+     "mean": 247.085,
+     "p25": 234.75,
+     "p75": 262.925,
+     "p10": 204.41,
+     "p90": 270.75
+    },
+    "sentences": {
+     "n": 68,
+     "median": 53.5,
+     "mean": 54.382,
+     "p25": 21.0,
+     "p75": 80.0,
+     "p10": 16.7,
+     "p90": 105.6
+    },
+    "sentence_mean": {
+     "n": 68,
+     "median": 8.78,
+     "mean": 9.516,
+     "p25": 7.245,
+     "p75": 10.51,
+     "p10": 6.347,
+     "p90": 12.153
+    },
+    "sentence_median": {
+     "n": 68,
+     "median": 7.0,
+     "mean": 7.426,
+     "p25": 6.0,
+     "p75": 8.125,
+     "p10": 5.0,
+     "p90": 10.3
+    },
+    "sentence_p90": {
+     "n": 68,
+     "median": 14.35,
+     "mean": 15.531,
+     "p25": 13.0,
+     "p75": 17.0,
+     "p10": 11.3,
+     "p90": 18.79
+    },
+    "sentence_max": {
+     "n": 68,
+     "median": 25.0,
+     "mean": 53.515,
+     "p25": 19.0,
+     "p75": 51.0,
+     "p10": 18.0,
+     "p90": 124.3
+    },
+    "short_sentence_share": {
+     "n": 68,
+     "median": 0.364,
+     "mean": 0.352,
+     "p25": 0.269,
+     "p75": 0.454,
+     "p10": 0.18,
+     "p90": 0.509
+    },
+    "first_sentence_words": {
+     "n": 68,
+     "median": 12.0,
+     "mean": 13.809,
+     "p25": 10.0,
+     "p75": 15.0,
+     "p10": 8.0,
+     "p90": 18.0
+    },
+    "premise_words": {
+     "n": 68,
+     "median": 20.0,
+     "mean": 22.75,
+     "p25": 14.75,
+     "p75": 27.5,
+     "p10": 12.0,
+     "p90": 34.0
+    },
+    "premise_seconds": {
+     "n": 68,
+     "median": 4.75,
+     "mean": 5.343,
+     "p25": 3.03,
+     "p75": 6.465,
+     "p10": 2.5,
+     "p90": 7.646
+    },
+    "last_sentence_words": {
+     "n": 68,
+     "median": 7.0,
+     "mean": 25.382,
+     "p25": 4.0,
+     "p75": 12.25,
+     "p10": 3.0,
+     "p90": 29.3
+    },
+    "grade": {
+     "n": 68,
+     "median": 2.765,
+     "mean": 3.193,
+     "p25": 1.802,
+     "p75": 4.21,
+     "p10": 1.51,
+     "p90": 5.2
+    },
+    "long_word_share": {
+     "n": 68,
+     "median": 0.043,
+     "mean": 0.047,
+     "p25": 0.034,
+     "p75": 0.053,
+     "p10": 0.031,
+     "p90": 0.077
+    },
+    "letters_per_word": {
+     "n": 68,
+     "median": 4.04,
+     "mean": 4.111,
+     "p25": 3.95,
+     "p75": 4.18,
+     "p10": 3.897,
+     "p90": 4.492
+    },
+    "question_share": {
+     "n": 68,
+     "median": 0.004,
+     "mean": 0.019,
+     "p25": 0.0,
+     "p75": 0.03,
+     "p10": 0.0,
+     "p90": 0.05
+    },
+    "beats": {
+     "n": 68,
+     "median": 9.0,
+     "mean": 8.691,
+     "p25": 8.0,
+     "p75": 9.0,
+     "p10": 8.0,
+     "p90": 9.0
+    },
+    "turn_position": {
+     "n": 68,
+     "median": 0.532,
+     "mean": 0.547,
+     "p25": 0.413,
+     "p75": 0.66,
+     "p10": 0.284,
+     "p90": 0.828
+    },
+    "dialogue_share": {
+     "n": 68,
+     "median": 0.037,
+     "mean": 0.045,
+     "p25": 0.012,
+     "p75": 0.071,
+     "p10": 0.0,
+     "p90": 0.105
+    },
+    "speech_lines": {
+     "n": 68,
+     "median": 3.0,
+     "mean": 4.941,
+     "p25": 1.0,
+     "p75": 7.0,
+     "p10": 0.0,
+     "p90": 12.0
+    },
+    "speech_per_100_words": {
+     "n": 68,
+     "median": 0.78,
+     "mean": 1.003,
+     "p25": 0.29,
+     "p75": 1.442,
+     "p10": 0.0,
+     "p90": 2.287
+    },
+    "speech_line_words": {
+     "n": 59,
+     "median": 4.28,
+     "mean": 4.664,
+     "p25": 3.445,
+     "p75": 5.23,
+     "p10": 2.964,
+     "p90": 7.066
+    },
+    "speech_line_max": {
+     "n": 59,
+     "median": 7.0,
+     "mean": 7.424,
+     "p25": 5.0,
+     "p75": 9.0,
+     "p10": 3.0,
+     "p90": 11.4
+    },
+    "first_speech_position": {
+     "n": 59,
+     "median": 0.382,
+     "mean": 0.427,
+     "p25": 0.272,
+     "p75": 0.571,
+     "p10": 0.152,
+     "p90": 0.716
+    },
+    "speakers": {
+     "n": 68,
+     "median": 2.0,
+     "mean": 2.191,
+     "p25": 1.0,
+     "p75": 3.0,
+     "p10": 0.0,
+     "p90": 4.0
+    },
+    "named": {
+     "n": 68,
+     "median": 1.0,
+     "mean": 1.029,
+     "p25": 0.75,
+     "p75": 1.0,
+     "p10": 0.0,
+     "p90": 2.0
+    },
+    "voices": {
+     "n": 68,
+     "median": 2.0,
+     "mean": 2.132,
+     "p25": 1.0,
+     "p75": 3.0,
+     "p10": 1.0,
+     "p90": 4.0
+    },
+    "other_voice_share": {
+     "n": 68,
+     "median": 0.038,
+     "mean": 0.064,
+     "p25": 0.0,
+     "p75": 0.091,
+     "p10": 0.0,
+     "p90": 0.16
+    },
+    "title_words": {
+     "n": 68,
+     "median": 6.0,
+     "mean": 5.868,
+     "p25": 4.0,
+     "p75": 7.0,
+     "p10": 3.0,
+     "p90": 8.3
+    }
+   },
+   "categorical": {
+    "genre": {
+     "n": 68,
+     "values": {
+      "rule_world": {
+       "count": 68,
+       "share": 1.0
+      }
+     }
+    },
+    "format": {
+     "n": 68,
+     "values": {
+      "narrated": {
+       "count": 68,
+       "share": 1.0
+      }
+     }
+    },
+    "person": {
+     "n": 68,
+     "values": {
+      "first": {
+       "count": 51,
+       "share": 0.75
+      },
+      "third": {
+       "count": 15,
+       "share": 0.221
+      },
+      "mixed": {
+       "count": 2,
+       "share": 0.029
+      }
+     }
+    },
+    "tense": {
+     "n": 68,
+     "values": {
+      "past": {
+       "count": 68,
+       "share": 1.0
+      }
+     }
+    },
+    "hook": {
+     "n": 68,
+     "values": {
+      "rule": {
+       "count": 68,
+       "share": 1.0
+      }
+     }
+    },
+    "ending": {
+     "n": 68,
+     "values": {
+      "resolution": {
+       "count": 23,
+       "share": 0.338
+      },
+      "twist": {
+       "count": 16,
+       "share": 0.235
+      },
+      "punchline": {
+       "count": 12,
+       "share": 0.176
+      },
+      "cta": {
+       "count": 8,
+       "share": 0.118
+      },
+      "cliffhanger": {
+       "count": 5,
+       "share": 0.074
+      },
+      "moral": {
+       "count": 3,
+       "share": 0.044
+      },
+      "loop": {
+       "count": 1,
+       "share": 0.015
+      }
+     }
+    },
+    "opener": {
+     "n": 68,
+     "values": {
+      "in this world": {
+       "count": 30,
+       "share": 0.441
+      },
+      "in this town": {
+       "count": 23,
+       "share": 0.338
+      },
+      "in this/my ...": {
+       "count": 10,
+       "share": 0.147
+      },
+      "other": {
+       "count": 3,
+       "share": 0.044
+      },
+      "in my town": {
+       "count": 2,
+       "share": 0.029
+      }
+     }
+    },
+    "last_line_spoken": {
+     "n": 68,
+     "values": {
+      "False": {
+       "count": 55,
+       "share": 0.809
+      },
+      "True": {
+       "count": 13,
+       "share": 0.191
+      }
+     }
+    },
+    "loops": {
+     "n": 68,
+     "values": {
+      "False": {
+       "count": 67,
+       "share": 0.985
+      },
+      "True": {
+       "count": 1,
+       "share": 0.015
+      }
+     }
+    },
+    "viewer_address": {
+     "n": 68,
+     "values": {
+      "False": {
+       "count": 53,
+       "share": 0.779
+      },
+      "True": {
+       "count": 15,
+       "share": 0.221
+      }
+     }
+    },
+    "scary": {
+     "n": 68,
+     "values": {
+      "False": {
+       "count": 68,
+       "share": 1.0
+      }
+     }
+    },
+    "has_speech": {
+     "n": 68,
+     "values": {
+      "True": {
+       "count": 59,
+       "share": 0.868
+      },
+      "False": {
+       "count": 9,
+       "share": 0.132
+      }
+     }
+    },
+    "multi_voice": {
+     "n": 68,
+     "values": {
+      "True": {
+       "count": 39,
+       "share": 0.574
+      },
+      "False": {
+       "count": 29,
+       "share": 0.426
+      }
+     }
+    },
+    "narrator_synthetic": {
+     "n": 68,
+     "values": {
+      "False": {
+       "count": 43,
+       "share": 0.632
+      },
+      "True": {
+       "count": 25,
+       "share": 0.368
+      }
+     }
+    },
+    "music": {
+     "n": 68,
+     "values": {
+      "True": {
+       "count": 64,
+       "share": 0.941
+      },
+      "False": {
+       "count": 4,
+       "share": 0.059
+      }
+     }
+    },
+    "sound_effects": {
+     "n": 68,
+     "values": {
+      "many": {
+       "count": 47,
+       "share": 0.691
+      },
+      "few": {
+       "count": 19,
+       "share": 0.279
+      },
+      "none": {
+       "count": 2,
+       "share": 0.029
+      }
+     }
+    },
+    "gore": {
+     "n": 68,
+     "values": {
+      "0": {
+       "count": 51,
+       "share": 0.75
+      },
+      "1": {
+       "count": 15,
+       "share": 0.221
+      },
+      "2": {
+       "count": 2,
+       "share": 0.029
+      }
+     }
+    },
+    "title_emoji": {
+     "n": 68,
+     "values": {
+      "True": {
+       "count": 44,
+       "share": 0.647
+      },
+      "False": {
+       "count": 24,
+       "share": 0.353
+      }
+     }
+    },
+    "title_opener": {
+     "n": 68,
+     "values": {
+      "in this": {
+       "count": 17,
+       "share": 0.25
+      },
+      "we live": {
+       "count": 4,
+       "share": 0.059
+      },
+      "the sun": {
+       "count": 2,
+       "share": 0.029
+      },
+      "the world": {
+       "count": 2,
+       "share": 0.029
+      },
+      "my world": {
+       "count": 2,
+       "share": 0.029
+      },
+      "everyone has": {
+       "count": 2,
+       "share": 0.029
+      },
+      "you can't": {
+       "count": 1,
+       "share": 0.015
+      },
+      "we pay": {
+       "count": 1,
+       "share": 0.015
+      },
+      "angel on": {
+       "count": 1,
+       "share": 0.015
+      },
+      "2 dimensional": {
+       "count": 1,
+       "share": 0.015
+      },
+      "every chest": {
+       "count": 1,
+       "share": 0.015
+      },
+      "you must": {
+       "count": 1,
+       "share": 0.015
+      }
+     }
+    }
+   },
+   "speech_line_length": {
+    "n": 336,
+    "median": 4.0,
+    "mean": 4.342,
+    "p25": 2.0,
+    "p75": 6.0,
+    "p10": 1.5,
+    "p90": 8.0
+   },
+   "speech_intro": {
+    "none": 0.509,
+    "after": 0.259,
+    "before": 0.232
+   },
+   "devices": {
+    "planted object": 40,
+    "repeated line": 31,
+    "rule broken": 21,
+    "countdown": 11,
+    "rule world": 11,
+    "callback": 9,
+    "reversal": 6,
+    "callback ending": 5,
+    "rule loophole": 5,
+    "underdog": 4,
+    "absurd rule": 2,
+    "false relief": 2,
+    "wholesome reversal": 2,
+    "rule setup": 2,
+    "unseen threat": 2
+   },
+   "beat_sequences": {
+    "hook > world > character > problem > escalation > turn > climax > aftermath > ending": 4,
+    "hook > world > problem > attempt > turn > escalation > climax > aftermath > ending": 3,
+    "hook > world > character > problem > escalation > attempt > climax > turn": 2,
+    "hook > world > character > turn > escalation > attempt > climax > aftermath > ending": 2,
+    "hook > world > character > problem > turn > attempt > climax > aftermath > ending": 2,
+    "hook > world > problem > escalation > attempt > turn > climax > aftermath > ending": 2,
+    "hook > world > character > attempt > escalation > turn > climax > aftermath > ending": 2,
+    "hook > world > character > problem > turn > attempt > escalation > climax > aftermath > cta": 1
+   },
+   "beat_use": {
+    "hook": 1.0,
+    "turn": 0.956,
+    "climax": 0.941,
+    "problem": 0.897,
+    "ending": 0.824,
+    "world": 0.809,
+    "escalation": 0.809,
+    "character": 0.779,
+    "attempt": 0.75,
+    "aftermath": 0.735,
+    "cta": 0.118
+   },
+   "speech_in_other_voice": {
+    "n": 59,
+    "median": 0.455,
+    "mean": 0.431,
+    "p25": 0.0,
+    "p75": 0.789,
+    "p10": 0.0,
+    "p90": 1.0
+   }
+  },
+  "drama": {
+   "n": 23,
+   "numeric": {
+    "seconds": {
+     "n": 23,
+     "median": 52.0,
+     "mean": 79.261,
+     "p25": 46.5,
+     "p75": 122.0,
+     "p10": 37.2,
+     "p90": 149.8
+    },
+    "words": {
+     "n": 23,
+     "median": 199.0,
+     "mean": 327.217,
+     "p25": 178.0,
+     "p75": 469.0,
+     "p10": 155.6,
+     "p90": 674.6
+    },
+    "wpm": {
+     "n": 23,
+     "median": 243.2,
+     "mean": 244.9,
+     "p25": 221.8,
+     "p75": 262.5,
+     "p10": 213.04,
+     "p90": 279.68
+    },
+    "sentences": {
+     "n": 23,
+     "median": 24.0,
+     "mean": 36.826,
+     "p25": 17.5,
+     "p75": 57.5,
+     "p10": 14.2,
+     "p90": 81.6
+    },
+    "sentence_mean": {
+     "n": 23,
+     "median": 8.51,
+     "mean": 9.95,
+     "p25": 7.975,
+     "p75": 10.625,
+     "p10": 7.352,
+     "p90": 13.014
+    },
+    "sentence_median": {
+     "n": 23,
+     "median": 8.0,
+     "mean": 8.283,
+     "p25": 6.5,
+     "p75": 8.0,
+     "p10": 6.0,
+     "p90": 11.2
+    },
+    "sentence_p90": {
+     "n": 23,
+     "median": 14.8,
+     "mean": 15.109,
+     "p25": 12.65,
+     "p75": 16.6,
+     "p10": 12.06,
+     "p90": 18.42
+    },
+    "sentence_max": {
+     "n": 23,
+     "median": 24.0,
+     "mean": 44.87,
+     "p25": 19.5,
+     "p75": 28.0,
+     "p10": 16.2,
+     "p90": 71.4
+    },
+    "short_sentence_share": {
+     "n": 23,
+     "median": 0.292,
+     "mean": 0.291,
+     "p25": 0.241,
+     "p75": 0.358,
+     "p10": 0.09,
+     "p90": 0.432
+    },
+    "first_sentence_words": {
+     "n": 23,
+     "median": 12.0,
+     "mean": 13.478,
+     "p25": 10.5,
+     "p75": 15.0,
+     "p10": 8.2,
+     "p90": 21.0
+    },
+    "premise_words": {
+     "n": 23,
+     "median": 20.0,
+     "mean": 27.609,
+     "p25": 15.5,
+     "p75": 33.0,
+     "p10": 12.2,
+     "p90": 55.0
+    },
+    "premise_seconds": {
+     "n": 23,
+     "median": 4.6,
+     "mean": 6.689,
+     "p25": 3.6,
+     "p75": 8.18,
+     "p10": 3.124,
+     "p90": 14.36
+    },
+    "last_sentence_words": {
+     "n": 23,
+     "median": 9.0,
+     "mean": 23.391,
+     "p25": 6.5,
+     "p75": 14.5,
+     "p10": 5.0,
+     "p90": 55.8
+    },
+    "grade": {
+     "n": 23,
+     "median": 3.33,
+     "mean": 3.546,
+     "p25": 2.34,
+     "p75": 4.255,
+     "p10": 1.856,
+     "p90": 4.964
+    },
+    "long_word_share": {
+     "n": 23,
+     "median": 0.041,
+     "mean": 0.048,
+     "p25": 0.031,
+     "p75": 0.064,
+     "p10": 0.028,
+     "p90": 0.078
+    },
+    "letters_per_word": {
+     "n": 23,
+     "median": 4.23,
+     "mean": 4.214,
+     "p25": 3.96,
+     "p75": 4.475,
+     "p10": 3.92,
+     "p90": 4.606
+    },
+    "question_share": {
+     "n": 23,
+     "median": 0.0,
+     "mean": 0.027,
+     "p25": 0.0,
+     "p75": 0.037,
+     "p10": 0.0,
+     "p90": 0.069
+    },
+    "beats": {
+     "n": 23,
+     "median": 9.0,
+     "mean": 8.478,
+     "p25": 8.0,
+     "p75": 9.0,
+     "p10": 8.0,
+     "p90": 9.0
+    },
+    "turn_position": {
+     "n": 23,
+     "median": 0.608,
+     "mean": 0.555,
+     "p25": 0.445,
+     "p75": 0.657,
+     "p10": 0.262,
+     "p90": 0.748
+    },
+    "dialogue_share": {
+     "n": 23,
+     "median": 0.032,
+     "mean": 0.086,
+     "p25": 0.005,
+     "p75": 0.081,
+     "p10": 0.0,
+     "p90": 0.151
+    },
+    "speech_lines": {
+     "n": 23,
+     "median": 3.0,
+     "mean": 4.478,
+     "p25": 0.5,
+     "p75": 5.0,
+     "p10": 0.0,
+     "p90": 8.8
+    },
+    "speech_per_100_words": {
+     "n": 23,
+     "median": 0.66,
+     "mean": 1.642,
+     "p25": 0.21,
+     "p75": 1.78,
+     "p10": 0.0,
+     "p90": 3.412
+    },
+    "speech_line_words": {
+     "n": 17,
+     "median": 4.6,
+     "mean": 4.698,
+     "p25": 3.2,
+     "p75": 6.33,
+     "p10": 2.6,
+     "p90": 7.172
+    },
+    "speech_line_max": {
+     "n": 17,
+     "median": 6.0,
+     "mean": 7.706,
+     "p25": 4.0,
+     "p75": 10.0,
+     "p10": 3.6,
+     "p90": 13.0
+    },
+    "first_speech_position": {
+     "n": 17,
+     "median": 0.341,
+     "mean": 0.378,
+     "p25": 0.243,
+     "p75": 0.524,
+     "p10": 0.102,
+     "p90": 0.639
+    },
+    "speakers": {
+     "n": 23,
+     "median": 1.0,
+     "mean": 1.478,
+     "p25": 0.5,
+     "p75": 2.0,
+     "p10": 0.0,
+     "p90": 2.8
+    },
+    "named": {
+     "n": 23,
+     "median": 1.0,
+     "mean": 1.391,
+     "p25": 1.0,
+     "p75": 1.0,
+     "p10": 0.2,
+     "p90": 2.0
+    },
+    "voices": {
+     "n": 23,
+     "median": 2.0,
+     "mean": 2.261,
+     "p25": 1.0,
+     "p75": 3.0,
+     "p10": 1.0,
+     "p90": 3.8
+    },
+    "other_voice_share": {
+     "n": 23,
+     "median": 0.075,
+     "mean": 0.127,
+     "p25": 0.0,
+     "p75": 0.14,
+     "p10": 0.0,
+     "p90": 0.31
+    },
+    "title_words": {
+     "n": 23,
+     "median": 6.0,
+     "mean": 6.13,
+     "p25": 5.0,
+     "p75": 8.0,
+     "p10": 4.2,
+     "p90": 8.8
+    }
+   },
+   "categorical": {
+    "genre": {
+     "n": 23,
+     "values": {
+      "drama": {
+       "count": 23,
+       "share": 1.0
+      }
+     }
+    },
+    "format": {
+     "n": 23,
+     "values": {
+      "narrated": {
+       "count": 22,
+       "share": 0.957
+      },
+      "acted": {
+       "count": 1,
+       "share": 0.043
+      }
+     }
+    },
+    "person": {
+     "n": 23,
+     "values": {
+      "third": {
+       "count": 13,
+       "share": 0.565
+      },
+      "first": {
+       "count": 9,
+       "share": 0.391
+      },
+      "mixed": {
+       "count": 1,
+       "share": 0.043
+      }
+     }
+    },
+    "tense": {
+     "n": 23,
+     "values": {
+      "past": {
+       "count": 21,
+       "share": 0.913
+      },
+      "present": {
+       "count": 2,
+       "share": 0.087
+      }
+     }
+    },
+    "hook": {
+     "n": 23,
+     "values": {
+      "rule": {
+       "count": 13,
+       "share": 0.565
+      },
+      "event": {
+       "count": 4,
+       "share": 0.174
+      },
+      "claim": {
+       "count": 4,
+       "share": 0.174
+      },
+      "character": {
+       "count": 1,
+       "share": 0.043
+      },
+      "question": {
+       "count": 1,
+       "share": 0.043
+      }
+     }
+    },
+    "ending": {
+     "n": 23,
+     "values": {
+      "twist": {
+       "count": 8,
+       "share": 0.348
+      },
+      "resolution": {
+       "count": 7,
+       "share": 0.304
+      },
+      "cliffhanger": {
+       "count": 4,
+       "share": 0.174
+      },
+      "open": {
+       "count": 2,
+       "share": 0.087
+      },
+      "cta": {
+       "count": 2,
+       "share": 0.087
+      }
+     }
+    },
+    "opener": {
+     "n": 23,
+     "values": {
+      "other": {
+       "count": 15,
+       "share": 0.652
+      },
+      "in this town": {
+       "count": 4,
+       "share": 0.174
+      },
+      "in this world": {
+       "count": 3,
+       "share": 0.13
+      },
+      "in this/my ...": {
+       "count": 1,
+       "share": 0.043
+      }
+     }
+    },
+    "last_line_spoken": {
+     "n": 23,
+     "values": {
+      "False": {
+       "count": 16,
+       "share": 0.696
+      },
+      "True": {
+       "count": 7,
+       "share": 0.304
+      }
+     }
+    },
+    "loops": {
+     "n": 23,
+     "values": {
+      "False": {
+       "count": 23,
+       "share": 1.0
+      }
+     }
+    },
+    "viewer_address": {
+     "n": 23,
+     "values": {
+      "False": {
+       "count": 19,
+       "share": 0.826
+      },
+      "True": {
+       "count": 4,
+       "share": 0.174
+      }
+     }
+    },
+    "scary": {
+     "n": 23,
+     "values": {
+      "False": {
+       "count": 22,
+       "share": 0.957
+      },
+      "True": {
+       "count": 1,
+       "share": 0.043
+      }
+     }
+    },
+    "has_speech": {
+     "n": 23,
+     "values": {
+      "True": {
+       "count": 17,
+       "share": 0.739
+      },
+      "False": {
+       "count": 6,
+       "share": 0.261
+      }
+     }
+    },
+    "multi_voice": {
+     "n": 23,
+     "values": {
+      "True": {
+       "count": 13,
+       "share": 0.565
+      },
+      "False": {
+       "count": 10,
+       "share": 0.435
+      }
+     }
+    },
+    "narrator_synthetic": {
+     "n": 23,
+     "values": {
+      "True": {
+       "count": 15,
+       "share": 0.652
+      },
+      "False": {
+       "count": 8,
+       "share": 0.348
+      }
+     }
+    },
+    "music": {
+     "n": 23,
+     "values": {
+      "True": {
+       "count": 23,
+       "share": 1.0
+      }
+     }
+    },
+    "sound_effects": {
+     "n": 23,
+     "values": {
+      "many": {
+       "count": 17,
+       "share": 0.739
+      },
+      "few": {
+       "count": 6,
+       "share": 0.261
+      }
+     }
+    },
+    "gore": {
+     "n": 23,
+     "values": {
+      "1": {
+       "count": 12,
+       "share": 0.522
+      },
+      "0": {
+       "count": 11,
+       "share": 0.478
+      }
+     }
+    },
+    "title_emoji": {
+     "n": 23,
+     "values": {
+      "True": {
+       "count": 12,
+       "share": 0.522
+      },
+      "False": {
+       "count": 11,
+       "share": 0.478
+      }
+     }
+    },
+    "title_opener": {
+     "n": 23,
+     "values": {
+      "he could": {
+       "count": 3,
+       "share": 0.13
+      },
+      "in this": {
+       "count": 3,
+       "share": 0.13
+      },
+      "the boy": {
+       "count": 2,
+       "share": 0.087
+      },
+      "everyone has": {
+       "count": 2,
+       "share": 0.087
+      },
+      "the world": {
+       "count": 1,
+       "share": 0.043
+      },
+      "the kid": {
+       "count": 1,
+       "share": 0.043
+      },
+      "the sky": {
+       "count": 1,
+       "share": 0.043
+      },
+      "anything he": {
+       "count": 1,
+       "share": 0.043
+      },
+      "other": {
+       "count": 1,
+       "share": 0.043
+      },
+      "we live": {
+       "count": 1,
+       "share": 0.043
+      },
+      "the shy": {
+       "count": 1,
+       "share": 0.043
+      },
+      "every time": {
+       "count": 1,
+       "share": 0.043
+      }
+     }
+    }
+   },
+   "speech_line_length": {
+    "n": 103,
+    "median": 4.0,
+    "mean": 5.272,
+    "p25": 3.0,
+    "p75": 6.0,
+    "p10": 2.0,
+    "p90": 9.0
+   },
+   "speech_intro": {
+    "none": 0.738,
+    "after": 0.155,
+    "before": 0.107
+   },
+   "devices": {
+    "repeated line": 9,
+    "planted object": 7,
+    "rule broken": 6,
+    "reveal": 4,
+    "hidden cost": 3,
+    "reversal": 3,
+    "false relief": 3,
+    "countdown": 3,
+    "sacrifice": 2,
+    "mind control": 1,
+    "rule premise": 1,
+    "target switch": 1,
+    "brother reveal": 1,
+    "rewind loop": 1,
+    "twist reframe": 1
+   },
+   "beat_sequences": {
+    "world > problem > escalation > attempt > turn > escalation > climax > ending": 1,
+    "hook > world > attempt > escalation > problem > attempt > turn > climax > ending": 1,
+    "hook > world > character > problem > attempt > escalation > turn > climax > ending": 1,
+    "hook > character > attempt > turn > escalation > climax > aftermath > ending": 1,
+    "hook > character > turn > problem > attempt > escalation > climax > aftermath > cta": 1,
+    "hook > world > character > problem > escalation > turn > attempt > climax > aftermath": 1,
+    "hook > world > problem > attempt > escalation > turn > attempt > climax": 1,
+    "hook > problem > world > attempt > turn > escalation > climax > ending": 1
+   },
+   "beat_use": {
+    "turn": 1.0,
+    "climax": 1.0,
+    "hook": 0.957,
+    "problem": 0.913,
+    "escalation": 0.826,
+    "world": 0.783,
+    "ending": 0.783,
+    "attempt": 0.696,
+    "aftermath": 0.652,
+    "character": 0.565,
+    "cta": 0.13
+   },
+   "speech_in_other_voice": {
+    "n": 17,
+    "median": 1.0,
+    "mean": 0.649,
+    "p25": 0.0,
+    "p75": 1.0,
+    "p10": 0.0,
+    "p90": 1.0
+   }
+  },
+  "wholesome": {
+   "n": 14,
+   "numeric": {
+    "seconds": {
+     "n": 14,
+     "median": 84.0,
+     "mean": 86.571,
+     "p25": 45.0,
+     "p75": 120.75,
+     "p10": 42.0,
+     "p90": 131.4
+    },
+    "words": {
+     "n": 14,
+     "median": 320.0,
+     "mean": 349.929,
+     "p25": 169.0,
+     "p75": 495.5,
+     "p10": 137.9,
+     "p90": 576.1
+    },
+    "wpm": {
+     "n": 14,
+     "median": 239.0,
+     "mean": 237.164,
+     "p25": 208.5,
+     "p75": 260.4,
+     "p10": 192.49,
+     "p90": 275.31
+    },
+    "sentences": {
+     "n": 14,
+     "median": 23.5,
+     "mean": 35.357,
+     "p25": 20.0,
+     "p75": 52.75,
+     "p10": 16.6,
+     "p90": 58.2
+    },
+    "sentence_mean": {
+     "n": 14,
+     "median": 9.385,
+     "mean": 11.316,
+     "p25": 7.49,
+     "p75": 11.855,
+     "p10": 7.154,
+     "p90": 13.568
+    },
+    "sentence_median": {
+     "n": 14,
+     "median": 7.5,
+     "mean": 8.393,
+     "p25": 6.625,
+     "p75": 10.25,
+     "p10": 6.15,
+     "p90": 12.7
+    },
+    "sentence_p90": {
+     "n": 14,
+     "median": 14.0,
+     "mean": 15.35,
+     "p25": 12.55,
+     "p75": 17.675,
+     "p10": 12.0,
+     "p90": 20.19
+    },
+    "sentence_max": {
+     "n": 14,
+     "median": 21.0,
+     "mean": 67.786,
+     "p25": 18.0,
+     "p75": 30.25,
+     "p10": 15.3,
+     "p90": 83.0
+    },
+    "short_sentence_share": {
+     "n": 14,
+     "median": 0.334,
+     "mean": 0.301,
+     "p25": 0.164,
+     "p75": 0.408,
+     "p10": 0.073,
+     "p90": 0.427
+    },
+    "first_sentence_words": {
+     "n": 14,
+     "median": 15.0,
+     "mean": 14.286,
+     "p25": 12.0,
+     "p75": 17.0,
+     "p10": 8.9,
+     "p90": 18.0
+    },
+    "premise_words": {
+     "n": 14,
+     "median": 18.0,
+     "mean": 23.429,
+     "p25": 16.25,
+     "p75": 26.75,
+     "p10": 9.2,
+     "p90": 39.7
+    },
+    "premise_seconds": {
+     "n": 14,
+     "median": 4.79,
+     "mean": 5.466,
+     "p25": 3.44,
+     "p75": 7.205,
+     "p10": 2.062,
+     "p90": 8.286
+    },
+    "last_sentence_words": {
+     "n": 14,
+     "median": 11.0,
+     "mean": 18.5,
+     "p25": 8.25,
+     "p75": 12.0,
+     "p10": 7.3,
+     "p90": 28.9
+    },
+    "grade": {
+     "n": 14,
+     "median": 2.92,
+     "mean": 3.599,
+     "p25": 2.445,
+     "p75": 3.438,
+     "p10": 1.582,
+     "p90": 4.844
+    },
+    "long_word_share": {
+     "n": 14,
+     "median": 0.039,
+     "mean": 0.041,
+     "p25": 0.031,
+     "p75": 0.049,
+     "p10": 0.022,
+     "p90": 0.057
+    },
+    "letters_per_word": {
+     "n": 14,
+     "median": 4.02,
+     "mean": 4.106,
+     "p25": 3.93,
+     "p75": 4.27,
+     "p10": 3.913,
+     "p90": 4.366
+    },
+    "question_share": {
+     "n": 14,
+     "median": 0.0,
+     "mean": 0.025,
+     "p25": 0.0,
+     "p75": 0.038,
+     "p10": 0.0,
+     "p90": 0.085
+    },
+    "beats": {
+     "n": 14,
+     "median": 9.0,
+     "mean": 8.429,
+     "p25": 8.0,
+     "p75": 9.0,
+     "p10": 7.3,
+     "p90": 9.0
+    },
+    "turn_position": {
+     "n": 14,
+     "median": 0.579,
+     "mean": 0.568,
+     "p25": 0.436,
+     "p75": 0.737,
+     "p10": 0.229,
+     "p90": 0.85
+    },
+    "dialogue_share": {
+     "n": 14,
+     "median": 0.059,
+     "mean": 0.075,
+     "p25": 0.031,
+     "p75": 0.106,
+     "p10": 0.015,
+     "p90": 0.167
+    },
+    "speech_lines": {
+     "n": 14,
+     "median": 4.0,
+     "mean": 6.286,
+     "p25": 2.0,
+     "p75": 6.5,
+     "p10": 1.3,
+     "p90": 17.9
+    },
+    "speech_per_100_words": {
+     "n": 14,
+     "median": 1.28,
+     "mean": 1.672,
+     "p25": 0.742,
+     "p75": 2.408,
+     "p10": 0.554,
+     "p90": 3.593
+    },
+    "speech_line_words": {
+     "n": 13,
+     "median": 4.0,
+     "mean": 4.565,
+     "p25": 3.5,
+     "p75": 5.62,
+     "p10": 2.84,
+     "p90": 5.934
+    },
+    "speech_line_max": {
+     "n": 13,
+     "median": 7.0,
+     "mean": 9.231,
+     "p25": 6.0,
+     "p75": 13.0,
+     "p10": 4.2,
+     "p90": 16.6
+    },
+    "first_speech_position": {
+     "n": 13,
+     "median": 0.327,
+     "mean": 0.381,
+     "p25": 0.208,
+     "p75": 0.627,
+     "p10": 0.077,
+     "p90": 0.729
+    },
+    "speakers": {
+     "n": 14,
+     "median": 2.0,
+     "mean": 2.143,
+     "p25": 1.0,
+     "p75": 2.75,
+     "p10": 1.0,
+     "p90": 4.0
+    },
+    "named": {
+     "n": 14,
+     "median": 1.0,
+     "mean": 1.286,
+     "p25": 0.25,
+     "p75": 2.0,
+     "p10": 0.0,
+     "p90": 2.7
+    },
+    "voices": {
+     "n": 14,
+     "median": 1.0,
+     "mean": 1.571,
+     "p25": 1.0,
+     "p75": 2.0,
+     "p10": 1.0,
+     "p90": 2.7
+    },
+    "other_voice_share": {
+     "n": 14,
+     "median": 0.0,
+     "mean": 0.064,
+     "p25": 0.0,
+     "p75": 0.124,
+     "p10": 0.0,
+     "p90": 0.157
+    },
+    "title_words": {
+     "n": 14,
+     "median": 5.0,
+     "mean": 5.714,
+     "p25": 4.0,
+     "p75": 8.0,
+     "p10": 3.3,
+     "p90": 8.7
+    }
+   },
+   "categorical": {
+    "genre": {
+     "n": 14,
+     "values": {
+      "wholesome": {
+       "count": 14,
+       "share": 1.0
+      }
+     }
+    },
+    "format": {
+     "n": 14,
+     "values": {
+      "narrated": {
+       "count": 14,
+       "share": 1.0
+      }
+     }
+    },
+    "person": {
+     "n": 14,
+     "values": {
+      "first": {
+       "count": 10,
+       "share": 0.714
+      },
+      "third": {
+       "count": 4,
+       "share": 0.286
+      }
+     }
+    },
+    "tense": {
+     "n": 14,
+     "values": {
+      "past": {
+       "count": 14,
+       "share": 1.0
+      }
+     }
+    },
+    "hook": {
+     "n": 14,
+     "values": {
+      "rule": {
+       "count": 10,
+       "share": 0.714
+      },
+      "claim": {
+       "count": 3,
+       "share": 0.214
+      },
+      "event": {
+       "count": 1,
+       "share": 0.071
+      }
+     }
+    },
+    "ending": {
+     "n": 14,
+     "values": {
+      "resolution": {
+       "count": 7,
+       "share": 0.5
+      },
+      "twist": {
+       "count": 6,
+       "share": 0.429
+      },
+      "moral": {
+       "count": 1,
+       "share": 0.071
+      }
+     }
+    },
+    "opener": {
+     "n": 14,
+     "values": {
+      "other": {
+       "count": 7,
+       "share": 0.5
+      },
+      "in this town": {
+       "count": 3,
+       "share": 0.214
+      },
+      "in this world": {
+       "count": 2,
+       "share": 0.143
+      },
+      "in this school": {
+       "count": 1,
+       "share": 0.071
+      },
+      "in this/my ...": {
+       "count": 1,
+       "share": 0.071
+      }
+     }
+    },
+    "last_line_spoken": {
+     "n": 14,
+     "values": {
+      "False": {
+       "count": 12,
+       "share": 0.857
+      },
+      "True": {
+       "count": 2,
+       "share": 0.143
+      }
+     }
+    },
+    "loops": {
+     "n": 14,
+     "values": {
+      "False": {
+       "count": 14,
+       "share": 1.0
+      }
+     }
+    },
+    "viewer_address": {
+     "n": 14,
+     "values": {
+      "False": {
+       "count": 12,
+       "share": 0.857
+      },
+      "True": {
+       "count": 2,
+       "share": 0.143
+      }
+     }
+    },
+    "scary": {
+     "n": 14,
+     "values": {
+      "False": {
+       "count": 14,
+       "share": 1.0
+      }
+     }
+    },
+    "has_speech": {
+     "n": 14,
+     "values": {
+      "True": {
+       "count": 13,
+       "share": 0.929
+      },
+      "False": {
+       "count": 1,
+       "share": 0.071
+      }
+     }
+    },
+    "multi_voice": {
+     "n": 14,
+     "values": {
+      "False": {
+       "count": 8,
+       "share": 0.571
+      },
+      "True": {
+       "count": 6,
+       "share": 0.429
+      }
+     }
+    },
+    "narrator_synthetic": {
+     "n": 14,
+     "values": {
+      "True": {
+       "count": 8,
+       "share": 0.571
+      },
+      "False": {
+       "count": 6,
+       "share": 0.429
+      }
+     }
+    },
+    "music": {
+     "n": 14,
+     "values": {
+      "True": {
+       "count": 12,
+       "share": 0.857
+      },
+      "False": {
+       "count": 2,
+       "share": 0.143
+      }
+     }
+    },
+    "sound_effects": {
+     "n": 14,
+     "values": {
+      "few": {
+       "count": 8,
+       "share": 0.571
+      },
+      "many": {
+       "count": 4,
+       "share": 0.286
+      },
+      "none": {
+       "count": 2,
+       "share": 0.143
+      }
+     }
+    },
+    "gore": {
+     "n": 14,
+     "values": {
+      "0": {
+       "count": 10,
+       "share": 0.714
+      },
+      "1": {
+       "count": 4,
+       "share": 0.286
+      }
+     }
+    },
+    "title_emoji": {
+     "n": 14,
+     "values": {
+      "True": {
+       "count": 7,
+       "share": 0.5
+      },
+      "False": {
+       "count": 7,
+       "share": 0.5
+      }
+     }
+    },
+    "title_opener": {
+     "n": 14,
+     "values": {
+      "he could": {
+       "count": 3,
+       "share": 0.214
+      },
+      "your pets": {
+       "count": 1,
+       "share": 0.071
+      },
+      "my crush": {
+       "count": 1,
+       "share": 0.071
+      },
+      "this girl": {
+       "count": 1,
+       "share": 0.071
+      },
+      "a lost": {
+       "count": 1,
+       "share": 0.071
+      },
+      "mood ring": {
+       "count": 1,
+       "share": 0.071
+      },
+      "the thunder": {
+       "count": 1,
+       "share": 0.071
+      },
+      "a string": {
+       "count": 1,
+       "share": 0.071
+      },
+      "the dinosaur": {
+       "count": 1,
+       "share": 0.071
+      },
+      "we live": {
+       "count": 1,
+       "share": 0.071
+      },
+      "everything he": {
+       "count": 1,
+       "share": 0.071
+      },
+      "never cut": {
+       "count": 1,
+       "share": 0.071
+      }
+     }
+    }
+   },
+   "speech_line_length": {
+    "n": 88,
+    "median": 4.0,
+    "mean": 5.136,
+    "p25": 3.0,
+    "p75": 6.0,
+    "p10": 2.0,
+    "p90": 11.3
+   },
+   "speech_intro": {
+    "none": 0.614,
+    "before": 0.205,
+    "after": 0.182
+   },
+   "devices": {
+    "planted object": 8,
+    "repeated line": 6,
+    "callback": 3,
+    "twist reveal": 2,
+    "unlikely hero": 1,
+    "world rule": 1,
+    "hidden meaning": 1,
+    "repeated phrase": 1,
+    "reveal": 1,
+    "time stop": 1,
+    "secret reveal": 1,
+    "ambiguous pronoun": 1,
+    "reinterpreted meaning": 1,
+    "word payoff": 1,
+    "repeated word": 1
+   },
+   "beat_sequences": {
+    "hook > world > problem > attempt > turn > escalation > climax > aftermath > ending": 2,
+    "hook > world > character > problem > escalation > attempt > turn > climax > aftermath > ending": 1,
+    "hook > world > escalation > problem > attempt > turn": 1,
+    "hook > world > problem > escalation > character > turn > climax > ending": 1,
+    "hook > world > character > escalation > attempt > problem > attempt > turn > ending": 1,
+    "hook > world > problem > attempt > turn > climax > aftermath > ending > cta": 1,
+    "hook > problem > attempt > escalation > climax > aftermath > turn > ending": 1,
+    "hook > character > turn > escalation > attempt > climax > aftermath > ending": 1
+   },
+   "beat_use": {
+    "turn": 1.0,
+    "hook": 1.0,
+    "problem": 0.929,
+    "ending": 0.929,
+    "world": 0.786,
+    "attempt": 0.786,
+    "aftermath": 0.786,
+    "escalation": 0.786,
+    "climax": 0.714,
+    "character": 0.571,
+    "cta": 0.071
+   },
+   "speech_in_other_voice": {
+    "n": 13,
+    "median": 0.0,
+    "mean": 0.324,
+    "p25": 0.0,
+    "p75": 0.7,
+    "p10": 0.0,
+    "p90": 0.95
+   }
+  },
+  "mystery": {
+   "n": 8,
+   "numeric": {
+    "seconds": {
+     "n": 8,
+     "median": 50.5,
+     "mean": 74.75,
+     "p25": 33.0,
+     "p75": 109.75,
+     "p10": 32.4,
+     "p90": 138.1
+    },
+    "words": {
+     "n": 8,
+     "median": 179.5,
+     "mean": 331.125,
+     "p25": 150.0,
+     "p75": 492.75,
+     "p10": 128.1,
+     "p90": 643.8
+    },
+    "wpm": {
+     "n": 8,
+     "median": 258.25,
+     "mean": 255.425,
+     "p25": 233.925,
+     "p75": 275.5,
+     "p10": 221.43,
+     "p90": 291.97
+    },
+    "sentences": {
+     "n": 8,
+     "median": 19.0,
+     "mean": 39.625,
+     "p25": 17.75,
+     "p75": 58.75,
+     "p10": 15.5,
+     "p90": 81.1
+    },
+    "sentence_mean": {
+     "n": 8,
+     "median": 8.105,
+     "mean": 8.986,
+     "p25": 7.845,
+     "p75": 8.725,
+     "p10": 7.413,
+     "p90": 11.038
+    },
+    "sentence_median": {
+     "n": 8,
+     "median": 7.0,
+     "mean": 7.062,
+     "p25": 6.0,
+     "p75": 7.5,
+     "p10": 5.7,
+     "p90": 9.15
+    },
+    "sentence_p90": {
+     "n": 8,
+     "median": 14.2,
+     "mean": 14.6,
+     "p25": 13.5,
+     "p75": 15.1,
+     "p10": 12.42,
+     "p90": 17.56
+    },
+    "sentence_max": {
+     "n": 8,
+     "median": 19.5,
+     "mean": 28.375,
+     "p25": 16.0,
+     "p75": 30.0,
+     "p10": 14.8,
+     "p90": 52.2
+    },
+    "short_sentence_share": {
+     "n": 8,
+     "median": 0.369,
+     "mean": 0.36,
+     "p25": 0.327,
+     "p75": 0.395,
+     "p10": 0.238,
+     "p90": 0.448
+    },
+    "first_sentence_words": {
+     "n": 8,
+     "median": 14.5,
+     "mean": 13.875,
+     "p25": 12.0,
+     "p75": 16.0,
+     "p10": 10.5,
+     "p90": 16.9
+    },
+    "premise_words": {
+     "n": 8,
+     "median": 16.0,
+     "mean": 17.25,
+     "p25": 14.75,
+     "p75": 17.5,
+     "p10": 13.4,
+     "p90": 23.5
+    },
+    "premise_seconds": {
+     "n": 8,
+     "median": 3.76,
+     "mean": 4.015,
+     "p25": 3.565,
+     "p75": 4.61,
+     "p10": 3.346,
+     "p90": 4.874
+    },
+    "last_sentence_words": {
+     "n": 8,
+     "median": 13.0,
+     "mean": 14.875,
+     "p25": 5.0,
+     "p75": 19.25,
+     "p10": 4.1,
+     "p90": 26.6
+    },
+    "grade": {
+     "n": 8,
+     "median": 2.985,
+     "mean": 3.607,
+     "p25": 2.525,
+     "p75": 3.73,
+     "p10": 2.327,
+     "p90": 5.458
+    },
+    "long_word_share": {
+     "n": 8,
+     "median": 0.049,
+     "mean": 0.052,
+     "p25": 0.043,
+     "p75": 0.063,
+     "p10": 0.038,
+     "p90": 0.066
+    },
+    "letters_per_word": {
+     "n": 8,
+     "median": 4.29,
+     "mean": 4.324,
+     "p25": 4.045,
+     "p75": 4.565,
+     "p10": 4.003,
+     "p90": 4.676
+    },
+    "question_share": {
+     "n": 8,
+     "median": 0.06,
+     "mean": 0.067,
+     "p25": 0.022,
+     "p75": 0.108,
+     "p10": 0.0,
+     "p90": 0.133
+    },
+    "beats": {
+     "n": 8,
+     "median": 9.0,
+     "mean": 8.5,
+     "p25": 8.0,
+     "p75": 9.0,
+     "p10": 7.7,
+     "p90": 9.0
+    },
+    "turn_position": {
+     "n": 8,
+     "median": 0.472,
+     "mean": 0.516,
+     "p25": 0.415,
+     "p75": 0.535,
+     "p10": 0.374,
+     "p90": 0.728
+    },
+    "dialogue_share": {
+     "n": 8,
+     "median": 0.048,
+     "mean": 0.139,
+     "p25": 0.034,
+     "p75": 0.188,
+     "p10": 0.019,
+     "p90": 0.324
+    },
+    "speech_lines": {
+     "n": 8,
+     "median": 4.5,
+     "mean": 8.0,
+     "p25": 1.75,
+     "p75": 9.0,
+     "p10": 0.7,
+     "p90": 19.5
+    },
+    "speech_per_100_words": {
+     "n": 8,
+     "median": 1.17,
+     "mean": 2.618,
+     "p25": 0.835,
+     "p75": 3.617,
+     "p10": 0.553,
+     "p90": 5.581
+    },
+    "speech_line_words": {
+     "n": 7,
+     "median": 4.97,
+     "mean": 4.719,
+     "p25": 3.98,
+     "p75": 5.8,
+     "p10": 3.226,
+     "p90": 5.88
+    },
+    "speech_line_max": {
+     "n": 7,
+     "median": 6.0,
+     "mean": 7.571,
+     "p25": 5.5,
+     "p75": 9.5,
+     "p10": 4.2,
+     "p90": 11.6
+    },
+    "first_speech_position": {
+     "n": 7,
+     "median": 0.29,
+     "mean": 0.338,
+     "p25": 0.188,
+     "p75": 0.361,
+     "p10": 0.107,
+     "p90": 0.58
+    },
+    "speakers": {
+     "n": 8,
+     "median": 2.0,
+     "mean": 2.375,
+     "p25": 1.75,
+     "p75": 3.0,
+     "p10": 0.7,
+     "p90": 3.9
+    },
+    "named": {
+     "n": 8,
+     "median": 1.0,
+     "mean": 0.625,
+     "p25": 0.0,
+     "p75": 1.0,
+     "p10": 0.0,
+     "p90": 1.0
+    },
+    "voices": {
+     "n": 8,
+     "median": 2.0,
+     "mean": 2.125,
+     "p25": 1.0,
+     "p75": 3.0,
+     "p10": 1.0,
+     "p90": 3.3
+    },
+    "other_voice_share": {
+     "n": 8,
+     "median": 0.077,
+     "mean": 0.149,
+     "p25": 0.0,
+     "p75": 0.216,
+     "p10": 0.0,
+     "p90": 0.393
+    },
+    "title_words": {
+     "n": 8,
+     "median": 5.5,
+     "mean": 6.0,
+     "p25": 5.0,
+     "p75": 7.25,
+     "p10": 4.4,
+     "p90": 8.3
+    }
+   },
+   "categorical": {
+    "genre": {
+     "n": 8,
+     "values": {
+      "mystery": {
+       "count": 8,
+       "share": 1.0
+      }
+     }
+    },
+    "format": {
+     "n": 8,
+     "values": {
+      "narrated": {
+       "count": 8,
+       "share": 1.0
+      }
+     }
+    },
+    "person": {
+     "n": 8,
+     "values": {
+      "third": {
+       "count": 4,
+       "share": 0.5
+      },
+      "first": {
+       "count": 4,
+       "share": 0.5
+      }
+     }
+    },
+    "tense": {
+     "n": 8,
+     "values": {
+      "past": {
+       "count": 8,
+       "share": 1.0
+      }
+     }
+    },
+    "hook": {
+     "n": 8,
+     "values": {
+      "rule": {
+       "count": 4,
+       "share": 0.5
+      },
+      "character": {
+       "count": 2,
+       "share": 0.25
+      },
+      "claim": {
+       "count": 1,
+       "share": 0.125
+      },
+      "event": {
+       "count": 1,
+       "share": 0.125
+      }
+     }
+    },
+    "ending": {
+     "n": 8,
+     "values": {
+      "resolution": {
+       "count": 3,
+       "share": 0.375
+      },
+      "cliffhanger": {
+       "count": 2,
+       "share": 0.25
+      },
+      "twist": {
+       "count": 2,
+       "share": 0.25
+      },
+      "cta": {
+       "count": 1,
+       "share": 0.125
+      }
+     }
+    },
+    "opener": {
+     "n": 8,
+     "values": {
+      "other": {
+       "count": 5,
+       "share": 0.625
+      },
+      "in this world": {
+       "count": 2,
+       "share": 0.25
+      },
+      "in this town": {
+       "count": 1,
+       "share": 0.125
+      }
+     }
+    },
+    "last_line_spoken": {
+     "n": 8,
+     "values": {
+      "False": {
+       "count": 5,
+       "share": 0.625
+      },
+      "True": {
+       "count": 3,
+       "share": 0.375
+      }
+     }
+    },
+    "loops": {
+     "n": 8,
+     "values": {
+      "False": {
+       "count": 7,
+       "share": 0.875
+      },
+      "True": {
+       "count": 1,
+       "share": 0.125
+      }
+     }
+    },
+    "viewer_address": {
+     "n": 8,
+     "values": {
+      "False": {
+       "count": 7,
+       "share": 0.875
+      },
+      "True": {
+       "count": 1,
+       "share": 0.125
+      }
+     }
+    },
+    "scary": {
+     "n": 8,
+     "values": {
+      "False": {
+       "count": 7,
+       "share": 0.875
+      },
+      "True": {
+       "count": 1,
+       "share": 0.125
+      }
+     }
+    },
+    "has_speech": {
+     "n": 8,
+     "values": {
+      "True": {
+       "count": 7,
+       "share": 0.875
+      },
+      "False": {
+       "count": 1,
+       "share": 0.125
+      }
+     }
+    },
+    "multi_voice": {
+     "n": 8,
+     "values": {
+      "True": {
+       "count": 5,
+       "share": 0.625
+      },
+      "False": {
+       "count": 3,
+       "share": 0.375
+      }
+     }
+    },
+    "narrator_synthetic": {
+     "n": 8,
+     "values": {
+      "True": {
+       "count": 5,
+       "share": 0.625
+      },
+      "False": {
+       "count": 3,
+       "share": 0.375
+      }
+     }
+    },
+    "music": {
+     "n": 8,
+     "values": {
+      "True": {
+       "count": 8,
+       "share": 1.0
+      }
+     }
+    },
+    "sound_effects": {
+     "n": 8,
+     "values": {
+      "many": {
+       "count": 8,
+       "share": 1.0
+      }
+     }
+    },
+    "gore": {
+     "n": 8,
+     "values": {
+      "0": {
+       "count": 6,
+       "share": 0.75
+      },
+      "1": {
+       "count": 2,
+       "share": 0.25
+      }
+     }
+    },
+    "title_emoji": {
+     "n": 8,
+     "values": {
+      "False": {
+       "count": 5,
+       "share": 0.625
+      },
+      "True": {
+       "count": 3,
+       "share": 0.375
+      }
+     }
+    },
+    "title_opener": {
+     "n": 8,
+     "values": {
+      "the world": {
+       "count": 1,
+       "share": 0.125
+      },
+      "in this": {
+       "count": 1,
+       "share": 0.125
+      },
+      "he ate": {
+       "count": 1,
+       "share": 0.125
+      },
+      "the world's": {
+       "count": 1,
+       "share": 0.125
+      },
+      "my dads": {
+       "count": 1,
+       "share": 0.125
+      },
+      "the boy": {
+       "count": 1,
+       "share": 0.125
+      },
+      "he was": {
+       "count": 1,
+       "share": 0.125
+      },
+      "if you": {
+       "count": 1,
+       "share": 0.125
+      }
+     }
+    }
+   },
+   "speech_line_length": {
+    "n": 64,
+    "median": 4.5,
+    "mean": 4.984,
+    "p25": 3.0,
+    "p75": 6.0,
+    "p10": 2.0,
+    "p90": 9.0
+   },
+   "speech_intro": {
+    "none": 0.75,
+    "after": 0.188,
+    "before": 0.062
+   },
+   "devices": {
+    "planted object": 5,
+    "rule broken": 2,
+    "rule world": 1,
+    "mercy reversal": 1,
+    "planted symbol": 1,
+    "unseen figure": 1,
+    "repeated line": 1,
+    "fake backdrop": 1,
+    "cta punchline": 1,
+    "cost reveal": 1,
+    "note from absent parent": 1,
+    "ambiguous treasure": 1,
+    "challenge": 1,
+    "execution setup": 1,
+    "framed innocent": 1
+   },
+   "beat_sequences": {
+    "hook > world > problem > turn > attempt > escalation > climax > aftermath > ending": 2,
+    "hook > world > problem > attempt > turn > aftermath > escalation > climax > ending": 1,
+    "hook > world > problem > escalation > attempt > turn > climax > aftermath > cta": 1,
+    "hook > world > problem > escalation > climax > turn > ending": 1,
+    "hook > world > problem > escalation > turn > attempt > climax > aftermath > ending": 1,
+    "hook > world > attempt > problem > escalation > climax > turn > ending": 1,
+    "hook > problem > escalation > climax > turn > attempt > aftermath > ending": 1
+   },
+   "beat_use": {
+    "turn": 1.0,
+    "problem": 1.0,
+    "escalation": 1.0,
+    "climax": 1.0,
+    "hook": 1.0,
+    "world": 0.875,
+    "attempt": 0.875,
+    "ending": 0.875,
+    "aftermath": 0.75,
+    "cta": 0.125
+   },
+   "speech_in_other_voice": {
+    "n": 7,
+    "median": 0.5,
+    "mean": 0.442,
+    "p25": 0.214,
+    "p75": 0.633,
+    "p10": 0.0,
+    "p90": 0.76
+   }
+  }
+ },
+ "scary": {
+  "n": 162,
+  "numeric": {
+   "seconds": {
+    "n": 162,
+    "median": 64.0,
+    "mean": 86.907,
+    "p25": 40.0,
+    "p75": 136.0,
+    "p10": 23.0,
+    "p90": 155.9
+   },
+   "words": {
+    "n": 162,
+    "median": 260.5,
+    "mean": 341.759,
+    "p25": 136.0,
+    "p75": 531.25,
+    "p10": 61.0,
+    "p90": 689.6
+   },
+   "wpm": {
+    "n": 162,
+    "median": 237.1,
+    "mean": 228.06,
+    "p25": 205.325,
+    "p75": 263.225,
+    "p10": 159.67,
+    "p90": 275.94
+   },
+   "sentences": {
+    "n": 162,
+    "median": 26.5,
+    "mean": 37.951,
+    "p25": 14.0,
+    "p75": 64.0,
+    "p10": 7.0,
+    "p90": 81.0
+   },
+   "sentence_mean": {
+    "n": 162,
+    "median": 9.155,
+    "mean": 14.049,
+    "p25": 7.598,
+    "p75": 11.43,
+    "p10": 6.364,
+    "p90": 15.958
+   },
+   "sentence_median": {
+    "n": 162,
+    "median": 8.0,
+    "mean": 12.37,
+    "p25": 6.0,
+    "p75": 9.0,
+    "p10": 5.0,
+    "p90": 12.5
+   },
+   "sentence_p90": {
+    "n": 162,
+    "median": 14.05,
+    "mean": 18.608,
+    "p25": 11.8,
+    "p75": 17.2,
+    "p10": 10.02,
+    "p90": 21.0
+   },
+   "sentence_max": {
+    "n": 162,
+    "median": 24.0,
+    "mean": 54.574,
+    "p25": 17.0,
+    "p75": 66.75,
+    "p10": 13.0,
+    "p90": 134.7
+   },
+   "short_sentence_share": {
+    "n": 162,
+    "median": 0.316,
+    "mean": 0.303,
+    "p25": 0.182,
+    "p75": 0.412,
+    "p10": 0.0,
+    "p90": 0.505
+   },
+   "first_sentence_words": {
+    "n": 162,
+    "median": 11.0,
+    "mean": 18.346,
+    "p25": 7.0,
+    "p75": 15.0,
+    "p10": 6.0,
+    "p90": 19.9
+   },
+   "premise_words": {
+    "n": 162,
+    "median": 19.0,
+    "mean": 28.574,
+    "p25": 15.0,
+    "p75": 30.75,
+    "p10": 11.0,
+    "p90": 46.6
+   },
+   "premise_seconds": {
+    "n": 162,
+    "median": 5.2,
+    "mean": 7.603,
+    "p25": 3.59,
+    "p75": 7.58,
+    "p10": 2.544,
+    "p90": 12.775
+   },
+   "last_sentence_words": {
+    "n": 162,
+    "median": 10.0,
+    "mean": 28.093,
+    "p25": 5.25,
+    "p75": 18.0,
+    "p10": 3.0,
+    "p90": 69.7
+   },
+   "grade": {
+    "n": 162,
+    "median": 3.15,
+    "mean": 5.073,
+    "p25": 2.152,
+    "p75": 4.547,
+    "p10": 1.634,
+    "p90": 6.284
+   },
+   "long_word_share": {
+    "n": 162,
+    "median": 0.043,
+    "mean": 0.049,
+    "p25": 0.033,
+    "p75": 0.06,
+    "p10": 0.023,
+    "p90": 0.082
+   },
+   "letters_per_word": {
+    "n": 162,
+    "median": 4.07,
+    "mean": 4.158,
+    "p25": 3.98,
+    "p75": 4.3,
+    "p10": 3.891,
+    "p90": 4.58
+   },
+   "question_share": {
+    "n": 162,
+    "median": 0.0,
+    "mean": 0.038,
+    "p25": 0.0,
+    "p75": 0.035,
+    "p10": 0.0,
+    "p90": 0.097
+   },
+   "beats": {
+    "n": 162,
+    "median": 9.0,
+    "mean": 8.037,
+    "p25": 7.0,
+    "p75": 9.0,
+    "p10": 6.0,
+    "p90": 9.0
+   },
+   "turn_position": {
+    "n": 155,
+    "median": 0.575,
+    "mean": 0.572,
+    "p25": 0.454,
+    "p75": 0.683,
+    "p10": 0.336,
+    "p90": 0.839
+   },
+   "dialogue_share": {
+    "n": 162,
+    "median": 0.031,
+    "mean": 0.087,
+    "p25": 0.0,
+    "p75": 0.072,
+    "p10": 0.0,
+    "p90": 0.16
+   },
+   "speech_lines": {
+    "n": 162,
+    "median": 3.0,
+    "mean": 5.062,
+    "p25": 0.0,
+    "p75": 7.0,
+    "p10": 0.0,
+    "p90": 13.0
+   },
+   "speech_per_100_words": {
+    "n": 162,
+    "median": 0.74,
+    "mean": 2.139,
+    "p25": 0.0,
+    "p75": 1.748,
+    "p10": 0.0,
+    "p90": 3.747
+   },
+   "speech_line_words": {
+    "n": 116,
+    "median": 4.015,
+    "mean": 4.361,
+    "p25": 3.277,
+    "p75": 5.0,
+    "p10": 2.525,
+    "p90": 6.0
+   },
+   "speech_line_max": {
+    "n": 116,
+    "median": 6.0,
+    "mean": 7.138,
+    "p25": 4.0,
+    "p75": 9.0,
+    "p10": 3.0,
+    "p90": 11.0
+   },
+   "first_speech_position": {
+    "n": 115,
+    "median": 0.299,
+    "mean": 0.326,
+    "p25": 0.141,
+    "p75": 0.486,
+    "p10": 0.031,
+    "p90": 0.638
+   },
+   "speakers": {
+    "n": 162,
+    "median": 2.0,
+    "mean": 1.944,
+    "p25": 0.0,
+    "p75": 3.0,
+    "p10": 0.0,
+    "p90": 4.9
+   },
+   "named": {
+    "n": 162,
+    "median": 1.0,
+    "mean": 1.21,
+    "p25": 0.0,
+    "p75": 2.0,
+    "p10": 0.0,
+    "p90": 3.0
+   },
+   "voices": {
+    "n": 162,
+    "median": 2.0,
+    "mean": 2.142,
+    "p25": 1.0,
+    "p75": 3.0,
+    "p10": 1.0,
+    "p90": 4.0
+   },
+   "other_voice_share": {
+    "n": 162,
+    "median": 0.031,
+    "mean": 0.2,
+    "p25": 0.0,
+    "p75": 0.144,
+    "p10": 0.0,
+    "p90": 0.357
+   },
+   "title_words": {
+    "n": 162,
+    "median": 6.0,
+    "mean": 5.648,
+    "p25": 4.0,
+    "p75": 7.0,
+    "p10": 2.0,
+    "p90": 9.0
+   }
+  },
+  "categorical": {
+   "genre": {
+    "n": 162,
+    "values": {
+     "scary": {
+      "count": 160,
+      "share": 0.988
+     },
+     "drama": {
+      "count": 1,
+      "share": 0.006
+     },
+     "mystery": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "format": {
+    "n": 162,
+    "values": {
+     "narrated": {
+      "count": 155,
+      "share": 0.957
+     },
+     "acted": {
+      "count": 6,
+      "share": 0.037
+     },
+     "mixed": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "person": {
+    "n": 162,
+    "values": {
+     "first": {
+      "count": 107,
+      "share": 0.66
+     },
+     "third": {
+      "count": 41,
+      "share": 0.253
+     },
+     "second": {
+      "count": 8,
+      "share": 0.049
+     },
+     "mixed": {
+      "count": 6,
+      "share": 0.037
+     }
+    }
+   },
+   "tense": {
+    "n": 162,
+    "values": {
+     "past": {
+      "count": 146,
+      "share": 0.901
+     },
+     "present": {
+      "count": 15,
+      "share": 0.093
+     },
+     "mixed": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "hook": {
+    "n": 162,
+    "values": {
+     "rule": {
+      "count": 108,
+      "share": 0.667
+     },
+     "event": {
+      "count": 17,
+      "share": 0.105
+     },
+     "claim": {
+      "count": 14,
+      "share": 0.086
+     },
+     "other": {
+      "count": 6,
+      "share": 0.037
+     },
+     "character": {
+      "count": 5,
+      "share": 0.031
+     },
+     "question": {
+      "count": 5,
+      "share": 0.031
+     },
+     "confession": {
+      "count": 4,
+      "share": 0.025
+     },
+     "warning": {
+      "count": 3,
+      "share": 0.019
+     }
+    }
+   },
+   "ending": {
+    "n": 162,
+    "values": {
+     "twist": {
+      "count": 55,
+      "share": 0.34
+     },
+     "cliffhanger": {
+      "count": 51,
+      "share": 0.315
+     },
+     "cta": {
+      "count": 31,
+      "share": 0.191
+     },
+     "resolution": {
+      "count": 11,
+      "share": 0.068
+     },
+     "open": {
+      "count": 8,
+      "share": 0.049
+     },
+     "loop": {
+      "count": 3,
+      "share": 0.019
+     },
+     "punchline": {
+      "count": 3,
+      "share": 0.019
+     }
+    }
+   },
+   "opener": {
+    "n": 162,
+    "values": {
+     "other": {
+      "count": 65,
+      "share": 0.401
+     },
+     "in this town": {
+      "count": 56,
+      "share": 0.346
+     },
+     "in this world": {
+      "count": 34,
+      "share": 0.21
+     },
+     "in this city": {
+      "count": 3,
+      "share": 0.019
+     },
+     "in this/my ...": {
+      "count": 2,
+      "share": 0.012
+     },
+     "in my town": {
+      "count": 2,
+      "share": 0.012
+     }
+    }
+   },
+   "last_line_spoken": {
+    "n": 162,
+    "values": {
+     "False": {
+      "count": 125,
+      "share": 0.772
+     },
+     "True": {
+      "count": 37,
+      "share": 0.228
+     }
+    }
+   },
+   "loops": {
+    "n": 162,
+    "values": {
+     "False": {
+      "count": 154,
+      "share": 0.951
+     },
+     "True": {
+      "count": 8,
+      "share": 0.049
+     }
+    }
+   },
+   "viewer_address": {
+    "n": 162,
+    "values": {
+     "False": {
+      "count": 89,
+      "share": 0.549
+     },
+     "True": {
+      "count": 73,
+      "share": 0.451
+     }
+    }
+   },
+   "scary": {
+    "n": 162,
+    "values": {
+     "True": {
+      "count": 162,
+      "share": 1.0
+     }
+    }
+   },
+   "has_speech": {
+    "n": 162,
+    "values": {
+     "True": {
+      "count": 116,
+      "share": 0.716
+     },
+     "False": {
+      "count": 46,
+      "share": 0.284
+     }
+    }
+   },
+   "multi_voice": {
+    "n": 162,
+    "values": {
+     "True": {
+      "count": 86,
+      "share": 0.531
+     },
+     "False": {
+      "count": 76,
+      "share": 0.469
+     }
+    }
+   },
+   "narrator_synthetic": {
+    "n": 162,
+    "values": {
+     "False": {
+      "count": 85,
+      "share": 0.525
+     },
+     "True": {
+      "count": 77,
+      "share": 0.475
+     }
+    }
+   },
+   "music": {
+    "n": 162,
+    "values": {
+     "True": {
+      "count": 145,
+      "share": 0.895
+     },
+     "False": {
+      "count": 17,
+      "share": 0.105
+     }
+    }
+   },
+   "sound_effects": {
+    "n": 162,
+    "values": {
+     "many": {
+      "count": 124,
+      "share": 0.765
+     },
+     "few": {
+      "count": 25,
+      "share": 0.154
+     },
+     "none": {
+      "count": 13,
+      "share": 0.08
+     }
+    }
+   },
+   "gore": {
+    "n": 162,
+    "values": {
+     "0": {
+      "count": 79,
+      "share": 0.488
+     },
+     "1": {
+      "count": 77,
+      "share": 0.475
+     },
+     "2": {
+      "count": 6,
+      "share": 0.037
+     }
+    }
+   },
+   "title_emoji": {
+    "n": 162,
+    "values": {
+     "True": {
+      "count": 106,
+      "share": 0.654
+     },
+     "False": {
+      "count": 56,
+      "share": 0.346
+     }
+    }
+   },
+   "title_opener": {
+    "n": 162,
+    "values": {
+     "in this": {
+      "count": 44,
+      "share": 0.272
+     },
+     "other": {
+      "count": 11,
+      "share": 0.068
+     },
+     "nobody can": {
+      "count": 5,
+      "share": 0.031
+     },
+     "if you": {
+      "count": 4,
+      "share": 0.025
+     },
+     "this roblox": {
+      "count": 3,
+      "share": 0.019
+     },
+     "imagine if": {
+      "count": 2,
+      "share": 0.012
+     },
+     "everyone has": {
+      "count": 2,
+      "share": 0.012
+     },
+     "roblox creepypasta": {
+      "count": 2,
+      "share": 0.012
+     },
+     "what if": {
+      "count": 2,
+      "share": 0.012
+     },
+     "everyone had": {
+      "count": 1,
+      "share": 0.006
+     },
+     "hot potato": {
+      "count": 1,
+      "share": 0.006
+     },
+     "you can": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   }
+  },
+  "speech_line_length": {
+   "n": 820,
+   "median": 4.0,
+   "mean": 4.187,
+   "p25": 2.0,
+   "p75": 5.0,
+   "p10": 1.0,
+   "p90": 7.0
+  },
+  "speech_intro": {
+   "none": 0.709,
+   "after": 0.156,
+   "before": 0.135
+  },
+  "devices": {
+   "planted object": 85,
+   "rule broken": 71,
+   "repeated line": 57,
+   "countdown": 22,
+   "twist reveal": 20,
+   "wrong detail": 16,
+   "false relief": 14,
+   "rule world": 10,
+   "impostor voice": 7,
+   "reveal": 6,
+   "callback": 4,
+   "unseen presence": 3,
+   "viewer question": 3,
+   "rule reversal": 3,
+   "rule loophole": 3
+  },
+  "beat_sequences": {
+   "hook > world > character > problem > attempt > turn > climax > aftermath > ending": 5,
+   "hook > world > character > problem > escalation > turn > climax > ending": 5,
+   "hook > world > character > problem > escalation > turn > climax > aftermath > ending": 4,
+   "hook > world > character > problem > attempt > escalation > climax > turn > ending": 3,
+   "hook > world > character > problem > attempt > escalation > turn > climax > ending": 2,
+   "hook > problem > escalation > attempt > turn > climax > aftermath > cta": 2,
+   "hook > world > character > problem > escalation > attempt > climax > turn > ending": 2,
+   "hook > world > problem > escalation > turn > climax > aftermath > ending > cta": 2
+  },
+  "beat_use": {
+   "hook": 1.0,
+   "turn": 0.981,
+   "problem": 0.864,
+   "climax": 0.846,
+   "escalation": 0.79,
+   "world": 0.753,
+   "attempt": 0.66,
+   "ending": 0.642,
+   "aftermath": 0.543,
+   "character": 0.512,
+   "cta": 0.296
+  },
+  "speech_in_other_voice": {
+   "n": 116,
+   "median": 0.5,
+   "mean": 0.473,
+   "p25": 0.0,
+   "p75": 0.904,
+   "p10": 0.0,
+   "p90": 1.0
+  }
+ },
+ "not_scary": {
+  "n": 187,
+  "numeric": {
+   "seconds": {
+    "n": 187,
+    "median": 57.0,
+    "mean": 79.075,
+    "p25": 45.0,
+    "p75": 118.0,
+    "p10": 34.6,
+    "p90": 153.2
+   },
+   "words": {
+    "n": 187,
+    "median": 222.0,
+    "mean": 312.316,
+    "p25": 151.5,
+    "p75": 469.5,
+    "p10": 109.0,
+    "p90": 671.0
+   },
+   "wpm": {
+    "n": 187,
+    "median": 243.2,
+    "mean": 230.72,
+    "p25": 203.75,
+    "p75": 263.6,
+    "p10": 156.18,
+    "p90": 279.24
+   },
+   "sentences": {
+    "n": 187,
+    "median": 23.0,
+    "mean": 37.037,
+    "p25": 16.0,
+    "p75": 54.0,
+    "p10": 12.0,
+    "p90": 85.0
+   },
+   "sentence_mean": {
+    "n": 187,
+    "median": 8.51,
+    "mean": 9.852,
+    "p25": 6.87,
+    "p75": 11.27,
+    "p10": 5.506,
+    "p90": 15.168
+   },
+   "sentence_median": {
+    "n": 187,
+    "median": 7.0,
+    "mean": 8.163,
+    "p25": 6.0,
+    "p75": 9.5,
+    "p10": 5.0,
+    "p90": 13.0
+   },
+   "sentence_p90": {
+    "n": 187,
+    "median": 13.9,
+    "mean": 15.131,
+    "p25": 11.65,
+    "p75": 17.1,
+    "p10": 9.0,
+    "p90": 20.76
+   },
+   "sentence_max": {
+    "n": 187,
+    "median": 22.0,
+    "mean": 41.487,
+    "p25": 16.0,
+    "p75": 31.0,
+    "p10": 12.0,
+    "p90": 96.0
+   },
+   "short_sentence_share": {
+    "n": 187,
+    "median": 0.357,
+    "mean": 0.346,
+    "p25": 0.214,
+    "p75": 0.476,
+    "p10": 0.067,
+    "p90": 0.59
+   },
+   "first_sentence_words": {
+    "n": 187,
+    "median": 12.0,
+    "mean": 13.214,
+    "p25": 10.0,
+    "p75": 16.0,
+    "p10": 6.0,
+    "p90": 19.0
+   },
+   "premise_words": {
+    "n": 187,
+    "median": 18.0,
+    "mean": 21.717,
+    "p25": 13.0,
+    "p75": 25.5,
+    "p10": 10.0,
+    "p90": 36.0
+   },
+   "premise_seconds": {
+    "n": 187,
+    "median": 4.42,
+    "mean": 5.281,
+    "p25": 3.18,
+    "p75": 6.11,
+    "p10": 2.532,
+    "p90": 8.488
+   },
+   "last_sentence_words": {
+    "n": 187,
+    "median": 8.0,
+    "mean": 20.16,
+    "p25": 5.0,
+    "p75": 13.0,
+    "p10": 3.0,
+    "p90": 31.6
+   },
+   "grade": {
+    "n": 187,
+    "median": 2.77,
+    "mean": 3.255,
+    "p25": 1.81,
+    "p75": 4.145,
+    "p10": 1.058,
+    "p90": 6.008
+   },
+   "long_word_share": {
+    "n": 187,
+    "median": 0.04,
+    "mean": 0.045,
+    "p25": 0.032,
+    "p75": 0.055,
+    "p10": 0.022,
+    "p90": 0.074
+   },
+   "letters_per_word": {
+    "n": 187,
+    "median": 4.03,
+    "mean": 4.085,
+    "p25": 3.915,
+    "p75": 4.235,
+    "p10": 3.81,
+    "p90": 4.488
+   },
+   "question_share": {
+    "n": 187,
+    "median": 0.018,
+    "mean": 0.049,
+    "p25": 0.0,
+    "p75": 0.071,
+    "p10": 0.0,
+    "p90": 0.156
+   },
+   "beats": {
+    "n": 187,
+    "median": 9.0,
+    "mean": 8.455,
+    "p25": 8.0,
+    "p75": 9.0,
+    "p10": 7.6,
+    "p90": 9.0
+   },
+   "turn_position": {
+    "n": 186,
+    "median": 0.591,
+    "mean": 0.571,
+    "p25": 0.436,
+    "p75": 0.716,
+    "p10": 0.288,
+    "p90": 0.836
+   },
+   "dialogue_share": {
+    "n": 187,
+    "median": 0.048,
+    "mean": 0.157,
+    "p25": 0.019,
+    "p75": 0.131,
+    "p10": 0.0,
+    "p90": 0.641
+   },
+   "speech_lines": {
+    "n": 187,
+    "median": 3.0,
+    "mean": 6.16,
+    "p25": 1.0,
+    "p75": 9.0,
+    "p10": 0.0,
+    "p90": 15.0
+   },
+   "speech_per_100_words": {
+    "n": 187,
+    "median": 1.19,
+    "mean": 3.352,
+    "p25": 0.485,
+    "p75": 2.715,
+    "p10": 0.0,
+    "p90": 11.644
+   },
+   "speech_line_words": {
+    "n": 163,
+    "median": 4.33,
+    "mean": 4.627,
+    "p25": 3.45,
+    "p75": 5.51,
+    "p10": 2.804,
+    "p90": 7.0
+   },
+   "speech_line_max": {
+    "n": 163,
+    "median": 7.0,
+    "mean": 7.865,
+    "p25": 5.0,
+    "p75": 10.0,
+    "p10": 3.0,
+    "p90": 13.0
+   },
+   "first_speech_position": {
+    "n": 163,
+    "median": 0.278,
+    "mean": 0.31,
+    "p25": 0.099,
+    "p75": 0.472,
+    "p10": 0.0,
+    "p90": 0.672
+   },
+   "speakers": {
+    "n": 187,
+    "median": 2.0,
+    "mean": 2.053,
+    "p25": 1.0,
+    "p75": 3.0,
+    "p10": 0.0,
+    "p90": 4.0
+   },
+   "named": {
+    "n": 187,
+    "median": 1.0,
+    "mean": 0.893,
+    "p25": 0.0,
+    "p75": 1.0,
+    "p10": 0.0,
+    "p90": 2.0
+   },
+   "voices": {
+    "n": 187,
+    "median": 2.0,
+    "mean": 2.187,
+    "p25": 1.0,
+    "p75": 3.0,
+    "p10": 1.0,
+    "p90": 4.0
+   },
+   "other_voice_share": {
+    "n": 187,
+    "median": 0.08,
+    "mean": 0.171,
+    "p25": 0.0,
+    "p75": 0.182,
+    "p10": 0.0,
+    "p90": 0.5
+   },
+   "title_words": {
+    "n": 187,
+    "median": 6.0,
+    "mean": 6.107,
+    "p25": 5.0,
+    "p75": 8.0,
+    "p10": 3.0,
+    "p90": 9.0
+   }
+  },
+  "categorical": {
+   "genre": {
+    "n": 187,
+    "values": {
+     "comedy": {
+      "count": 75,
+      "share": 0.401
+     },
+     "rule_world": {
+      "count": 68,
+      "share": 0.364
+     },
+     "drama": {
+      "count": 22,
+      "share": 0.118
+     },
+     "wholesome": {
+      "count": 14,
+      "share": 0.075
+     },
+     "mystery": {
+      "count": 7,
+      "share": 0.037
+     },
+     "other": {
+      "count": 1,
+      "share": 0.005
+     }
+    }
+   },
+   "format": {
+    "n": 187,
+    "values": {
+     "narrated": {
+      "count": 163,
+      "share": 0.872
+     },
+     "acted": {
+      "count": 20,
+      "share": 0.107
+     },
+     "mixed": {
+      "count": 4,
+      "share": 0.021
+     }
+    }
+   },
+   "person": {
+    "n": 187,
+    "values": {
+     "first": {
+      "count": 120,
+      "share": 0.642
+     },
+     "third": {
+      "count": 42,
+      "share": 0.225
+     },
+     "second": {
+      "count": 17,
+      "share": 0.091
+     },
+     "mixed": {
+      "count": 8,
+      "share": 0.043
+     }
+    }
+   },
+   "tense": {
+    "n": 187,
+    "values": {
+     "past": {
+      "count": 149,
+      "share": 0.797
+     },
+     "present": {
+      "count": 37,
+      "share": 0.198
+     },
+     "mixed": {
+      "count": 1,
+      "share": 0.005
+     }
+    }
+   },
+   "hook": {
+    "n": 187,
+    "values": {
+     "rule": {
+      "count": 103,
+      "share": 0.551
+     },
+     "event": {
+      "count": 30,
+      "share": 0.16
+     },
+     "question": {
+      "count": 23,
+      "share": 0.123
+     },
+     "claim": {
+      "count": 18,
+      "share": 0.096
+     },
+     "character": {
+      "count": 5,
+      "share": 0.027
+     },
+     "confession": {
+      "count": 4,
+      "share": 0.021
+     },
+     "warning": {
+      "count": 3,
+      "share": 0.016
+     },
+     "other": {
+      "count": 1,
+      "share": 0.005
+     }
+    }
+   },
+   "ending": {
+    "n": 187,
+    "values": {
+     "twist": {
+      "count": 50,
+      "share": 0.267
+     },
+     "resolution": {
+      "count": 41,
+      "share": 0.219
+     },
+     "punchline": {
+      "count": 38,
+      "share": 0.203
+     },
+     "cta": {
+      "count": 29,
+      "share": 0.155
+     },
+     "cliffhanger": {
+      "count": 17,
+      "share": 0.091
+     },
+     "loop": {
+      "count": 5,
+      "share": 0.027
+     },
+     "moral": {
+      "count": 5,
+      "share": 0.027
+     },
+     "open": {
+      "count": 2,
+      "share": 0.011
+     }
+    }
+   },
+   "opener": {
+    "n": 187,
+    "values": {
+     "other": {
+      "count": 99,
+      "share": 0.529
+     },
+     "in this world": {
+      "count": 36,
+      "share": 0.193
+     },
+     "in this town": {
+      "count": 34,
+      "share": 0.182
+     },
+     "in this/my ...": {
+      "count": 12,
+      "share": 0.064
+     },
+     "in my town": {
+      "count": 5,
+      "share": 0.027
+     },
+     "in this school": {
+      "count": 1,
+      "share": 0.005
+     }
+    }
+   },
+   "last_line_spoken": {
+    "n": 187,
+    "values": {
+     "False": {
+      "count": 129,
+      "share": 0.69
+     },
+     "True": {
+      "count": 58,
+      "share": 0.31
+     }
+    }
+   },
+   "loops": {
+    "n": 187,
+    "values": {
+     "False": {
+      "count": 179,
+      "share": 0.957
+     },
+     "True": {
+      "count": 8,
+      "share": 0.043
+     }
+    }
+   },
+   "viewer_address": {
+    "n": 187,
+    "values": {
+     "False": {
+      "count": 137,
+      "share": 0.733
+     },
+     "True": {
+      "count": 50,
+      "share": 0.267
+     }
+    }
+   },
+   "scary": {
+    "n": 187,
+    "values": {
+     "False": {
+      "count": 187,
+      "share": 1.0
+     }
+    }
+   },
+   "has_speech": {
+    "n": 187,
+    "values": {
+     "True": {
+      "count": 163,
+      "share": 0.872
+     },
+     "False": {
+      "count": 24,
+      "share": 0.128
+     }
+    }
+   },
+   "multi_voice": {
+    "n": 187,
+    "values": {
+     "True": {
+      "count": 116,
+      "share": 0.62
+     },
+     "False": {
+      "count": 71,
+      "share": 0.38
+     }
+    }
+   },
+   "narrator_synthetic": {
+    "n": 187,
+    "values": {
+     "False": {
+      "count": 107,
+      "share": 0.572
+     },
+     "True": {
+      "count": 80,
+      "share": 0.428
+     }
+    }
+   },
+   "music": {
+    "n": 187,
+    "values": {
+     "True": {
+      "count": 166,
+      "share": 0.888
+     },
+     "False": {
+      "count": 21,
+      "share": 0.112
+     }
+    }
+   },
+   "sound_effects": {
+    "n": 187,
+    "values": {
+     "many": {
+      "count": 120,
+      "share": 0.642
+     },
+     "few": {
+      "count": 56,
+      "share": 0.299
+     },
+     "none": {
+      "count": 11,
+      "share": 0.059
+     }
+    }
+   },
+   "gore": {
+    "n": 187,
+    "values": {
+     "0": {
+      "count": 132,
+      "share": 0.706
+     },
+     "1": {
+      "count": 48,
+      "share": 0.257
+     },
+     "2": {
+      "count": 7,
+      "share": 0.037
+     }
+    }
+   },
+   "title_emoji": {
+    "n": 187,
+    "values": {
+     "True": {
+      "count": 101,
+      "share": 0.54
+     },
+     "False": {
+      "count": 86,
+      "share": 0.46
+     }
+    }
+   },
+   "title_opener": {
+    "n": 187,
+    "values": {
+     "in this": {
+      "count": 20,
+      "share": 0.107
+     },
+     "what if": {
+      "count": 17,
+      "share": 0.091
+     },
+     "he could": {
+      "count": 6,
+      "share": 0.032
+     },
+     "we live": {
+      "count": 6,
+      "share": 0.032
+     },
+     "the world": {
+      "count": 4,
+      "share": 0.021
+     },
+     "other": {
+      "count": 4,
+      "share": 0.021
+     },
+     "everyone has": {
+      "count": 4,
+      "share": 0.021
+     },
+     "my crush": {
+      "count": 3,
+      "share": 0.016
+     },
+     "the boy": {
+      "count": 3,
+      "share": 0.016
+     },
+     "my world": {
+      "count": 3,
+      "share": 0.016
+     },
+     "the sun": {
+      "count": 2,
+      "share": 0.011
+     },
+     "quem vai": {
+      "count": 2,
+      "share": 0.011
+     }
+    }
+   }
+  },
+  "speech_line_length": {
+   "n": 1152,
+   "median": 4.0,
+   "mean": 4.673,
+   "p25": 2.0,
+   "p75": 6.0,
+   "p10": 1.0,
+   "p90": 9.0
+  },
+  "speech_intro": {
+   "none": 0.729,
+   "before": 0.16,
+   "after": 0.111
+  },
+  "devices": {
+   "planted object": 85,
+   "repeated line": 72,
+   "rule broken": 34,
+   "countdown": 22,
+   "callback": 17,
+   "rule world": 17,
+   "reveal": 15,
+   "reversal": 15,
+   "twist reveal": 11,
+   "false relief": 8,
+   "callback ending": 7,
+   "rule loophole": 6,
+   "underdog": 5,
+   "wrong detail": 4,
+   "absurd rule": 3
+  },
+  "beat_sequences": {
+   "hook > world > attempt > escalation > turn > climax > aftermath > ending": 6,
+   "hook > world > character > problem > escalation > turn > climax > aftermath > ending": 5,
+   "hook > world > problem > attempt > turn > escalation > climax > aftermath > ending": 5,
+   "hook > problem > attempt > escalation > turn > climax > aftermath > ending": 5,
+   "hook > world > problem > escalation > attempt > turn > climax > aftermath > ending": 3,
+   "hook > world > character > problem > escalation > attempt > climax > turn": 2,
+   "hook > problem > attempt > escalation > climax > turn > aftermath > ending": 2,
+   "hook > problem > attempt > escalation > turn > climax > ending": 2
+  },
+  "beat_use": {
+   "hook": 0.995,
+   "turn": 0.973,
+   "climax": 0.909,
+   "escalation": 0.877,
+   "problem": 0.872,
+   "ending": 0.797,
+   "attempt": 0.781,
+   "world": 0.706,
+   "aftermath": 0.652,
+   "character": 0.497,
+   "cta": 0.198
+  },
+  "speech_in_other_voice": {
+   "n": 163,
+   "median": 0.5,
+   "mean": 0.487,
+   "p25": 0.0,
+   "p75": 0.931,
+   "p10": 0.0,
+   "p90": 1.0
+  }
+ },
+ "top_quarter": {
+  "n": 167,
+  "numeric": {
+   "seconds": {
+    "n": 167,
+    "median": 99.0,
+    "mean": 91.263,
+    "p25": 44.5,
+    "p75": 134.5,
+    "p10": 32.0,
+    "p90": 166.0
+   },
+   "words": {
+    "n": 167,
+    "median": 360.0,
+    "mean": 360.94,
+    "p25": 163.0,
+    "p75": 549.5,
+    "p10": 86.0,
+    "p90": 725.8
+   },
+   "wpm": {
+    "n": 167,
+    "median": 237.8,
+    "mean": 228.588,
+    "p25": 208.05,
+    "p75": 264.55,
+    "p10": 156.36,
+    "p90": 276.0
+   },
+   "sentences": {
+    "n": 167,
+    "median": 33.0,
+    "mean": 43.407,
+    "p25": 17.0,
+    "p75": 66.0,
+    "p10": 12.0,
+    "p90": 88.0
+   },
+   "sentence_mean": {
+    "n": 167,
+    "median": 8.09,
+    "mean": 11.853,
+    "p25": 6.915,
+    "p75": 10.585,
+    "p10": 5.128,
+    "p90": 15.168
+   },
+   "sentence_median": {
+    "n": 167,
+    "median": 7.0,
+    "mean": 10.06,
+    "p25": 6.0,
+    "p75": 8.0,
+    "p10": 4.0,
+    "p90": 11.0
+   },
+   "sentence_p90": {
+    "n": 167,
+    "median": 13.0,
+    "mean": 16.392,
+    "p25": 11.2,
+    "p75": 16.0,
+    "p10": 8.88,
+    "p90": 19.28
+   },
+   "sentence_max": {
+    "n": 167,
+    "median": 22.0,
+    "mean": 51.18,
+    "p25": 17.0,
+    "p75": 51.0,
+    "p10": 12.6,
+    "p90": 122.8
+   },
+   "short_sentence_share": {
+    "n": 167,
+    "median": 0.37,
+    "mean": 0.371,
+    "p25": 0.25,
+    "p75": 0.475,
+    "p10": 0.088,
+    "p90": 0.646
+   },
+   "first_sentence_words": {
+    "n": 167,
+    "median": 12.0,
+    "mean": 15.778,
+    "p25": 8.0,
+    "p75": 15.0,
+    "p10": 5.6,
+    "p90": 18.4
+   },
+   "premise_words": {
+    "n": 167,
+    "median": 18.0,
+    "mean": 24.701,
+    "p25": 12.5,
+    "p75": 26.0,
+    "p10": 9.6,
+    "p90": 38.4
+   },
+   "premise_seconds": {
+    "n": 167,
+    "median": 4.48,
+    "mean": 6.35,
+    "p25": 3.1,
+    "p75": 6.5,
+    "p10": 2.5,
+    "p90": 8.44
+   },
+   "last_sentence_words": {
+    "n": 167,
+    "median": 8.0,
+    "mean": 28.311,
+    "p25": 5.0,
+    "p75": 13.0,
+    "p10": 3.0,
+    "p90": 69.0
+   },
+   "grade": {
+    "n": 167,
+    "median": 2.52,
+    "mean": 4.006,
+    "p25": 1.715,
+    "p75": 4.06,
+    "p10": 0.998,
+    "p90": 5.83
+   },
+   "long_word_share": {
+    "n": 167,
+    "median": 0.038,
+    "mean": 0.043,
+    "p25": 0.03,
+    "p75": 0.053,
+    "p10": 0.022,
+    "p90": 0.074
+   },
+   "letters_per_word": {
+    "n": 167,
+    "median": 4.04,
+    "mean": 4.083,
+    "p25": 3.92,
+    "p75": 4.185,
+    "p10": 3.82,
+    "p90": 4.43
+   },
+   "question_share": {
+    "n": 167,
+    "median": 0.016,
+    "mean": 0.047,
+    "p25": 0.0,
+    "p75": 0.06,
+    "p10": 0.0,
+    "p90": 0.137
+   },
+   "beats": {
+    "n": 167,
+    "median": 9.0,
+    "mean": 8.461,
+    "p25": 8.0,
+    "p75": 9.0,
+    "p10": 7.0,
+    "p90": 9.0
+   },
+   "turn_position": {
+    "n": 165,
+    "median": 0.583,
+    "mean": 0.561,
+    "p25": 0.417,
+    "p75": 0.71,
+    "p10": 0.278,
+    "p90": 0.838
+   },
+   "dialogue_share": {
+    "n": 167,
+    "median": 0.047,
+    "mean": 0.163,
+    "p25": 0.019,
+    "p75": 0.113,
+    "p10": 0.0,
+    "p90": 0.729
+   },
+   "speech_lines": {
+    "n": 167,
+    "median": 4.0,
+    "mean": 7.431,
+    "p25": 1.0,
+    "p75": 11.0,
+    "p10": 0.0,
+    "p90": 18.0
+   },
+   "speech_per_100_words": {
+    "n": 167,
+    "median": 1.19,
+    "mean": 3.803,
+    "p25": 0.495,
+    "p75": 2.75,
+    "p10": 0.0,
+    "p90": 16.058
+   },
+   "speech_line_words": {
+    "n": 140,
+    "median": 4.205,
+    "mean": 4.633,
+    "p25": 3.33,
+    "p75": 5.32,
+    "p10": 2.818,
+    "p90": 6.641
+   },
+   "speech_line_max": {
+    "n": 140,
+    "median": 7.5,
+    "mean": 8.336,
+    "p25": 5.75,
+    "p75": 10.25,
+    "p10": 4.0,
+    "p90": 13.0
+   },
+   "first_speech_position": {
+    "n": 139,
+    "median": 0.273,
+    "mean": 0.299,
+    "p25": 0.108,
+    "p75": 0.457,
+    "p10": 0.0,
+    "p90": 0.634
+   },
+   "speakers": {
+    "n": 167,
+    "median": 2.0,
+    "mean": 2.359,
+    "p25": 1.0,
+    "p75": 3.0,
+    "p10": 0.0,
+    "p90": 5.0
+   },
+   "named": {
+    "n": 167,
+    "median": 1.0,
+    "mean": 1.251,
+    "p25": 0.0,
+    "p75": 2.0,
+    "p10": 0.0,
+    "p90": 3.0
+   },
+   "voices": {
+    "n": 167,
+    "median": 2.0,
+    "mean": 2.395,
+    "p25": 1.0,
+    "p75": 3.0,
+    "p10": 1.0,
+    "p90": 4.0
+   },
+   "other_voice_share": {
+    "n": 167,
+    "median": 0.08,
+    "mean": 0.253,
+    "p25": 0.0,
+    "p75": 0.204,
+    "p10": 0.0,
+    "p90": 0.679
+   },
+   "title_words": {
+    "n": 167,
+    "median": 6.0,
+    "mean": 5.802,
+    "p25": 4.0,
+    "p75": 8.0,
+    "p10": 3.0,
+    "p90": 9.0
+   }
+  },
+  "categorical": {
+   "genre": {
+    "n": 167,
+    "values": {
+     "scary": {
+      "count": 67,
+      "share": 0.401
+     },
+     "rule_world": {
+      "count": 38,
+      "share": 0.228
+     },
+     "comedy": {
+      "count": 31,
+      "share": 0.186
+     },
+     "drama": {
+      "count": 16,
+      "share": 0.096
+     },
+     "wholesome": {
+      "count": 11,
+      "share": 0.066
+     },
+     "mystery": {
+      "count": 4,
+      "share": 0.024
+     }
+    }
+   },
+   "format": {
+    "n": 167,
+    "values": {
+     "narrated": {
+      "count": 144,
+      "share": 0.862
+     },
+     "acted": {
+      "count": 19,
+      "share": 0.114
+     },
+     "mixed": {
+      "count": 4,
+      "share": 0.024
+     }
+    }
+   },
+   "person": {
+    "n": 167,
+    "values": {
+     "first": {
+      "count": 115,
+      "share": 0.689
+     },
+     "third": {
+      "count": 40,
+      "share": 0.24
+     },
+     "second": {
+      "count": 7,
+      "share": 0.042
+     },
+     "mixed": {
+      "count": 5,
+      "share": 0.03
+     }
+    }
+   },
+   "tense": {
+    "n": 167,
+    "values": {
+     "past": {
+      "count": 144,
+      "share": 0.862
+     },
+     "present": {
+      "count": 22,
+      "share": 0.132
+     },
+     "mixed": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "hook": {
+    "n": 167,
+    "values": {
+     "rule": {
+      "count": 114,
+      "share": 0.683
+     },
+     "event": {
+      "count": 16,
+      "share": 0.096
+     },
+     "claim": {
+      "count": 15,
+      "share": 0.09
+     },
+     "question": {
+      "count": 9,
+      "share": 0.054
+     },
+     "warning": {
+      "count": 5,
+      "share": 0.03
+     },
+     "character": {
+      "count": 4,
+      "share": 0.024
+     },
+     "other": {
+      "count": 3,
+      "share": 0.018
+     },
+     "confession": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "ending": {
+    "n": 167,
+    "values": {
+     "twist": {
+      "count": 61,
+      "share": 0.365
+     },
+     "cta": {
+      "count": 29,
+      "share": 0.174
+     },
+     "resolution": {
+      "count": 29,
+      "share": 0.174
+     },
+     "cliffhanger": {
+      "count": 20,
+      "share": 0.12
+     },
+     "punchline": {
+      "count": 19,
+      "share": 0.114
+     },
+     "loop": {
+      "count": 4,
+      "share": 0.024
+     },
+     "moral": {
+      "count": 4,
+      "share": 0.024
+     },
+     "open": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "opener": {
+    "n": 167,
+    "values": {
+     "other": {
+      "count": 66,
+      "share": 0.395
+     },
+     "in this town": {
+      "count": 53,
+      "share": 0.317
+     },
+     "in this world": {
+      "count": 34,
+      "share": 0.204
+     },
+     "in this/my ...": {
+      "count": 10,
+      "share": 0.06
+     },
+     "in my town": {
+      "count": 2,
+      "share": 0.012
+     },
+     "in this city": {
+      "count": 1,
+      "share": 0.006
+     },
+     "in this school": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "last_line_spoken": {
+    "n": 167,
+    "values": {
+     "False": {
+      "count": 117,
+      "share": 0.701
+     },
+     "True": {
+      "count": 50,
+      "share": 0.299
+     }
+    }
+   },
+   "loops": {
+    "n": 167,
+    "values": {
+     "False": {
+      "count": 160,
+      "share": 0.958
+     },
+     "True": {
+      "count": 7,
+      "share": 0.042
+     }
+    }
+   },
+   "viewer_address": {
+    "n": 167,
+    "values": {
+     "False": {
+      "count": 104,
+      "share": 0.623
+     },
+     "True": {
+      "count": 63,
+      "share": 0.377
+     }
+    }
+   },
+   "scary": {
+    "n": 167,
+    "values": {
+     "False": {
+      "count": 98,
+      "share": 0.587
+     },
+     "True": {
+      "count": 69,
+      "share": 0.413
+     }
+    }
+   },
+   "has_speech": {
+    "n": 167,
+    "values": {
+     "True": {
+      "count": 140,
+      "share": 0.838
+     },
+     "False": {
+      "count": 27,
+      "share": 0.162
+     }
+    }
+   },
+   "multi_voice": {
+    "n": 167,
+    "values": {
+     "True": {
+      "count": 109,
+      "share": 0.653
+     },
+     "False": {
+      "count": 58,
+      "share": 0.347
+     }
+    }
+   },
+   "narrator_synthetic": {
+    "n": 167,
+    "values": {
+     "False": {
+      "count": 92,
+      "share": 0.551
+     },
+     "True": {
+      "count": 75,
+      "share": 0.449
+     }
+    }
+   },
+   "music": {
+    "n": 167,
+    "values": {
+     "True": {
+      "count": 151,
+      "share": 0.904
+     },
+     "False": {
+      "count": 16,
+      "share": 0.096
+     }
+    }
+   },
+   "sound_effects": {
+    "n": 167,
+    "values": {
+     "many": {
+      "count": 121,
+      "share": 0.725
+     },
+     "few": {
+      "count": 38,
+      "share": 0.228
+     },
+     "none": {
+      "count": 8,
+      "share": 0.048
+     }
+    }
+   },
+   "gore": {
+    "n": 167,
+    "values": {
+     "0": {
+      "count": 99,
+      "share": 0.593
+     },
+     "1": {
+      "count": 64,
+      "share": 0.383
+     },
+     "2": {
+      "count": 4,
+      "share": 0.024
+     }
+    }
+   },
+   "title_emoji": {
+    "n": 167,
+    "values": {
+     "True": {
+      "count": 102,
+      "share": 0.611
+     },
+     "False": {
+      "count": 65,
+      "share": 0.389
+     }
+    }
+   },
+   "title_opener": {
+    "n": 167,
+    "values": {
+     "in this": {
+      "count": 33,
+      "share": 0.198
+     },
+     "other": {
+      "count": 7,
+      "share": 0.042
+     },
+     "what if": {
+      "count": 6,
+      "share": 0.036
+     },
+     "he could": {
+      "count": 5,
+      "share": 0.03
+     },
+     "nobody can": {
+      "count": 5,
+      "share": 0.03
+     },
+     "if you": {
+      "count": 4,
+      "share": 0.024
+     },
+     "we live": {
+      "count": 4,
+      "share": 0.024
+     },
+     "the boy": {
+      "count": 3,
+      "share": 0.018
+     },
+     "everyone has": {
+      "count": 3,
+      "share": 0.018
+     },
+     "everyone had": {
+      "count": 2,
+      "share": 0.012
+     },
+     "the sun": {
+      "count": 2,
+      "share": 0.012
+     },
+     "my crush": {
+      "count": 2,
+      "share": 0.012
+     }
+    }
+   }
+  },
+  "speech_line_length": {
+   "n": 1241,
+   "median": 4.0,
+   "mean": 4.353,
+   "p25": 2.0,
+   "p75": 6.0,
+   "p10": 1.0,
+   "p90": 8.0
+  },
+  "speech_intro": {
+   "none": 0.757,
+   "after": 0.138,
+   "before": 0.106
+  },
+  "devices": {
+   "planted object": 85,
+   "repeated line": 72,
+   "rule broken": 63,
+   "countdown": 23,
+   "twist reveal": 15,
+   "callback": 15,
+   "rule world": 14,
+   "wrong detail": 14,
+   "reveal": 11,
+   "false relief": 10,
+   "reversal": 7,
+   "rule loophole": 6,
+   "callback ending": 5,
+   "impostor voice": 4,
+   "underdog": 4
+  },
+  "beat_sequences": {
+   "hook > world > problem > attempt > turn > escalation > climax > aftermath > ending": 4,
+   "hook > world > attempt > escalation > turn > climax > aftermath > ending": 3,
+   "hook > world > character > problem > attempt > turn > climax > aftermath > ending": 3,
+   "hook > problem > attempt > escalation > turn > climax > aftermath > ending": 3,
+   "hook > world > character > problem > attempt > escalation > climax > turn > ending": 2,
+   "hook > world > character > problem > attempt > escalation > turn > climax > ending": 2,
+   "hook > world > problem > turn > attempt > climax > aftermath > ending": 2,
+   "hook > problem > attempt > escalation > climax > turn > aftermath > ending": 2
+  },
+  "beat_use": {
+   "hook": 1.0,
+   "turn": 0.976,
+   "problem": 0.88,
+   "climax": 0.874,
+   "escalation": 0.85,
+   "attempt": 0.784,
+   "ending": 0.731,
+   "world": 0.725,
+   "aftermath": 0.629,
+   "character": 0.563,
+   "cta": 0.269
+  },
+  "speech_in_other_voice": {
+   "n": 140,
+   "median": 0.547,
+   "mean": 0.521,
+   "p25": 0.0,
+   "p75": 0.93,
+   "p10": 0.0,
+   "p90": 1.0
+  }
+ },
+ "rest": {
+  "n": 175,
+  "numeric": {
+   "seconds": {
+    "n": 175,
+    "median": 54.0,
+    "mean": 76.291,
+    "p25": 41.0,
+    "p75": 120.5,
+    "p10": 29.4,
+    "p90": 149.6
+   },
+   "words": {
+    "n": 175,
+    "median": 220.0,
+    "mean": 301.366,
+    "p25": 141.0,
+    "p75": 492.0,
+    "p10": 73.6,
+    "p90": 630.4
+   },
+   "wpm": {
+    "n": 175,
+    "median": 243.7,
+    "mean": 232.599,
+    "p25": 205.35,
+    "p75": 263.4,
+    "p10": 162.3,
+    "p90": 279.92
+   },
+   "sentences": {
+    "n": 175,
+    "median": 21.0,
+    "mean": 32.709,
+    "p25": 14.0,
+    "p75": 49.5,
+    "p10": 8.4,
+    "p90": 75.2
+   },
+   "sentence_mean": {
+    "n": 175,
+    "median": 9.41,
+    "mean": 11.893,
+    "p25": 7.6,
+    "p75": 11.915,
+    "p10": 6.286,
+    "p90": 18.054
+   },
+   "sentence_median": {
+    "n": 175,
+    "median": 8.0,
+    "mean": 10.266,
+    "p25": 6.0,
+    "p75": 10.0,
+    "p10": 5.5,
+    "p90": 14.3
+   },
+   "sentence_p90": {
+    "n": 175,
+    "median": 15.0,
+    "mean": 17.21,
+    "p25": 12.2,
+    "p75": 18.1,
+    "p10": 10.5,
+    "p90": 22.82
+   },
+   "sentence_max": {
+    "n": 175,
+    "median": 23.0,
+    "mean": 45.366,
+    "p25": 17.0,
+    "p75": 37.0,
+    "p10": 13.0,
+    "p90": 114.0
+   },
+   "short_sentence_share": {
+    "n": 175,
+    "median": 0.287,
+    "mean": 0.281,
+    "p25": 0.167,
+    "p75": 0.39,
+    "p10": 0.0,
+    "p90": 0.5
+   },
+   "first_sentence_words": {
+    "n": 175,
+    "median": 12.0,
+    "mean": 15.583,
+    "p25": 9.0,
+    "p75": 16.0,
+    "p10": 6.0,
+    "p90": 20.0
+   },
+   "premise_words": {
+    "n": 175,
+    "median": 19.0,
+    "mean": 24.846,
+    "p25": 15.0,
+    "p75": 29.0,
+    "p10": 11.0,
+    "p90": 44.4
+   },
+   "premise_seconds": {
+    "n": 175,
+    "median": 4.86,
+    "mean": 6.223,
+    "p25": 3.44,
+    "p75": 6.92,
+    "p10": 2.708,
+    "p90": 12.472
+   },
+   "last_sentence_words": {
+    "n": 175,
+    "median": 9.0,
+    "mean": 20.074,
+    "p25": 5.0,
+    "p75": 16.0,
+    "p10": 3.0,
+    "p90": 56.2
+   },
+   "grade": {
+    "n": 175,
+    "median": 3.29,
+    "mean": 4.204,
+    "p25": 2.29,
+    "p75": 4.625,
+    "p10": 1.65,
+    "p90": 6.684
+   },
+   "long_word_share": {
+    "n": 175,
+    "median": 0.044,
+    "mean": 0.049,
+    "p25": 0.034,
+    "p75": 0.059,
+    "p10": 0.026,
+    "p90": 0.082
+   },
+   "letters_per_word": {
+    "n": 175,
+    "median": 4.08,
+    "mean": 4.14,
+    "p25": 3.955,
+    "p75": 4.305,
+    "p10": 3.83,
+    "p90": 4.546
+   },
+   "question_share": {
+    "n": 175,
+    "median": 0.0,
+    "mean": 0.041,
+    "p25": 0.0,
+    "p75": 0.052,
+    "p10": 0.0,
+    "p90": 0.138
+   },
+   "beats": {
+    "n": 175,
+    "median": 8.0,
+    "mean": 8.109,
+    "p25": 8.0,
+    "p75": 9.0,
+    "p10": 6.4,
+    "p90": 9.0
+   },
+   "turn_position": {
+    "n": 169,
+    "median": 0.594,
+    "mean": 0.585,
+    "p25": 0.467,
+    "p75": 0.703,
+    "p10": 0.305,
+    "p90": 0.843
+   },
+   "dialogue_share": {
+    "n": 175,
+    "median": 0.033,
+    "mean": 0.087,
+    "p25": 0.007,
+    "p75": 0.085,
+    "p10": 0.0,
+    "p90": 0.183
+   },
+   "speech_lines": {
+    "n": 175,
+    "median": 2.0,
+    "mean": 4.029,
+    "p25": 1.0,
+    "p75": 5.0,
+    "p10": 0.0,
+    "p90": 10.6
+   },
+   "speech_per_100_words": {
+    "n": 175,
+    "median": 0.81,
+    "mean": 1.769,
+    "p25": 0.19,
+    "p75": 1.97,
+    "p10": 0.0,
+    "p90": 4.252
+   },
+   "speech_line_words": {
+    "n": 135,
+    "median": 4.2,
+    "mean": 4.438,
+    "p25": 3.4,
+    "p75": 5.21,
+    "p10": 2.5,
+    "p90": 6.63
+   },
+   "speech_line_max": {
+    "n": 135,
+    "median": 6.0,
+    "mean": 6.874,
+    "p25": 4.0,
+    "p75": 8.0,
+    "p10": 3.0,
+    "p90": 11.0
+   },
+   "first_speech_position": {
+    "n": 135,
+    "median": 0.297,
+    "mean": 0.329,
+    "p25": 0.129,
+    "p75": 0.481,
+    "p10": 0.033,
+    "p90": 0.699
+   },
+   "speakers": {
+    "n": 175,
+    "median": 2.0,
+    "mean": 1.714,
+    "p25": 1.0,
+    "p75": 2.5,
+    "p10": 0.0,
+    "p90": 3.0
+   },
+   "named": {
+    "n": 175,
+    "median": 1.0,
+    "mean": 0.863,
+    "p25": 0.0,
+    "p75": 1.0,
+    "p10": 0.0,
+    "p90": 2.0
+   },
+   "voices": {
+    "n": 175,
+    "median": 2.0,
+    "mean": 1.977,
+    "p25": 1.0,
+    "p75": 3.0,
+    "p10": 1.0,
+    "p90": 4.0
+   },
+   "other_voice_share": {
+    "n": 175,
+    "median": 0.024,
+    "mean": 0.124,
+    "p25": 0.0,
+    "p75": 0.163,
+    "p10": 0.0,
+    "p90": 0.37
+   },
+   "title_words": {
+    "n": 175,
+    "median": 6.0,
+    "mean": 6.006,
+    "p25": 5.0,
+    "p75": 7.0,
+    "p10": 2.0,
+    "p90": 10.0
+   }
+  },
+  "categorical": {
+   "genre": {
+    "n": 175,
+    "values": {
+     "scary": {
+      "count": 86,
+      "share": 0.491
+     },
+     "comedy": {
+      "count": 44,
+      "share": 0.251
+     },
+     "rule_world": {
+      "count": 30,
+      "share": 0.171
+     },
+     "drama": {
+      "count": 7,
+      "share": 0.04
+     },
+     "mystery": {
+      "count": 4,
+      "share": 0.023
+     },
+     "wholesome": {
+      "count": 3,
+      "share": 0.017
+     },
+     "other": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "format": {
+    "n": 175,
+    "values": {
+     "narrated": {
+      "count": 168,
+      "share": 0.96
+     },
+     "acted": {
+      "count": 6,
+      "share": 0.034
+     },
+     "mixed": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "person": {
+    "n": 175,
+    "values": {
+     "first": {
+      "count": 106,
+      "share": 0.606
+     },
+     "third": {
+      "count": 42,
+      "share": 0.24
+     },
+     "second": {
+      "count": 18,
+      "share": 0.103
+     },
+     "mixed": {
+      "count": 9,
+      "share": 0.051
+     }
+    }
+   },
+   "tense": {
+    "n": 175,
+    "values": {
+     "past": {
+      "count": 145,
+      "share": 0.829
+     },
+     "present": {
+      "count": 29,
+      "share": 0.166
+     },
+     "mixed": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "hook": {
+    "n": 175,
+    "values": {
+     "rule": {
+      "count": 97,
+      "share": 0.554
+     },
+     "event": {
+      "count": 28,
+      "share": 0.16
+     },
+     "question": {
+      "count": 19,
+      "share": 0.109
+     },
+     "claim": {
+      "count": 17,
+      "share": 0.097
+     },
+     "character": {
+      "count": 6,
+      "share": 0.034
+     },
+     "other": {
+      "count": 4,
+      "share": 0.023
+     },
+     "confession": {
+      "count": 4,
+      "share": 0.023
+     }
+    }
+   },
+   "ending": {
+    "n": 175,
+    "values": {
+     "cliffhanger": {
+      "count": 46,
+      "share": 0.263
+     },
+     "twist": {
+      "count": 43,
+      "share": 0.246
+     },
+     "cta": {
+      "count": 28,
+      "share": 0.16
+     },
+     "resolution": {
+      "count": 23,
+      "share": 0.131
+     },
+     "punchline": {
+      "count": 22,
+      "share": 0.126
+     },
+     "open": {
+      "count": 8,
+      "share": 0.046
+     },
+     "loop": {
+      "count": 4,
+      "share": 0.023
+     },
+     "moral": {
+      "count": 1,
+      "share": 0.006
+     }
+    }
+   },
+   "opener": {
+    "n": 175,
+    "values": {
+     "other": {
+      "count": 91,
+      "share": 0.52
+     },
+     "in this town": {
+      "count": 37,
+      "share": 0.211
+     },
+     "in this world": {
+      "count": 36,
+      "share": 0.206
+     },
+     "in my town": {
+      "count": 5,
+      "share": 0.029
+     },
+     "in this/my ...": {
+      "count": 4,
+      "share": 0.023
+     },
+     "in this city": {
+      "count": 2,
+      "share": 0.011
+     }
+    }
+   },
+   "last_line_spoken": {
+    "n": 175,
+    "values": {
+     "False": {
+      "count": 131,
+      "share": 0.749
+     },
+     "True": {
+      "count": 44,
+      "share": 0.251
+     }
+    }
+   },
+   "loops": {
+    "n": 175,
+    "values": {
+     "False": {
+      "count": 166,
+      "share": 0.949
+     },
+     "True": {
+      "count": 9,
+      "share": 0.051
+     }
+    }
+   },
+   "viewer_address": {
+    "n": 175,
+    "values": {
+     "False": {
+      "count": 119,
+      "share": 0.68
+     },
+     "True": {
+      "count": 56,
+      "share": 0.32
+     }
+    }
+   },
+   "scary": {
+    "n": 175,
+    "values": {
+     "False": {
+      "count": 89,
+      "share": 0.509
+     },
+     "True": {
+      "count": 86,
+      "share": 0.491
+     }
+    }
+   },
+   "has_speech": {
+    "n": 175,
+    "values": {
+     "True": {
+      "count": 135,
+      "share": 0.771
+     },
+     "False": {
+      "count": 40,
+      "share": 0.229
+     }
+    }
+   },
+   "multi_voice": {
+    "n": 175,
+    "values": {
+     "True": {
+      "count": 91,
+      "share": 0.52
+     },
+     "False": {
+      "count": 84,
+      "share": 0.48
+     }
+    }
+   },
+   "narrator_synthetic": {
+    "n": 175,
+    "values": {
+     "False": {
+      "count": 93,
+      "share": 0.531
+     },
+     "True": {
+      "count": 82,
+      "share": 0.469
+     }
+    }
+   },
+   "music": {
+    "n": 175,
+    "values": {
+     "True": {
+      "count": 155,
+      "share": 0.886
+     },
+     "False": {
+      "count": 20,
+      "share": 0.114
+     }
+    }
+   },
+   "sound_effects": {
+    "n": 175,
+    "values": {
+     "many": {
+      "count": 118,
+      "share": 0.674
+     },
+     "few": {
+      "count": 41,
+      "share": 0.234
+     },
+     "none": {
+      "count": 16,
+      "share": 0.091
+     }
+    }
+   },
+   "gore": {
+    "n": 175,
+    "values": {
+     "0": {
+      "count": 107,
+      "share": 0.611
+     },
+     "1": {
+      "count": 60,
+      "share": 0.343
+     },
+     "2": {
+      "count": 8,
+      "share": 0.046
+     }
+    }
+   },
+   "title_emoji": {
+    "n": 175,
+    "values": {
+     "True": {
+      "count": 101,
+      "share": 0.577
+     },
+     "False": {
+      "count": 74,
+      "share": 0.423
+     }
+    }
+   },
+   "title_opener": {
+    "n": 175,
+    "values": {
+     "in this": {
+      "count": 31,
+      "share": 0.177
+     },
+     "what if": {
+      "count": 13,
+      "share": 0.074
+     },
+     "other": {
+      "count": 7,
+      "share": 0.04
+     },
+     "we live": {
+      "count": 3,
+      "share": 0.017
+     },
+     "everyone has": {
+      "count": 3,
+      "share": 0.017
+     },
+     "imagine if": {
+      "count": 2,
+      "share": 0.011
+     },
+     "this roblox": {
+      "count": 2,
+      "share": 0.011
+     },
+     "the world": {
+      "count": 2,
+      "share": 0.011
+     },
+     "nobody can": {
+      "count": 2,
+      "share": 0.011
+     },
+     "he could": {
+      "count": 2,
+      "share": 0.011
+     },
+     "roblox creepypasta": {
+      "count": 2,
+      "share": 0.011
+     },
+     "if you": {
+      "count": 2,
+      "share": 0.011
+     }
+    }
+   }
+  },
+  "speech_line_length": {
+   "n": 705,
+   "median": 4.0,
+   "mean": 4.721,
+   "p25": 3.0,
+   "p75": 6.0,
+   "p10": 2.0,
+   "p90": 8.0
+  },
+  "speech_intro": {
+   "none": 0.648,
+   "before": 0.231,
+   "after": 0.121
+  },
+  "devices": {
+   "planted object": 84,
+   "repeated line": 55,
+   "rule broken": 41,
+   "countdown": 21,
+   "twist reveal": 15,
+   "rule world": 13,
+   "false relief": 11,
+   "reveal": 10,
+   "reversal": 10,
+   "wrong detail": 6,
+   "callback": 6,
+   "unseen threat": 4,
+   "callback ending": 4,
+   "dramatic irony": 3,
+   "underdog": 3
+  },
+  "beat_sequences": {
+   "hook > world > character > problem > escalation > turn > climax > aftermath > ending": 7,
+   "hook > world > character > problem > escalation > turn > climax > ending": 5,
+   "hook > world > attempt > escalation > turn > climax > aftermath > ending": 4,
+   "hook > problem > attempt > escalation > turn > climax > ending": 3,
+   "hook > world > problem > escalation > attempt > turn > climax > aftermath > ending": 3,
+   "hook > world > character > problem > attempt > turn > climax > aftermath > ending": 2,
+   "hook > world > problem > attempt > turn > escalation > climax > aftermath > ending": 2,
+   "hook > world > character > problem > escalation > turn > climax > aftermath > cta": 2
+  },
+  "beat_use": {
+   "hook": 0.994,
+   "turn": 0.977,
+   "climax": 0.886,
+   "problem": 0.869,
+   "escalation": 0.823,
+   "world": 0.737,
+   "ending": 0.731,
+   "attempt": 0.68,
+   "aftermath": 0.571,
+   "character": 0.463,
+   "cta": 0.206
+  },
+  "speech_in_other_voice": {
+   "n": 135,
+   "median": 0.5,
+   "mean": 0.445,
+   "p25": 0.0,
+   "p75": 0.955,
+   "p10": 0.0,
+   "p90": 1.0
+  }
+ },
+ "top_vs_rest": {
+  "n_top": 167,
+  "n_rest": 175,
+  "numeric": {
+   "seconds": {
+    "top_median": 99.0,
+    "rest_median": 54.0,
+    "auc": 0.576,
+    "p": 0.0146
+   },
+   "words": {
+    "top_median": 360.0,
+    "rest_median": 220.0,
+    "auc": 0.569,
+    "p": 0.0284
+   },
+   "wpm": {
+    "top_median": 237.8,
+    "rest_median": 243.7,
+    "auc": 0.477,
+    "p": 0.4609
+   },
+   "sentences": {
+    "top_median": 33.0,
+    "rest_median": 21.0,
+    "auc": 0.606,
+    "p": 0.0007
+   },
+   "sentence_mean": {
+    "top_median": 8.09,
+    "rest_median": 9.41,
+    "auc": 0.394,
+    "p": 0.0007
+   },
+   "sentence_median": {
+    "top_median": 7.0,
+    "rest_median": 8.0,
+    "auc": 0.377,
+    "p": 0.0001
+   },
+   "sentence_p90": {
+    "top_median": 13.0,
+    "rest_median": 15.0,
+    "auc": 0.385,
+    "p": 0.0002
+   },
+   "sentence_max": {
+    "top_median": 22.0,
+    "rest_median": 23.0,
+    "auc": 0.491,
+    "p": 0.7793
+   },
+   "short_sentence_share": {
+    "top_median": 0.37,
+    "rest_median": 0.287,
+    "auc": 0.627,
+    "p": 0.0
+   },
+   "first_sentence_words": {
+    "top_median": 12.0,
+    "rest_median": 12.0,
+    "auc": 0.441,
+    "p": 0.0595
+   },
+   "premise_words": {
+    "top_median": 18.0,
+    "rest_median": 19.0,
+    "auc": 0.445,
+    "p": 0.0801
+   },
+   "premise_seconds": {
+    "top_median": 4.48,
+    "rest_median": 4.86,
+    "auc": 0.456,
+    "p": 0.1548
+   },
+   "last_sentence_words": {
+    "top_median": 8.0,
+    "rest_median": 9.0,
+    "auc": 0.487,
+    "p": 0.6659
+   },
+   "grade": {
+    "top_median": 2.52,
+    "rest_median": 3.29,
+    "auc": 0.387,
+    "p": 0.0003
+   },
+   "long_word_share": {
+    "top_median": 0.038,
+    "rest_median": 0.044,
+    "auc": 0.414,
+    "p": 0.006
+   },
+   "letters_per_word": {
+    "top_median": 4.04,
+    "rest_median": 4.08,
+    "auc": 0.441,
+    "p": 0.0584
+   },
+   "question_share": {
+    "top_median": 0.016,
+    "rest_median": 0.0,
+    "auc": 0.562,
+    "p": 0.0358
+   },
+   "beats": {
+    "top_median": 9.0,
+    "rest_median": 8.0,
+    "auc": 0.578,
+    "p": 0.0061
+   },
+   "turn_position": {
+    "top_median": 0.583,
+    "rest_median": 0.594,
+    "auc": 0.465,
+    "p": 0.2652
+   },
+   "dialogue_share": {
+    "top_median": 0.047,
+    "rest_median": 0.033,
+    "auc": 0.585,
+    "p": 0.0063
+   },
+   "speech_lines": {
+    "top_median": 4.0,
+    "rest_median": 2.0,
+    "auc": 0.625,
+    "p": 0.0001
+   },
+   "speech_per_100_words": {
+    "top_median": 1.19,
+    "rest_median": 0.81,
+    "auc": 0.578,
+    "p": 0.0124
+   },
+   "speech_line_words": {
+    "top_median": 4.205,
+    "rest_median": 4.2,
+    "auc": 0.507,
+    "p": 0.84
+   },
+   "speech_line_max": {
+    "top_median": 7.5,
+    "rest_median": 6.0,
+    "auc": 0.623,
+    "p": 0.0004
+   },
+   "first_speech_position": {
+    "top_median": 0.273,
+    "rest_median": 0.297,
+    "auc": 0.465,
+    "p": 0.3094
+   },
+   "speakers": {
+    "top_median": 2.0,
+    "rest_median": 2.0,
+    "auc": 0.606,
+    "p": 0.0006
+   },
+   "named": {
+    "top_median": 1.0,
+    "rest_median": 1.0,
+    "auc": 0.604,
+    "p": 0.0004
+   },
+   "voices": {
+    "top_median": 2.0,
+    "rest_median": 2.0,
+    "auc": 0.589,
+    "p": 0.0029
+   },
+   "other_voice_share": {
+    "top_median": 0.08,
+    "rest_median": 0.024,
+    "auc": 0.57,
+    "p": 0.0201
+   },
+   "title_words": {
+    "top_median": 6.0,
+    "rest_median": 6.0,
+    "auc": 0.496,
+    "p": 0.9099
+   }
+  },
+  "categorical": {
+   "genre=scary": {
+    "top_share": 0.401,
+    "rest_share": 0.491,
+    "p": 0.0934
+   },
+   "genre=comedy": {
+    "top_share": 0.186,
+    "rest_share": 0.251,
+    "p": 0.1416
+   },
+   "genre=rule_world": {
+    "top_share": 0.228,
+    "rest_share": 0.171,
+    "p": 0.1937
+   },
+   "genre=drama": {
+    "top_share": 0.096,
+    "rest_share": 0.04,
+    "p": 0.0394
+   },
+   "genre=wholesome": {
+    "top_share": 0.066,
+    "rest_share": 0.017,
+    "p": 0.023
+   },
+   "genre=mystery": {
+    "top_share": 0.024,
+    "rest_share": 0.023,
+    "p": 0.9466
+   },
+   "format=narrated": {
+    "top_share": 0.862,
+    "rest_share": 0.96,
+    "p": 0.0014
+   },
+   "format=acted": {
+    "top_share": 0.114,
+    "rest_share": 0.034,
+    "p": 0.0048
+   },
+   "person=first": {
+    "top_share": 0.689,
+    "rest_share": 0.606,
+    "p": 0.109
+   },
+   "person=third": {
+    "top_share": 0.24,
+    "rest_share": 0.24,
+    "p": 0.9917
+   },
+   "person=second": {
+    "top_share": 0.042,
+    "rest_share": 0.103,
+    "p": 0.0304
+   },
+   "person=mixed": {
+    "top_share": 0.03,
+    "rest_share": 0.051,
+    "p": 0.3161
+   },
+   "tense=past": {
+    "top_share": 0.862,
+    "rest_share": 0.829,
+    "p": 0.3893
+   },
+   "tense=present": {
+    "top_share": 0.132,
+    "rest_share": 0.166,
+    "p": 0.3779
+   },
+   "hook=rule": {
+    "top_share": 0.683,
+    "rest_share": 0.554,
+    "p": 0.0147
+   },
+   "hook=event": {
+    "top_share": 0.096,
+    "rest_share": 0.16,
+    "p": 0.0763
+   },
+   "hook=claim": {
+    "top_share": 0.09,
+    "rest_share": 0.097,
+    "p": 0.8162
+   },
+   "hook=question": {
+    "top_share": 0.054,
+    "rest_share": 0.109,
+    "p": 0.0652
+   },
+   "hook=character": {
+    "top_share": 0.024,
+    "rest_share": 0.034,
+    "p": 0.5707
+   },
+   "ending=twist": {
+    "top_share": 0.365,
+    "rest_share": 0.246,
+    "p": 0.0163
+   },
+   "ending=cliffhanger": {
+    "top_share": 0.12,
+    "rest_share": 0.263,
+    "p": 0.0008
+   },
+   "ending=cta": {
+    "top_share": 0.174,
+    "rest_share": 0.16,
+    "p": 0.7349
+   },
+   "ending=resolution": {
+    "top_share": 0.174,
+    "rest_share": 0.131,
+    "p": 0.277
+   },
+   "ending=punchline": {
+    "top_share": 0.114,
+    "rest_share": 0.126,
+    "p": 0.734
+   },
+   "ending=open": {
+    "top_share": 0.006,
+    "rest_share": 0.046,
+    "p": 0.0218
+   },
+   "opener=other": {
+    "top_share": 0.395,
+    "rest_share": 0.52,
+    "p": 0.0206
+   },
+   "opener=in this town": {
+    "top_share": 0.317,
+    "rest_share": 0.211,
+    "p": 0.0262
+   },
+   "opener=in this world": {
+    "top_share": 0.204,
+    "rest_share": 0.206,
+    "p": 0.9612
+   },
+   "opener=in this/my ...": {
+    "top_share": 0.06,
+    "rest_share": 0.023,
+    "p": 0.0841
+   },
+   "last_line_spoken=False": {
+    "top_share": 0.701,
+    "rest_share": 0.749,
+    "p": 0.3205
+   },
+   "last_line_spoken=True": {
+    "top_share": 0.299,
+    "rest_share": 0.251,
+    "p": 0.3205
+   },
+   "loops=False": {
+    "top_share": 0.958,
+    "rest_share": 0.949,
+    "p": 0.6771
+   },
+   "loops=True": {
+    "top_share": 0.042,
+    "rest_share": 0.051,
+    "p": 0.6771
+   },
+   "viewer_address=False": {
+    "top_share": 0.623,
+    "rest_share": 0.68,
+    "p": 0.2666
+   },
+   "viewer_address=True": {
+    "top_share": 0.377,
+    "rest_share": 0.32,
+    "p": 0.2666
+   },
+   "scary=False": {
+    "top_share": 0.587,
+    "rest_share": 0.509,
+    "p": 0.1462
+   },
+   "scary=True": {
+    "top_share": 0.413,
+    "rest_share": 0.491,
+    "p": 0.1462
+   },
+   "has_speech=True": {
+    "top_share": 0.838,
+    "rest_share": 0.771,
+    "p": 0.1192
+   },
+   "has_speech=False": {
+    "top_share": 0.162,
+    "rest_share": 0.229,
+    "p": 0.1192
+   },
+   "multi_voice=True": {
+    "top_share": 0.653,
+    "rest_share": 0.52,
+    "p": 0.0128
+   },
+   "multi_voice=False": {
+    "top_share": 0.347,
+    "rest_share": 0.48,
+    "p": 0.0128
+   },
+   "narrator_synthetic=False": {
+    "top_share": 0.551,
+    "rest_share": 0.531,
+    "p": 0.718
+   },
+   "narrator_synthetic=True": {
+    "top_share": 0.449,
+    "rest_share": 0.469,
+    "p": 0.718
+   },
+   "music=True": {
+    "top_share": 0.904,
+    "rest_share": 0.886,
+    "p": 0.5778
+   },
+   "music=False": {
+    "top_share": 0.096,
+    "rest_share": 0.114,
+    "p": 0.5778
+   },
+   "sound_effects=many": {
+    "top_share": 0.725,
+    "rest_share": 0.674,
+    "p": 0.3111
+   },
+   "sound_effects=few": {
+    "top_share": 0.228,
+    "rest_share": 0.234,
+    "p": 0.8825
+   },
+   "sound_effects=none": {
+    "top_share": 0.048,
+    "rest_share": 0.091,
+    "p": 0.1152
+   },
+   "gore=0": {
+    "top_share": 0.593,
+    "rest_share": 0.611,
+    "p": 0.7251
+   },
+   "gore=1": {
+    "top_share": 0.383,
+    "rest_share": 0.343,
+    "p": 0.4375
+   },
+   "gore=2": {
+    "top_share": 0.024,
+    "rest_share": 0.046,
+    "p": 0.2743
+   },
+   "title_emoji=True": {
+    "top_share": 0.611,
+    "rest_share": 0.577,
+    "p": 0.5267
+   },
+   "title_emoji=False": {
+    "top_share": 0.389,
+    "rest_share": 0.423,
+    "p": 0.5267
+   },
+   "title_opener=in this": {
+    "top_share": 0.198,
+    "rest_share": 0.177,
+    "p": 0.6277
+   },
+   "title_opener=what if": {
+    "top_share": 0.036,
+    "rest_share": 0.074,
+    "p": 0.1216
+   },
+   "title_opener=other": {
+    "top_share": 0.042,
+    "rest_share": 0.04,
+    "p": 0.9288
+   }
+  },
+  "differs": [
+   "beats",
+   "dialogue_share",
+   "ending=cliffhanger",
+   "ending=open",
+   "ending=twist",
+   "format=acted",
+   "format=narrated",
+   "genre=drama",
+   "genre=wholesome",
+   "grade",
+   "hook=rule",
+   "long_word_share",
+   "multi_voice=False",
+   "multi_voice=True",
+   "named",
+   "opener=in this town",
+   "opener=other",
+   "other_voice_share",
+   "person=second",
+   "question_share",
+   "seconds",
+   "sentence_mean",
+   "sentence_median",
+   "sentence_p90",
+   "sentences",
+   "short_sentence_share",
+   "speakers",
+   "speech_line_max",
+   "speech_lines",
+   "speech_per_100_words",
+   "voices",
+   "words"
+  ]
+ },
+ "top_vs_rest_scary": {
+  "n_top": 69,
+  "n_rest": 86,
+  "numeric": {
+   "seconds": {
+    "top_median": 117.0,
+    "rest_median": 54.0,
+    "auc": 0.571,
+    "p": 0.1268
+   },
+   "words": {
+    "top_median": 408.0,
+    "rest_median": 237.5,
+    "auc": 0.579,
+    "p": 0.092
+   },
+   "wpm": {
+    "top_median": 236.3,
+    "rest_median": 241.3,
+    "auc": 0.52,
+    "p": 0.6618
+   },
+   "sentences": {
+    "top_median": 40.0,
+    "rest_median": 24.5,
+    "auc": 0.596,
+    "p": 0.0412
+   },
+   "sentence_mean": {
+    "top_median": 8.67,
+    "rest_median": 9.355,
+    "auc": 0.446,
+    "p": 0.25
+   },
+   "sentence_median": {
+    "top_median": 7.0,
+    "rest_median": 8.0,
+    "auc": 0.403,
+    "p": 0.0362
+   },
+   "sentence_p90": {
+    "top_median": 13.0,
+    "rest_median": 14.55,
+    "auc": 0.408,
+    "p": 0.0492
+   },
+   "sentence_max": {
+    "top_median": 25.0,
+    "rest_median": 24.0,
+    "auc": 0.539,
+    "p": 0.4094
+   },
+   "short_sentence_share": {
+    "top_median": 0.341,
+    "rest_median": 0.278,
+    "auc": 0.591,
+    "p": 0.0515
+   },
+   "first_sentence_words": {
+    "top_median": 11.0,
+    "rest_median": 11.0,
+    "auc": 0.493,
+    "p": 0.8809
+   },
+   "premise_words": {
+    "top_median": 18.0,
+    "rest_median": 20.0,
+    "auc": 0.429,
+    "p": 0.1284
+   },
+   "premise_seconds": {
+    "top_median": 4.64,
+    "rest_median": 5.56,
+    "auc": 0.415,
+    "p": 0.0696
+   },
+   "last_sentence_words": {
+    "top_median": 9.0,
+    "rest_median": 9.5,
+    "auc": 0.511,
+    "p": 0.8175
+   },
+   "grade": {
+    "top_median": 2.73,
+    "rest_median": 3.295,
+    "auc": 0.423,
+    "p": 0.1021
+   },
+   "long_word_share": {
+    "top_median": 0.035,
+    "rest_median": 0.049,
+    "auc": 0.344,
+    "p": 0.0008
+   },
+   "letters_per_word": {
+    "top_median": 4.04,
+    "rest_median": 4.085,
+    "auc": 0.427,
+    "p": 0.121
+   },
+   "question_share": {
+    "top_median": 0.014,
+    "rest_median": 0.0,
+    "auc": 0.607,
+    "p": 0.0121
+   },
+   "beats": {
+    "top_median": 9.0,
+    "rest_median": 8.0,
+    "auc": 0.592,
+    "p": 0.0331
+   },
+   "turn_position": {
+    "top_median": 0.632,
+    "rest_median": 0.559,
+    "auc": 0.557,
+    "p": 0.2369
+   },
+   "dialogue_share": {
+    "top_median": 0.044,
+    "rest_median": 0.021,
+    "auc": 0.618,
+    "p": 0.0111
+   },
+   "speech_lines": {
+    "top_median": 4.0,
+    "rest_median": 2.0,
+    "auc": 0.615,
+    "p": 0.0125
+   },
+   "speech_per_100_words": {
+    "top_median": 0.93,
+    "rest_median": 0.545,
+    "auc": 0.601,
+    "p": 0.0294
+   },
+   "speech_line_words": {
+    "top_median": 4.015,
+    "rest_median": 4.1,
+    "auc": 0.512,
+    "p": 0.827
+   },
+   "speech_line_max": {
+    "top_median": 7.0,
+    "rest_median": 6.0,
+    "auc": 0.635,
+    "p": 0.0134
+   },
+   "first_speech_position": {
+    "top_median": 0.265,
+    "rest_median": 0.321,
+    "auc": 0.43,
+    "p": 0.2063
+   },
+   "speakers": {
+    "top_median": 2.0,
+    "rest_median": 1.0,
+    "auc": 0.618,
+    "p": 0.0103
+   },
+   "named": {
+    "top_median": 1.0,
+    "rest_median": 1.0,
+    "auc": 0.565,
+    "p": 0.1458
+   },
+   "voices": {
+    "top_median": 2.0,
+    "rest_median": 1.0,
+    "auc": 0.628,
+    "p": 0.0037
+   },
+   "other_voice_share": {
+    "top_median": 0.077,
+    "rest_median": 0.0,
+    "auc": 0.611,
+    "p": 0.0124
+   },
+   "title_words": {
+    "top_median": 6.0,
+    "rest_median": 6.0,
+    "auc": 0.564,
+    "p": 0.167
+   }
+  },
+  "categorical": {
+   "genre=scary": {
+    "top_share": 0.971,
+    "rest_share": 1.0,
+    "p": 0.112
+   },
+   "format=narrated": {
+    "top_share": 0.957,
+    "rest_share": 0.965,
+    "p": 0.7828
+   },
+   "person=first": {
+    "top_share": 0.754,
+    "rest_share": 0.57,
+    "p": 0.017
+   },
+   "person=third": {
+    "top_share": 0.217,
+    "rest_share": 0.291,
+    "p": 0.2999
+   },
+   "person=second": {
+    "top_share": 0.014,
+    "rest_share": 0.081,
+    "p": 0.0613
+   },
+   "tense=past": {
+    "top_share": 0.942,
+    "rest_share": 0.872,
+    "p": 0.1433
+   },
+   "tense=present": {
+    "top_share": 0.058,
+    "rest_share": 0.116,
+    "p": 0.2082
+   },
+   "hook=rule": {
+    "top_share": 0.754,
+    "rest_share": 0.651,
+    "p": 0.1678
+   },
+   "hook=claim": {
+    "top_share": 0.087,
+    "rest_share": 0.093,
+    "p": 0.8958
+   },
+   "hook=event": {
+    "top_share": 0.058,
+    "rest_share": 0.116,
+    "p": 0.2082
+   },
+   "ending=twist": {
+    "top_share": 0.435,
+    "rest_share": 0.279,
+    "p": 0.0432
+   },
+   "ending=cliffhanger": {
+    "top_share": 0.188,
+    "rest_share": 0.419,
+    "p": 0.0022
+   },
+   "ending=cta": {
+    "top_share": 0.232,
+    "rest_share": 0.14,
+    "p": 0.1375
+   },
+   "ending=resolution": {
+    "top_share": 0.072,
+    "rest_share": 0.07,
+    "p": 0.9482
+   },
+   "opener=other": {
+    "top_share": 0.304,
+    "rest_share": 0.43,
+    "p": 0.1075
+   },
+   "opener=in this town": {
+    "top_share": 0.464,
+    "rest_share": 0.279,
+    "p": 0.0174
+   },
+   "opener=in this world": {
+    "top_share": 0.203,
+    "rest_share": 0.233,
+    "p": 0.6574
+   },
+   "last_line_spoken=False": {
+    "top_share": 0.71,
+    "rest_share": 0.814,
+    "p": 0.1282
+   },
+   "last_line_spoken=True": {
+    "top_share": 0.29,
+    "rest_share": 0.186,
+    "p": 0.1282
+   },
+   "loops=False": {
+    "top_share": 0.928,
+    "rest_share": 0.965,
+    "p": 0.2933
+   },
+   "loops=True": {
+    "top_share": 0.072,
+    "rest_share": 0.035,
+    "p": 0.2933
+   },
+   "viewer_address=False": {
+    "top_share": 0.435,
+    "rest_share": 0.651,
+    "p": 0.0071
+   },
+   "viewer_address=True": {
+    "top_share": 0.565,
+    "rest_share": 0.349,
+    "p": 0.0071
+   },
+   "scary=True": {
+    "top_share": 1.0,
+    "rest_share": 1.0,
+    "p": 1.0
+   },
+   "has_speech=True": {
+    "top_share": 0.783,
+    "rest_share": 0.674,
+    "p": 0.1349
+   },
+   "has_speech=False": {
+    "top_share": 0.217,
+    "rest_share": 0.326,
+    "p": 0.1349
+   },
+   "multi_voice=True": {
+    "top_share": 0.681,
+    "rest_share": 0.43,
+    "p": 0.0018
+   },
+   "multi_voice=False": {
+    "top_share": 0.319,
+    "rest_share": 0.57,
+    "p": 0.0018
+   },
+   "narrator_synthetic=False": {
+    "top_share": 0.478,
+    "rest_share": 0.523,
+    "p": 0.5777
+   },
+   "narrator_synthetic=True": {
+    "top_share": 0.522,
+    "rest_share": 0.477,
+    "p": 0.5777
+   },
+   "music=True": {
+    "top_share": 0.957,
+    "rest_share": 0.86,
+    "p": 0.0444
+   },
+   "music=False": {
+    "top_share": 0.043,
+    "rest_share": 0.14,
+    "p": 0.0444
+   },
+   "sound_effects=many": {
+    "top_share": 0.855,
+    "rest_share": 0.698,
+    "p": 0.0211
+   },
+   "sound_effects=few": {
+    "top_share": 0.087,
+    "rest_share": 0.198,
+    "p": 0.054
+   },
+   "sound_effects=none": {
+    "top_share": 0.058,
+    "rest_share": 0.105,
+    "p": 0.2974
+   },
+   "gore=1": {
+    "top_share": 0.551,
+    "rest_share": 0.442,
+    "p": 0.1778
+   },
+   "gore=0": {
+    "top_share": 0.435,
+    "rest_share": 0.512,
+    "p": 0.3411
+   },
+   "title_emoji=True": {
+    "top_share": 0.681,
+    "rest_share": 0.64,
+    "p": 0.5872
+   },
+   "title_emoji=False": {
+    "top_share": 0.319,
+    "rest_share": 0.36,
+    "p": 0.5872
+   },
+   "title_opener=in this": {
+    "top_share": 0.377,
+    "rest_share": 0.209,
+    "p": 0.0215
+   },
+   "title_opener=other": {
+    "top_share": 0.058,
+    "rest_share": 0.07,
+    "p": 0.7664
+   }
+  },
+  "differs": [
+   "beats",
+   "dialogue_share",
+   "ending=cliffhanger",
+   "ending=twist",
+   "long_word_share",
+   "multi_voice=False",
+   "multi_voice=True",
+   "music=False",
+   "music=True",
+   "opener=in this town",
+   "other_voice_share",
+   "person=first",
+   "question_share",
+   "sentence_median",
+   "sentence_p90",
+   "sentences",
+   "sound_effects=many",
+   "speakers",
+   "speech_line_max",
+   "speech_lines",
+   "speech_per_100_words",
+   "title_opener=in this",
+   "viewer_address=False",
+   "viewer_address=True",
+   "voices"
+  ]
+ },
+ "scary_vs_not": {
+  "n_top": 162,
+  "n_rest": 187,
+  "numeric": {
+   "seconds": {
+    "top_median": 64.0,
+    "rest_median": 57.0,
+    "auc": 0.508,
+    "p": 0.787
+   },
+   "words": {
+    "top_median": 260.5,
+    "rest_median": 222.0,
+    "auc": 0.511,
+    "p": 0.712
+   },
+   "wpm": {
+    "top_median": 237.1,
+    "rest_median": 243.2,
+    "auc": 0.477,
+    "p": 0.4678
+   },
+   "sentences": {
+    "top_median": 26.5,
+    "rest_median": 23.0,
+    "auc": 0.487,
+    "p": 0.6824
+   },
+   "sentence_mean": {
+    "top_median": 9.155,
+    "rest_median": 8.51,
+    "auc": 0.559,
+    "p": 0.0558
+   },
+   "sentence_median": {
+    "top_median": 8.0,
+    "rest_median": 7.0,
+    "auc": 0.556,
+    "p": 0.0685
+   },
+   "sentence_p90": {
+    "top_median": 14.05,
+    "rest_median": 13.9,
+    "auc": 0.505,
+    "p": 0.8711
+   },
+   "sentence_max": {
+    "top_median": 24.0,
+    "rest_median": 22.0,
+    "auc": 0.566,
+    "p": 0.0323
+   },
+   "short_sentence_share": {
+    "top_median": 0.316,
+    "rest_median": 0.357,
+    "auc": 0.424,
+    "p": 0.0147
+   },
+   "first_sentence_words": {
+    "top_median": 11.0,
+    "rest_median": 12.0,
+    "auc": 0.427,
+    "p": 0.019
+   },
+   "premise_words": {
+    "top_median": 19.0,
+    "rest_median": 18.0,
+    "auc": 0.559,
+    "p": 0.0577
+   },
+   "premise_seconds": {
+    "top_median": 5.2,
+    "rest_median": 4.42,
+    "auc": 0.578,
+    "p": 0.0124
+   },
+   "last_sentence_words": {
+    "top_median": 10.0,
+    "rest_median": 8.0,
+    "auc": 0.552,
+    "p": 0.0944
+   },
+   "grade": {
+    "top_median": 3.15,
+    "rest_median": 2.77,
+    "auc": 0.563,
+    "p": 0.042
+   },
+   "long_word_share": {
+    "top_median": 0.043,
+    "rest_median": 0.04,
+    "auc": 0.536,
+    "p": 0.2428
+   },
+   "letters_per_word": {
+    "top_median": 4.07,
+    "rest_median": 4.03,
+    "auc": 0.571,
+    "p": 0.0227
+   },
+   "question_share": {
+    "top_median": 0.0,
+    "rest_median": 0.018,
+    "auc": 0.422,
+    "p": 0.0072
+   },
+   "beats": {
+    "top_median": 9.0,
+    "rest_median": 9.0,
+    "auc": 0.441,
+    "p": 0.0364
+   },
+   "turn_position": {
+    "top_median": 0.575,
+    "rest_median": 0.591,
+    "auc": 0.498,
+    "p": 0.9503
+   },
+   "dialogue_share": {
+    "top_median": 0.031,
+    "rest_median": 0.048,
+    "auc": 0.384,
+    "p": 0.0002
+   },
+   "speech_lines": {
+    "top_median": 3.0,
+    "rest_median": 3.0,
+    "auc": 0.427,
+    "p": 0.0171
+   },
+   "speech_per_100_words": {
+    "top_median": 0.74,
+    "rest_median": 1.19,
+    "auc": 0.391,
+    "p": 0.0004
+   },
+   "speech_line_words": {
+    "top_median": 4.015,
+    "rest_median": 4.33,
+    "auc": 0.44,
+    "p": 0.0885
+   },
+   "speech_line_max": {
+    "top_median": 6.0,
+    "rest_median": 7.0,
+    "auc": 0.45,
+    "p": 0.1488
+   },
+   "first_speech_position": {
+    "top_median": 0.299,
+    "rest_median": 0.278,
+    "auc": 0.529,
+    "p": 0.4069
+   },
+   "speakers": {
+    "top_median": 2.0,
+    "rest_median": 2.0,
+    "auc": 0.453,
+    "p": 0.1216
+   },
+   "named": {
+    "top_median": 1.0,
+    "rest_median": 1.0,
+    "auc": 0.594,
+    "p": 0.0014
+   },
+   "voices": {
+    "top_median": 2.0,
+    "rest_median": 2.0,
+    "auc": 0.475,
+    "p": 0.3909
+   },
+   "other_voice_share": {
+    "top_median": 0.031,
+    "rest_median": 0.08,
+    "auc": 0.438,
+    "p": 0.0368
+   },
+   "title_words": {
+    "top_median": 6.0,
+    "rest_median": 6.0,
+    "auc": 0.469,
+    "p": 0.3149
+   }
+  },
+  "categorical": {
+   "genre=scary": {
+    "top_share": 0.988,
+    "rest_share": 0.0,
+    "p": 0.0
+   },
+   "genre=comedy": {
+    "top_share": 0.0,
+    "rest_share": 0.401,
+    "p": 0.0
+   },
+   "genre=rule_world": {
+    "top_share": 0.0,
+    "rest_share": 0.364,
+    "p": 0.0
+   },
+   "genre=drama": {
+    "top_share": 0.006,
+    "rest_share": 0.118,
+    "p": 0.0
+   },
+   "genre=wholesome": {
+    "top_share": 0.0,
+    "rest_share": 0.075,
+    "p": 0.0004
+   },
+   "genre=mystery": {
+    "top_share": 0.006,
+    "rest_share": 0.037,
+    "p": 0.0516
+   },
+   "format=narrated": {
+    "top_share": 0.957,
+    "rest_share": 0.872,
+    "p": 0.0053
+   },
+   "format=acted": {
+    "top_share": 0.037,
+    "rest_share": 0.107,
+    "p": 0.0131
+   },
+   "person=first": {
+    "top_share": 0.66,
+    "rest_share": 0.642,
+    "p": 0.7136
+   },
+   "person=third": {
+    "top_share": 0.253,
+    "rest_share": 0.225,
+    "p": 0.533
+   },
+   "person=second": {
+    "top_share": 0.049,
+    "rest_share": 0.091,
+    "p": 0.1335
+   },
+   "person=mixed": {
+    "top_share": 0.037,
+    "rest_share": 0.043,
+    "p": 0.7851
+   },
+   "tense=past": {
+    "top_share": 0.901,
+    "rest_share": 0.797,
+    "p": 0.0071
+   },
+   "tense=present": {
+    "top_share": 0.093,
+    "rest_share": 0.198,
+    "p": 0.0059
+   },
+   "hook=rule": {
+    "top_share": 0.667,
+    "rest_share": 0.551,
+    "p": 0.0273
+   },
+   "hook=event": {
+    "top_share": 0.105,
+    "rest_share": 0.16,
+    "p": 0.1299
+   },
+   "hook=claim": {
+    "top_share": 0.086,
+    "rest_share": 0.096,
+    "p": 0.7508
+   },
+   "hook=question": {
+    "top_share": 0.031,
+    "rest_share": 0.123,
+    "p": 0.0016
+   },
+   "hook=character": {
+    "top_share": 0.031,
+    "rest_share": 0.027,
+    "p": 0.8178
+   },
+   "hook=confession": {
+    "top_share": 0.025,
+    "rest_share": 0.021,
+    "p": 0.8372
+   },
+   "ending=twist": {
+    "top_share": 0.34,
+    "rest_share": 0.267,
+    "p": 0.1429
+   },
+   "ending=cliffhanger": {
+    "top_share": 0.315,
+    "rest_share": 0.091,
+    "p": 0.0
+   },
+   "ending=cta": {
+    "top_share": 0.191,
+    "rest_share": 0.155,
+    "p": 0.3704
+   },
+   "ending=resolution": {
+    "top_share": 0.068,
+    "rest_share": 0.219,
+    "p": 0.0001
+   },
+   "ending=punchline": {
+    "top_share": 0.019,
+    "rest_share": 0.203,
+    "p": 0.0
+   },
+   "ending=open": {
+    "top_share": 0.049,
+    "rest_share": 0.011,
+    "p": 0.0307
+   },
+   "opener=other": {
+    "top_share": 0.401,
+    "rest_share": 0.529,
+    "p": 0.0167
+   },
+   "opener=in this town": {
+    "top_share": 0.346,
+    "rest_share": 0.182,
+    "p": 0.0005
+   },
+   "opener=in this world": {
+    "top_share": 0.21,
+    "rest_share": 0.193,
+    "p": 0.6862
+   },
+   "opener=in this/my ...": {
+    "top_share": 0.012,
+    "rest_share": 0.064,
+    "p": 0.0139
+   },
+   "last_line_spoken=False": {
+    "top_share": 0.772,
+    "rest_share": 0.69,
+    "p": 0.087
+   },
+   "last_line_spoken=True": {
+    "top_share": 0.228,
+    "rest_share": 0.31,
+    "p": 0.087
+   },
+   "loops=False": {
+    "top_share": 0.951,
+    "rest_share": 0.957,
+    "p": 0.7687
+   },
+   "loops=True": {
+    "top_share": 0.049,
+    "rest_share": 0.043,
+    "p": 0.7687
+   },
+   "viewer_address=False": {
+    "top_share": 0.549,
+    "rest_share": 0.733,
+    "p": 0.0004
+   },
+   "viewer_address=True": {
+    "top_share": 0.451,
+    "rest_share": 0.267,
+    "p": 0.0004
+   },
+   "scary=False": {
+    "top_share": 0.0,
+    "rest_share": 1.0,
+    "p": 0.0
+   },
+   "scary=True": {
+    "top_share": 1.0,
+    "rest_share": 0.0,
+    "p": 0.0
+   },
+   "has_speech=True": {
+    "top_share": 0.716,
+    "rest_share": 0.872,
+    "p": 0.0003
+   },
+   "has_speech=False": {
+    "top_share": 0.284,
+    "rest_share": 0.128,
+    "p": 0.0003
+   },
+   "multi_voice=True": {
+    "top_share": 0.531,
+    "rest_share": 0.62,
+    "p": 0.0914
+   },
+   "multi_voice=False": {
+    "top_share": 0.469,
+    "rest_share": 0.38,
+    "p": 0.0914
+   },
+   "narrator_synthetic=False": {
+    "top_share": 0.525,
+    "rest_share": 0.572,
+    "p": 0.3737
+   },
+   "narrator_synthetic=True": {
+    "top_share": 0.475,
+    "rest_share": 0.428,
+    "p": 0.3737
+   },
+   "music=True": {
+    "top_share": 0.895,
+    "rest_share": 0.888,
+    "p": 0.8257
+   },
+   "music=False": {
+    "top_share": 0.105,
+    "rest_share": 0.112,
+    "p": 0.8257
+   },
+   "sound_effects=many": {
+    "top_share": 0.765,
+    "rest_share": 0.642,
+    "p": 0.012
+   },
+   "sound_effects=few": {
+    "top_share": 0.154,
+    "rest_share": 0.299,
+    "p": 0.0014
+   },
+   "sound_effects=none": {
+    "top_share": 0.08,
+    "rest_share": 0.059,
+    "p": 0.4303
+   },
+   "gore=0": {
+    "top_share": 0.488,
+    "rest_share": 0.706,
+    "p": 0.0
+   },
+   "gore=1": {
+    "top_share": 0.475,
+    "rest_share": 0.257,
+    "p": 0.0
+   },
+   "gore=2": {
+    "top_share": 0.037,
+    "rest_share": 0.037,
+    "p": 0.9845
+   },
+   "title_emoji=True": {
+    "top_share": 0.654,
+    "rest_share": 0.54,
+    "p": 0.0303
+   },
+   "title_emoji=False": {
+    "top_share": 0.346,
+    "rest_share": 0.46,
+    "p": 0.0303
+   },
+   "title_opener=in this": {
+    "top_share": 0.272,
+    "rest_share": 0.107,
+    "p": 0.0001
+   },
+   "title_opener=what if": {
+    "top_share": 0.012,
+    "rest_share": 0.091,
+    "p": 0.0013
+   },
+   "title_opener=other": {
+    "top_share": 0.068,
+    "rest_share": 0.021,
+    "p": 0.0326
+   }
+  },
+  "differs": [
+   "beats",
+   "dialogue_share",
+   "ending=cliffhanger",
+   "ending=open",
+   "ending=punchline",
+   "ending=resolution",
+   "first_sentence_words",
+   "format=acted",
+   "format=narrated",
+   "genre=comedy",
+   "genre=drama",
+   "genre=rule_world",
+   "genre=scary",
+   "genre=wholesome",
+   "gore=0",
+   "gore=1",
+   "grade",
+   "has_speech=False",
+   "has_speech=True",
+   "hook=question",
+   "hook=rule",
+   "letters_per_word",
+   "named",
+   "opener=in this town",
+   "opener=in this/my ...",
+   "opener=other",
+   "other_voice_share",
+   "premise_seconds",
+   "question_share",
+   "scary=False",
+   "scary=True",
+   "sentence_max",
+   "short_sentence_share",
+   "sound_effects=few",
+   "sound_effects=many",
+   "speech_lines",
+   "speech_per_100_words",
+   "tense=past",
+   "tense=present",
+   "title_emoji=False",
+   "title_emoji=True",
+   "title_opener=in this",
+   "title_opener=other",
+   "title_opener=what if",
+   "viewer_address=False",
+   "viewer_address=True"
+  ]
+ },
+ "by_channel": {
+  "Gelo Stories": {
+   "n": 44,
+   "median_words": 484.0,
+   "median_seconds": 121.5,
+   "median_dialogue_share": 0.028999999999999998,
+   "scary_share": 0.727
+  },
+  "BlueStarLazer": {
+   "n": 44,
+   "median_words": 691.0,
+   "median_seconds": 155.0,
+   "median_dialogue_share": 0.041999999999999996,
+   "scary_share": 0.364
+  },
+  "GreenBroRants": {
+   "n": 41,
+   "median_words": 565.0,
+   "median_seconds": 131.0,
+   "median_dialogue_share": 0.035,
+   "scary_share": 0.415
+  },
+  "Ryex": {
+   "n": 38,
+   "median_words": 247.5,
+   "median_seconds": 56.5,
+   "median_dialogue_share": 0.08149999999999999,
+   "scary_share": 0.658
+  },
+  "cannonanimates": {
+   "n": 34,
+   "median_words": 160.5,
+   "median_seconds": 43.5,
+   "median_dialogue_share": 0.0,
+   "scary_share": 0.382
+  },
+  "SensBlox": {
+   "n": 32,
+   "median_words": 248.5,
+   "median_seconds": 51.5,
+   "median_dialogue_share": 0.063,
+   "scary_share": 0.156
+  },
+  "BloxDaze": {
+   "n": 21,
+   "median_words": 139.0,
+   "median_seconds": 56.0,
+   "median_dialogue_share": 0.156,
+   "scary_share": 0.095
+  },
+  "Glorvo": {
+   "n": 18,
+   "median_words": 208.0,
+   "median_seconds": 48.0,
+   "median_dialogue_share": 0.078,
+   "scary_share": 0.056
+  },
+  "ItsBeans": {
+   "n": 7,
+   "median_words": 194.0,
+   "median_seconds": 44.0,
+   "median_dialogue_share": 0.0,
+   "scary_share": 0.714
+  },
+  "Luna Kwai": {
+   "n": 7,
+   "median_words": 85.0,
+   "median_seconds": 32.0,
+   "median_dialogue_share": 1.0,
+   "scary_share": 0.0
+  },
+  "Avocado Playz": {
+   "n": 7,
+   "median_words": 80.0,
+   "median_seconds": 27.0,
+   "median_dialogue_share": 1.0,
+   "scary_share": 0.143
+  }
+ },
+ "recurring_phrases": [
+  {
+   "phrase": "in this town",
+   "scripts": 91,
+   "share": 0.261
+  },
+  {
+   "phrase": "that night",
+   "scripts": 87,
+   "share": 0.249
+  },
+  {
+   "phrase": "and every",
+   "scripts": 74,
+   "share": 0.212
+  },
+  {
+   "phrase": "looked at",
+   "scripts": 73,
+   "share": 0.209
+  },
+  {
+   "phrase": "in this world",
+   "scripts": 70,
+   "share": 0.201
+  },
+  {
+   "phrase": "one day",
+   "scripts": 65,
+   "share": 0.186
+  },
+  {
+   "phrase": "in town",
+   "scripts": 64,
+   "share": 0.183
+  },
+  {
+   "phrase": "whole town",
+   "scripts": 63,
+   "share": 0.181
+  },
+  {
+   "phrase": "night i",
+   "scripts": 60,
+   "share": 0.172
+  },
+  {
+   "phrase": "every night",
+   "scripts": 60,
+   "share": 0.172
+  },
+  {
+   "phrase": "in front",
+   "scripts": 59,
+   "share": 0.169
+  },
+  {
+   "phrase": "you see",
+   "scripts": 57,
+   "share": 0.163
+  },
+  {
+   "phrase": "and nobody",
+   "scripts": 57,
+   "share": 0.163
+  },
+  {
+   "phrase": "i ran",
+   "scripts": 55,
+   "share": 0.158
+  },
+  {
+   "phrase": "i said",
+   "scripts": 54,
+   "share": 0.155
+  },
+  {
+   "phrase": "he said",
+   "scripts": 53,
+   "share": 0.152
+  },
+  {
+   "phrase": "i saw",
+   "scripts": 52,
+   "share": 0.149
+  },
+  {
+   "phrase": "i didn't",
+   "scripts": 52,
+   "share": 0.149
+  },
+  {
+   "phrase": "at school",
+   "scripts": 49,
+   "share": 0.14
+  },
+  {
+   "phrase": "like and subscribe",
+   "scripts": 48,
+   "share": 0.138
+  },
+  {
+   "phrase": "for the first time",
+   "scripts": 48,
+   "share": 0.138
+  },
+  {
+   "phrase": "every single",
+   "scripts": 47,
+   "share": 0.135
+  },
+  {
+   "phrase": "every time",
+   "scripts": 47,
+   "share": 0.135
+  },
+  {
+   "phrase": "every morning",
+   "scripts": 46,
+   "share": 0.132
+  },
+  {
+   "phrase": "i got",
+   "scripts": 46,
+   "share": 0.132
+  },
+  {
+   "phrase": "i looked",
+   "scripts": 44,
+   "share": 0.126
+  },
+  {
+   "phrase": "that's when",
+   "scripts": 41,
+   "share": 0.117
+  },
+  {
+   "phrase": "in the middle",
+   "scripts": 41,
+   "share": 0.117
+  },
+  {
+   "phrase": "we moved",
+   "scripts": 40,
+   "share": 0.115
+  },
+  {
+   "phrase": "to get",
+   "scripts": 40,
+   "share": 0.115
+  },
+  {
+   "phrase": "every day",
+   "scripts": 39,
+   "share": 0.112
+  },
+  {
+   "phrase": "next morning",
+   "scripts": 39,
+   "share": 0.112
+  },
+  {
+   "phrase": "he didn't",
+   "scripts": 39,
+   "share": 0.112
+  },
+  {
+   "phrase": "you can",
+   "scripts": 39,
+   "share": 0.112
+  },
+  {
+   "phrase": "his hand",
+   "scripts": 39,
+   "share": 0.112
+  },
+  {
+   "phrase": "one night",
+   "scripts": 39,
+   "share": 0.112
+  },
+  {
+   "phrase": "i went",
+   "scripts": 38,
+   "share": 0.109
+  },
+  {
+   "phrase": "only one",
+   "scripts": 38,
+   "share": 0.109
+  },
+  {
+   "phrase": "at midnight",
+   "scripts": 37,
+   "share": 0.106
+  },
+  {
+   "phrase": "woke up",
+   "scripts": 36,
+   "share": 0.103
+  }
+ ],
+ "recurring_phrases_scary": [
+  {
+   "phrase": "in this town",
+   "scripts": 57,
+   "share": 0.352
+  },
+  {
+   "phrase": "that night",
+   "scripts": 56,
+   "share": 0.346
+  },
+  {
+   "phrase": "night i",
+   "scripts": 39,
+   "share": 0.241
+  },
+  {
+   "phrase": "at school",
+   "scripts": 35,
+   "share": 0.216
+  },
+  {
+   "phrase": "and nobody",
+   "scripts": 35,
+   "share": 0.216
+  },
+  {
+   "phrase": "like and subscribe",
+   "scripts": 35,
+   "share": 0.216
+  },
+  {
+   "phrase": "one day",
+   "scripts": 34,
+   "share": 0.21
+  },
+  {
+   "phrase": "in this world",
+   "scripts": 34,
+   "share": 0.21
+  },
+  {
+   "phrase": "every night",
+   "scripts": 34,
+   "share": 0.21
+  },
+  {
+   "phrase": "and every",
+   "scripts": 33,
+   "share": 0.204
+  },
+  {
+   "phrase": "in town",
+   "scripts": 33,
+   "share": 0.204
+  },
+  {
+   "phrase": "in front",
+   "scripts": 30,
+   "share": 0.185
+  },
+  {
+   "phrase": "i saw",
+   "scripts": 29,
+   "share": 0.179
+  },
+  {
+   "phrase": "whole town",
+   "scripts": 28,
+   "share": 0.173
+  },
+  {
+   "phrase": "at midnight",
+   "scripts": 28,
+   "share": 0.173
+  },
+  {
+   "phrase": "looked at",
+   "scripts": 27,
+   "share": 0.167
+  },
+  {
+   "phrase": "we moved",
+   "scripts": 27,
+   "share": 0.167
+  },
+  {
+   "phrase": "i got",
+   "scripts": 27,
+   "share": 0.167
+  },
+  {
+   "phrase": "i went",
+   "scripts": 23,
+   "share": 0.142
+  },
+  {
+   "phrase": "i ran",
+   "scripts": 23,
+   "share": 0.142
+  },
+  {
+   "phrase": "for the first time",
+   "scripts": 23,
+   "share": 0.142
+  },
+  {
+   "phrase": "he said",
+   "scripts": 23,
+   "share": 0.142
+  },
+  {
+   "phrase": "every single",
+   "scripts": 22,
+   "share": 0.136
+  },
+  {
+   "phrase": "every day",
+   "scripts": 22,
+   "share": 0.136
+  },
+  {
+   "phrase": "since you",
+   "scripts": 22,
+   "share": 0.136
+  },
+  {
+   "phrase": "and the mayor",
+   "scripts": 22,
+   "share": 0.136
+  },
+  {
+   "phrase": "they say",
+   "scripts": 22,
+   "share": 0.136
+  },
+  {
+   "phrase": "one night",
+   "scripts": 22,
+   "share": 0.136
+  },
+  {
+   "phrase": "at once",
+   "scripts": 21,
+   "share": 0.13
+  },
+  {
+   "phrase": "i didn't",
+   "scripts": 21,
+   "share": 0.13
+  },
+  {
+   "phrase": "that night i",
+   "scripts": 21,
+   "share": 0.13
+  },
+  {
+   "phrase": "you see",
+   "scripts": 20,
+   "share": 0.123
+  },
+  {
+   "phrase": "an old",
+   "scripts": 20,
+   "share": 0.123
+  },
+  {
+   "phrase": "my name",
+   "scripts": 20,
+   "share": 0.123
+  },
+  {
+   "phrase": "i said",
+   "scripts": 20,
+   "share": 0.123
+  },
+  {
+   "phrase": "we moved in",
+   "scripts": 20,
+   "share": 0.123
+  },
+  {
+   "phrase": "years ago",
+   "scripts": 20,
+   "share": 0.123
+  },
+  {
+   "phrase": "was gone",
+   "scripts": 20,
+   "share": 0.123
+  },
+  {
+   "phrase": "that's when",
+   "scripts": 19,
+   "share": 0.117
+  },
+  {
+   "phrase": "i heard",
+   "scripts": 19,
+   "share": 0.117
+  }
+ ],
+ "recurring_openers": {
+  "in this town": 90,
+  "in this world": 70,
+  "in my world": 10,
+  "in my town": 7,
+  "what if you": 6,
+  "what if every": 6,
+  "in a world": 4,
+  "what if roblox": 4,
+  "i woke up": 4,
+  "my parents never": 3,
+  "i always had": 3,
+  "in this city": 3,
+  "i traveled back": 3
+ },
+ "recurring_title_openers": {
+  "in this": 64,
+  "what if": 19,
+  "other": 15,
+  "we live": 7,
+  "nobody can": 7,
+  "he could": 7,
+  "if you": 6,
+  "everyone has": 6,
+  "the world": 4,
+  "the boy": 4,
+  "this roblox": 3,
+  "my crush": 3,
+  "every time": 3,
+  "my world": 3
+ }
+}
