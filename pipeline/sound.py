@@ -1,4 +1,4 @@
-"""Sound stage: bed.wav from sound.json (a music score, ambience loops, one-shot cues, an optional synthetic pad).
+"""Sound stage: bed.wav from sound.json (a music score, a drone, ambience loops, one-shot cues, an optional synthetic pad).
 
 Usage: python -m pipeline.sound --job <folder> [--provider elevenlabs|synthetic] [--refresh NAME ...] [--dry-run]
 
@@ -6,11 +6,14 @@ Usage: python -m pipeline.sound --job <folder> [--provider elevenlabs|synthetic]
 each with a text prompt, plus an optional "pad" (pipeline.bed) and "prompt_influence". "music" is one
 generated instrumental score for the whole bed: {"prompt", "gain_db", "duck_db", "cuts": [{"at", "seconds"}],
 "fallback": mood}; it drops by duck_db under every cue, goes silent at each cut and falls back to the
-synthetic pad when the music endpoint refuses. "normalise": true levels every clip before its gain_db
+synthetic pad when the music endpoint refuses. "drone": {"root_hz", "gain_db", "fade_in"} is a synthesised
+sustained layer that runs the whole bed and is never ducked or cut, so a cut drops to the drone alone.
+"normalise": true levels every clip before its gain_db
 (ambience and music to -20 dBFS RMS, cues to a -6 dBFS peak), so gains mean the same for every sound. Moments are
 seconds, {"time": s}, {"shot": id, "offset": s} or {"word": index, "offset": s}, resolved against
-timeline.json (shot starts) and words.json (word starts, narration duration). The bed is the narration
-duration plus half a second, written as a 48 kHz mono 16-bit WAV with its sample peak at -3 dBFS; the
+timeline.json (shot starts) and words.json (word starts, narration duration). The bed is the longer of the
+narration plus half a second and the picture in timeline.json (which may hold silent shots after the last
+word), written as a 48 kHz mono 16-bit WAV with its sample peak at -3 dBFS; the
 edit stage loops or trims it and sets it under the voice (python -m pipeline.edit --music bed.wav).
 
 ElevenLabs (the sound-generation endpoint, key in ELEVENLABS_API_KEY, read at call time and never
@@ -53,6 +56,8 @@ LEVEL_RMS, LEVEL_PEAK = 0.1, 0.5
 MIN_SECONDS = 0.5
 MAX_SECONDS = 22.0
 TAIL_SECONDS = 0.5
+WINDOW_SECONDS = 0.4
+DRONE_PARTIALS = ((1.0, 0.5, 0.031), (2.0, 1.0, 0.043), (2.012, 0.8, 0.057), (2.828, 0.45, 0.071), (4.24, 0.4, 0.037), (6.0, 0.2, 0.09))
 PEAK_DBFS = -3.0
 RETRIES = 3
 CUE_ATTACK = 240
@@ -97,6 +102,7 @@ class Plan:
     pad: Optional[Dict[str, Any]] = None
     music: Optional[Dict[str, Any]] = None
     normalise: bool = False
+    drone: Optional[Dict[str, Any]] = None
 
 
 def pause(seconds: float) -> None:
@@ -145,17 +151,19 @@ class Timing:
         except (KeyError, TypeError, ValueError):
             raise SoundError("%s needs a numeric 'duration' and a 'words' list with a 'start' on each word" % words_path)
         self.shots = None  # type: Optional[Dict[str, float]]
+        self.picture = 0.0
         self.timeline_path = job / "timeline.json"
         if self.timeline_path.is_file():
             timeline = _load_json(self.timeline_path)
             try:
                 self.shots = {str(shot["id"]): float(shot["start"]) for shot in timeline["shots"]}
+                self.picture = float(timeline.get("duration", 0.0))
             except (KeyError, TypeError, ValueError):
                 raise SoundError("%s needs a 'shots' list with an 'id' and a 'start' on each shot" % self.timeline_path)
 
     @property
     def total(self) -> float:
-        return self.duration + TAIL_SECONDS
+        return max(self.duration + TAIL_SECONDS, self.picture)
 
     def resolve(self, spec: Any, where: str) -> float:
         """Seconds for plain seconds, {"time"}, {"shot", "offset"} or {"word", "offset"}."""
@@ -273,9 +281,17 @@ def build_plan(config: Dict[str, Any], timing: Timing) -> Plan:
                  "duck_db": _number(music.get("duck_db", -8.0), "music.duck_db"), "cuts": cuts,
                  "fade_in": _number(music.get("fade_in", 1.0), "music.fade_in"), "fade_out": _number(music.get("fade_out", 0.3), "music.fade_out"),
                  "fallback": music.get("fallback", "sad")}
-    if not items and pad is None and music is None:
-        raise SoundError("sound.json has no music, ambience, cues or pad, so there is nothing to mix")
-    return Plan(items, total, influence, pad, music, config.get("normalise") is True)
+    drone = config.get("drone")
+    if drone is not None:
+        if not isinstance(drone, dict):
+            raise SoundError('drone must be an object such as {"root_hz": 55, "gain_db": -6}')
+        drone = {"root_hz": _number(drone.get("root_hz", 55.0), "drone.root_hz"), "gain_db": _number(drone.get("gain_db", -6.0), "drone.gain_db"),
+                 "fade_in": _number(drone.get("fade_in", 0.05), "drone.fade_in")}
+        if not 20.0 <= drone["root_hz"] <= 400.0:
+            raise SoundError("drone.root_hz must be between 20 and 400, got %s" % drone["root_hz"])
+    if not items and pad is None and music is None and drone is None:
+        raise SoundError("sound.json has no music, drone, ambience, cues or pad, so there is nothing to mix")
+    return Plan(items, total, influence, pad, music, config.get("normalise") is True, drone)
 
 
 def cache_key(provider: str, prompt: str, seconds: float, influence: float) -> str:
@@ -429,6 +445,38 @@ def obtain_music(job: Path, plan: Plan, provider: str, refresh: Sequence[str]) -
     return [(stereo[2 * index] + stereo[2 * index + 1]) / 65536.0 for index in range(len(stereo) // 2)], entry
 
 
+def drone_samples(seconds: float, root_hz: float) -> List[float]:
+    """A sustained uneasy drone: beating, dissonant partials that each swell slowly and never reach zero."""
+    count = int(round(seconds * RATE))
+    two_pi = 2 * math.pi
+    out = [0.0] * count
+    for number, (ratio, weight, wobble) in enumerate(DRONE_PARTIALS):
+        step = two_pi * root_hz * ratio / RATE
+        slow = two_pi * wobble / RATE
+        phase = number * 1.7
+        sin = math.sin
+        for index in range(count):
+            out[index] += weight * (0.7 + 0.3 * sin(slow * index + phase)) * sin(step * index)
+    return out
+
+
+def quietest_window(samples: Sequence[int], seconds: float = WINDOW_SECONDS) -> Tuple[float, float, float]:
+    """(level of the quietest window, its start time, level of the whole bed), levels in dBFS RMS."""
+    size = max(1, int(seconds * RATE))
+    total = 0.0
+    lowest, where = None, 0.0  # type: Tuple[Optional[float], float]
+    for start in range(0, max(1, len(samples) - size + 1), size):
+        energy = sum(value * value for value in samples[start:start + size])
+        total += energy
+        if lowest is None or energy / size < lowest:
+            lowest, where = energy / size, start / float(RATE)
+
+    def db(mean_square: float) -> float:
+        return round(10 * math.log10(max(mean_square, 1e-12) / (32768.0 * 32768.0)), 2)
+
+    return db(lowest or 0.0), round(where, 2), db(total / max(1, len(samples) - len(samples) % size))
+
+
 def level(clip: List[float], kind: str) -> List[float]:
     """Scale a clip to the common level for its kind."""
     if not clip:
@@ -552,6 +600,12 @@ def mix(plan: Plan, clips: Dict[str, List[float]], score: Optional[List[float]] 
         start, body = layer(item, clips[item.key], count)
         for index, value in enumerate(body):
             bus[start + index] += value
+    if plan.drone is not None:
+        drone = level(drone_samples(plan.total, plan.drone["root_hz"]), "drone")
+        gain = 10 ** (plan.drone["gain_db"] / 20.0)
+        fade_edges(drone, int(plan.drone["fade_in"] * RATE), 0)
+        for index in range(min(count, len(drone))):
+            bus[index] += drone[index] * gain
     if plan.pad is not None:
         stereo = bed.render(plan.total, plan.pad["mood"])
         gain = 10 ** (plan.pad["gain_db"] / 20.0) / 2.0
@@ -593,8 +647,9 @@ def make_bed(job: Path, provider: str = "elevenlabs", refresh: Sequence[str] = (
         score, music_entry = obtain_music(job, plan, provider, refresh)
         if plan.normalise:
             score = level(score, "music")
+    drone_entry = None if plan.drone is None else dict(plan.drone, source="synthesised drone from pipeline.sound", start=0.0, end=round(plan.total, 3))
     report = {"duration": round(plan.total, 3), "provider": provider, "prompt_influence": plan.influence, "pad": plan.pad, "items": entries,
-              "music": music_entry, "normalise": plan.normalise,
+              "music": music_entry, "drone": drone_entry, "normalise": plan.normalise,
               "peak_dbfs": None, "generated": sum(not entry["cached"] for entry in entries),
               "reused": sum(entry["cached"] for entry in entries)}  # type: Dict[str, Any]
     if dry_run:
@@ -604,6 +659,9 @@ def make_bed(job: Path, provider: str = "elevenlabs", refresh: Sequence[str] = (
     samples = mix(plan, clips, score)
     write_wav(job / "bed.wav", samples)
     report["peak_dbfs"] = round(20 * math.log10(max(abs(value) for value in samples) / 32768.0), 2)
+    quietest, at, overall = quietest_window(samples)
+    report["rms_dbfs"] = overall
+    report["quietest_window"] = {"seconds": WINDOW_SECONDS, "at": at, "rms_dbfs": quietest, "below_overall_db": round(overall - quietest, 2)}
     report["wall_seconds"] = round(time.time() - started, 2)
     with open(job / "sound_report.json", "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=1)
@@ -616,6 +674,11 @@ def describe(report: Dict[str, Any]) -> List[str]:
         lines.append("%-8s %-16s %6.2f-%6.2f s  %+5.1f dB  %s  %s" % (
             entry["kind"], entry["name"], entry["start"], entry["end"], entry["gain_db"],
             "cached  " if entry["cached"] else "generate", entry["file"]))
+    if report.get("drone"):
+        lines.append("drone    %-16s %6.2f-%6.2f s  %+5.1f dB  synthesised" % ("%g Hz root" % report["drone"]["root_hz"], 0.0, report["duration"], report["drone"]["gain_db"]))
+    if report.get("quietest_window"):
+        lines.append("bed %.1f dBFS RMS overall; quietest %.1f s window %.1f dBFS at %.2f s" % (
+            report["rms_dbfs"], report["quietest_window"]["seconds"], report["quietest_window"]["rms_dbfs"], report["quietest_window"]["at"]))
     if report["pad"]:
         lines.append("pad      %-16s %6.2f-%6.2f s  %+5.1f dB" % (report["pad"]["mood"], 0.0, report["duration"], report["pad"]["gain_db"]))
     return lines

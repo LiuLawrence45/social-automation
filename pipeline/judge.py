@@ -29,7 +29,7 @@ import sys
 import tempfile
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from . import vision
 from .edit import FONTS_DIR, EditError, esc, ffmpeg_bin, run
@@ -49,6 +49,15 @@ DEFAULTS: Dict[str, Any] = {
     "prices": {},
 }
 FRAMING_KEYS = ("on", "frame", "yaw", "pitch", "head", "dutch", "ots", "pov", "move", "amount", "from", "pos", "locked")
+SHOT_TYPES = ("wide", "medium", "close", "extreme_close", "over_shoulder", "low_angle", "high_angle", "tilted", "pov", "insert")
+FRAME_TYPES = {"extreme": "extreme_close", "detail": "extreme_close", "close": "close", "medium": "medium", "full": "medium", "wide": "wide", "vast": "wide"}
+MOVE_KINDS = {"static": "static", "push": "push_in", "creep": "push_in", "pull": "pull_out", "pan_left": "pan", "pan_right": "pan",
+              "tilt_up": "pan", "tilt_down": "pan", "drift_left": "track", "drift_right": "track", "rise": "track", "drop": "track",
+              "handheld": "handheld", "orbit_left": "orbit", "orbit_right": "orbit"}
+LOW_PITCH, HIGH_PITCH, TILT_DEGREES = -12.0, 20.0, 6.0
+FRONT_YAW, BACK_YAW = 25.0, 155.0
+TYPE_PITCHES = {"low_angle": (-16, -24), "high_angle": (26, 36)}
+VARIETY_DEFAULTS = {"cap": 0.2, "slack": 0.02, "min_moving": 0.5}
 CAPTION_TOP, CAPTION_HEIGHT = 0.60, 0.18
 SCOUT_FRAMES = {"extreme": ("close",), "close": ("medium",), "medium": ("close", "full"), "full": ("medium", "wide"), "wide": ("full",), "vast": ("wide",)}
 SCOUT_PITCHES = (6, 22, -12)
@@ -146,8 +155,134 @@ def is_locked(shot: Dict[str, Any]) -> bool:
     return bool(camera.get("locked")) or "from" in camera or "pos" in camera or _subject(shot) is None
 
 
+def _fixed(camera: Dict[str, Any]) -> bool:
+    return camera.get("from") is not None or "pos" in camera or not camera.get("on")
+
+
+def geometric_type(camera: Dict[str, Any]) -> Optional[str]:
+    """The shot type a subject camera's own numbers give it; None for a fixed camera, which has to be tagged."""
+    if camera.get("pov"):
+        return "pov"
+    if camera.get("ots"):
+        return "over_shoulder"
+    if _fixed(camera):
+        return None
+    pitch = float(camera.get("pitch") or 0)
+    if abs(float(camera.get("dutch") or 0)) >= TILT_DEGREES:
+        return "tilted"
+    if pitch <= LOW_PITCH:
+        return "low_angle"
+    if pitch >= HIGH_PITCH:
+        return "high_angle"
+    return FRAME_TYPES.get(str(camera.get("frame") or "medium"), "medium")
+
+
+def camera_type(camera: Dict[str, Any]) -> str:
+    """One of SHOT_TYPES: the camera's "type" tag when it has one, else what its geometry says; an untagged fixed camera is an insert."""
+    return str(camera.get("type") or geometric_type(camera) or "insert")
+
+
+def camera_side(camera: Dict[str, Any]) -> str:
+    """Which side of the subject the camera is on (front, left, right, back), or the fixed position it shoots from."""
+    if camera.get("pov"):
+        return "pov:%s" % camera["pov"]
+    if _fixed(camera):
+        place = camera.get("from") if camera.get("from") is not None else camera.get("pos")
+        if isinstance(place, dict):
+            place = place.get("pos") or place.get("on")
+        return "fixed:%s" % json.dumps(place)
+    yaw = (float(camera.get("yaw") or 0) + 180.0) % 360.0 - 180.0
+    if abs(yaw) <= FRONT_YAW:
+        return "front"
+    if abs(yaw) >= BACK_YAW:
+        return "back"
+    return "left" if yaw < 0 else "right"
+
+
+def camera_move(camera: Dict[str, Any]) -> str:
+    return MOVE_KINDS.get(str(camera.get("move") or "push"), "push_in")
+
+
+def repeats(camera: Dict[str, Any], previous: Optional[Dict[str, Any]]) -> bool:
+    """True when a camera has both the type and the side of the previous shot's camera."""
+    return previous is not None and camera_type(camera) == camera_type(previous) and camera_side(camera) == camera_side(previous)
+
+
+def variety(shots: Sequence[Dict[str, Any]], cameras: Optional[Dict[str, Dict[str, Any]]] = None,
+            settings: Optional[Dict[str, Any]] = None, locked_neighbours_only: bool = False) -> Dict[str, Any]:
+    """The shot-type and camera-move distribution of a timeline, with every break of the variety rules listed.
+
+    Shares are of screen time. The rules: no type above cap (plus slack), neighbouring shots never share both type
+    and side, at least min_moving of the time on a moving camera, and a "type" tag never contradicts the camera.
+    """
+    rules = dict(VARIETY_DEFAULTS, **(settings or {}))
+    rows = []
+    for shot in shots:
+        camera = (cameras or {}).get(shot["id"]) or shot.get("camera") or {}
+        seconds = float(shot.get("end", 0)) - float(shot.get("start", 0)) if "end" in shot else 1.0
+        rows.append({"id": shot["id"], "seconds": seconds, "type": camera_type(camera), "side": camera_side(camera),
+                     "move": camera_move(camera), "tag": camera.get("type"), "geometry": geometric_type(camera), "locked": is_locked(shot)})
+    total = sum(row["seconds"] for row in rows) or 1.0
+
+    def table(key: str) -> Dict[str, Dict[str, Any]]:
+        found: Dict[str, Dict[str, Any]] = {}
+        for row in rows:
+            item = found.setdefault(row[key], {"shots": 0, "seconds": 0.0})
+            item["shots"] += 1
+            item["seconds"] += row["seconds"]
+        for item in found.values():
+            item["share"] = round(item["seconds"] / total, 4)
+            item["seconds"] = round(item["seconds"], 3)
+        return dict(sorted(found.items(), key=lambda pair: -pair[1]["share"]))
+
+    types, moves = table("type"), table("move")
+    moving = round(1.0 - moves.get("static", {"share": 0.0})["share"], 4)
+    problems = []
+    for name, item in types.items():
+        if name not in SHOT_TYPES:
+            problems.append("type %r is not one of %s" % (name, ", ".join(SHOT_TYPES)))
+        if item["share"] > rules["cap"] + rules["slack"]:
+            problems.append("%s takes %.0f%% of the video (cap %.0f%%)" % (name, 100 * item["share"], 100 * rules["cap"]))
+    for before, after in zip(rows, rows[1:]):
+        if before["type"] == after["type"] and before["side"] == after["side"] and (
+                not locked_neighbours_only or (before["locked"] and after["locked"])):
+            problems.append("%s and %s are both %s from %s" % (before["id"], after["id"], after["type"], after["side"]))
+    for row in rows:
+        if row["tag"] and row["geometry"] and row["tag"] != row["geometry"]:
+            problems.append("%s is tagged %s but its camera is %s" % (row["id"], row["tag"], row["geometry"]))
+    if moving < rules["min_moving"]:
+        problems.append("only %.0f%% of the video is on a moving camera (minimum %.0f%%)" % (100 * moving, 100 * rules["min_moving"]))
+    return {"rules": rules, "shots": len(rows), "seconds": round(total, 3), "types": types, "moves": moves, "moving_share": moving,
+            "problems": problems, "sequence": [{"id": row["id"], "type": row["type"], "side": row["side"], "move": row["move"]} for row in rows]}
+
+
+def describe_variety(report: Dict[str, Any]) -> str:
+    types = ", ".join("%s %.0f%%" % (name, 100 * item["share"]) for name, item in report["types"].items())
+    moves = ", ".join("%s %.0f%%" % (name, 100 * item["share"]) for name, item in report["moves"].items())
+    return "types: %s\nmoves: %s (moving %.0f%%)" % (types, moves, 100 * report["moving_share"])
+
+
+def _typed_specs(camera: Dict[str, Any], round_index: int) -> List[Tuple[str, Dict[str, Any]]]:
+    """Variations that keep a tagged camera's shot type: the same framing from other sides of the subject."""
+    if camera.get("pov") or camera.get("ots"):
+        return []
+    base = {key: camera[key] for key in ("on", "frame", "pitch", "head", "dutch", "move", "amount") if key in camera}
+    yaw = float(camera.get("yaw") or 0)
+    turns = (-2 * yaw, 35, -35, 70, -70) if round_index == 0 else (20, -20, 55, -55, 110, -110)
+    specs = []
+    for turn in turns:
+        if abs(turn) < 15:
+            continue
+        specs.append(("%s_turn%+d" % (camera["type"], turn), dict(base, yaw=round((yaw + turn + 180.0) % 360.0 - 180.0, 1))))
+    return specs
+
+
 def propose(shot: Dict[str, Any], round_index: int, max_candidates: int) -> List[Dict[str, Any]]:
-    """Candidate cameras for one shot; round 0 starts with the author's own camera, later rounds restage."""
+    """Candidate cameras for one shot; round 0 starts with the author's own camera, later rounds restage.
+
+    A camera tagged with a "type" only gets candidates of that type, so the judge chooses the side and
+    never changes what kind of shot it is.
+    """
     camera = shot.get("camera") or {}
     author = {"name": "author", "camera": copy.deepcopy(camera)}
     if is_locked(shot):
@@ -155,7 +290,9 @@ def propose(shot: Dict[str, Any], round_index: int, max_candidates: int) -> List
     subject = _subject(shot)
     others = [str(a["who"]) for a in shot.get("cast") or [] if str(a["who"]) != subject]
     other = others[0] if others else None
-    if round_index == 0:
+    if camera.get("type"):
+        specs = _typed_specs(camera, round_index)
+    elif round_index == 0:
         specs = [
             ("close_three_quarter", {"on": subject, "frame": "close", "yaw": 30, "pitch": 4, "move": "push"}),
             ("medium_other_side", {"on": subject, "frame": "medium", "yaw": -35, "move": "drift_left"}),
@@ -181,7 +318,7 @@ def propose(shot: Dict[str, Any], round_index: int, max_candidates: int) -> List
     if camera.get("face_on"):
         specs = [(name, spec) for name, spec in specs if "yaw" in spec and abs(spec["yaw"]) <= FACE_ON_YAW]
     candidates = [{"name": name, "camera": dict(kept, **spec)} for name, spec in specs]
-    if round_index == 0:
+    if round_index == 0 or (camera.get("type") and not candidates):
         candidates.insert(0, author)
     return candidates[:max(1, max_candidates)]
 
@@ -209,7 +346,8 @@ def scout(shot: Dict[str, Any], stager: Any, previous: Optional[Dict[str, Any]],
     kept = {key: value for key, value in camera.items() if key not in FRAMING_KEYS}
     wish = {"frame": camera.get("frame") or "medium", "yaw": float(camera.get("yaw") or 0), "pitch": float(camera.get("pitch") or 6)}
     frames = [wish["frame"]] + [name for name in SCOUT_FRAMES.get(wish["frame"], ()) if name != wish["frame"]]
-    pitches = [wish["pitch"]] + [pitch for pitch in SCOUT_PITCHES if abs(pitch - wish["pitch"]) > 5]
+    pitches = [wish["pitch"]] + [pitch for pitch in TYPE_PITCHES.get(str(camera.get("type")), SCOUT_PITCHES) if abs(pitch - wish["pitch"]) > 5]
+    extra = {key: camera[key] for key in ("dutch", "head", "amount") if key in camera and camera.get("type")}
     specs = []
     for frame in frames:
         for pitch in pitches:
@@ -217,7 +355,11 @@ def scout(shot: Dict[str, Any], stager: Any, previous: Optional[Dict[str, Any]],
                 yaw = (wish["yaw"] + 15.0 * (round_index % 2) + step * 360.0 / SCOUT_STEPS + 180.0) % 360.0 - 180.0
                 if camera.get("face_on") and abs(yaw) > FACE_ON_YAW:
                     continue
-                specs.append({"on": subject, "frame": frame, "yaw": round(yaw, 1), "pitch": pitch, "move": camera.get("move") or "push"})
+                spec = dict(extra, on=subject, frame=frame, yaw=round(yaw, 1), pitch=pitch, move=camera.get("move") or "push")
+                if not camera.get("type") or geometric_type(spec) == camera["type"]:
+                    specs.append(spec)
+    if not specs:
+        return []
     checks = stager.geometry(shot["id"], [dict(kept, **spec) for spec in specs], previous)
     valid = [(spec, check) for spec, check in zip(specs, checks) if check.get("ok")]
     picked: List[Any] = []
@@ -425,11 +567,14 @@ def _judge_shot(job: Path, shot: Dict[str, Any], text: str, previous: Optional[D
         if len(checks) != len(proposals):
             raise JudgeError("stager.geometry returned %d results for %d cameras of %s" % (len(checks), len(proposals), shot_id))
         for proposal, check in zip(proposals, checks):
+            if check.get("ok") and previous and repeats(proposal["camera"], previous.get("camera")):
+                check = dict(check, ok=False, issues=list(check.get("issues") or []) + ["same shot type and side as the previous shot"])
             proposal.update({"round": round_index, "geometry": check, "still": None, "scores": None, "total": None, "reason": ""})
         good = [p for p in proposals if p["geometry"].get("ok")]
         bad = [p for p in proposals if not p["geometry"].get("ok")]
         if len(good) < cfg["scout_below"]:
             found = scout(shot, stager, previous, cfg["max_candidates"] - len(good), round_index)
+            found = [p for p in found if not (previous and repeats(p["camera"], previous.get("camera")))]
             for proposal in found:
                 proposal.update({"round": round_index, "still": None, "scores": None, "total": None, "reason": ""})
             proposals += found
@@ -515,6 +660,10 @@ def judge_shots(job: Path, stager: Any, config: Optional[Dict[str, Any]] = None,
     if cfg["provider"] != "none" and "labels" not in cfg:
         cfg["labels"] = "text" if drawtext_available() else "boxes"
     rubric["threshold"] = cfg["threshold"]
+    if cfg.get("variety") is not None:
+        authored = variety(timeline_shots, None, cfg["variety"], locked_neighbours_only=True)
+        if authored["problems"]:
+            raise JudgeError("the shot list breaks the variety rules before any camera is tried: %s" % "; ".join(authored["problems"]))
     existing = _load_judge(job)
     entries = {e["id"]: e for e in existing.get("shots", []) if isinstance(e, dict) and "id" in e}
     budget = vision.Budget(cfg["ceiling_usd"])
@@ -522,7 +671,8 @@ def judge_shots(job: Path, stager: Any, config: Optional[Dict[str, Any]] = None,
 
     def save() -> None:
         ordered = [entries[i] for i in known if i in entries] + [e for i, e in entries.items() if i not in known]
-        doc.update({"version": 1, "config": cfg, "rubric": rubric, "shots": ordered,
+        cameras = {i: e["chosen"]["camera"] for i, e in entries.items() if e.get("chosen")}
+        doc.update({"version": 1, "config": cfg, "rubric": rubric, "shots": ordered, "variety": variety(timeline_shots, cameras, cfg.get("variety")),
                     "usage": _merge_usage(existing.get("usage"), budget.summary())})
         _write_judge(job, doc)
 
@@ -722,6 +872,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     video.add_argument("--references", type=Path, help="folder of up to 4 reference frames")
     _add_model_flags(video)
     sub.add_parser("show", help="print the chosen cameras").add_argument("--job", required=True, type=Path)
+    spread = sub.add_parser("variety", help="print the shot-type and move distribution and any broken variety rule")
+    spread.add_argument("--job", required=True, type=Path)
+    spread.add_argument("--authored", action="store_true", help="use the shot list's own cameras, ignoring judge.json")
     args = parser.parse_args(argv)
     try:
         if args.command == "models":
@@ -730,6 +883,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         if args.command == "show":
             print(show(args.job))
             return 0
+        if args.command == "variety":
+            data = read_job(args.job)
+            report = variety(data["timeline"]["shots"], None if args.authored else chosen_cameras(args.job),
+                             (data["story"].get("judge") or {}).get("variety"), locked_neighbours_only=args.authored)
+            print(describe_variety(report))
+            for problem in report["problems"]:
+                print("problem: " + problem)
+            return 1 if report["problems"] else 0
         config = {"provider": args.provider, "model": args.model, "ceiling_usd": args.ceiling}
         if args.command == "video":
             doc = judge_video(args.job, config, args.references)

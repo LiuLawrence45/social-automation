@@ -20,6 +20,8 @@ SHADOW_BLUR = 7
 SHADOW_ALPHA_HEX = "99"
 CENTER_Y_FRACTION = 0.69
 MIN_WORD_SECONDS = 0.12
+LONG_TAIL_SECONDS = 0.6
+LAST_WORD_HOLD_SECONDS = 0.4
 
 _NUMBER_WORDS = {
     "zero": "0", "one": "1", "two": "2", "three": "3", "four": "4", "five": "5",
@@ -65,17 +67,22 @@ def display_text(token: str, names: Iterable[str] = ()) -> str:
 
 
 def caption_events(
-    words: Sequence[dict], fps: Fraction, total_frames: int
+    words: Sequence[dict], fps: Fraction, total_frames: int, narration_end: Optional[float] = None
 ) -> List[Tuple[int, int, str]]:
     """Return (start_frame, end_frame, text) events, end exclusive, on the frame grid.
 
     A word shows until the next word starts. Words shorter than 120 ms are
     extended into the following gap by delaying the next word, never overlapping.
-    The first word starts at frame 0 and the last word holds to the last frame.
+    The first word starts at frame 0 and the last word holds to the last frame,
+    unless the video runs LONG_TAIL_SECONDS or more past narration_end (seconds):
+    then it ends LAST_WORD_HOLD_SECONDS after its own end and the tail has no caption.
     """
     min_frames = max(1, math.ceil(MIN_WORD_SECONDS * fps - Fraction(1, 1000)))
     starts = [int(round(Fraction(str(w["start"])) * fps)) for w in words]
     starts[0] = 0
+    last_end = None
+    if narration_end is not None and total_frames / fps - Fraction(str(narration_end)) >= LONG_TAIL_SECONDS:
+        last_end = int(round((Fraction(str(words[-1]["end"])) + Fraction(str(LAST_WORD_HOLD_SECONDS))) * fps))
     events: List[Tuple[int, int, str]] = []
     cursor = 0
     for idx, word in enumerate(words):
@@ -85,11 +92,12 @@ def caption_events(
         natural_end = starts[idx + 1] if idx + 1 < len(words) else total_frames
         end = max(natural_end, begin + min_frames)
         if idx + 1 == len(words):
-            end = total_frames
+            end = last_end if last_end is not None else total_frames
+            end = max(end, begin + min_frames)
         end = min(end, total_frames)
         events.append((begin, end, word["display"]))
         cursor = end
-    if events:
+    if events and last_end is None:
         last_begin, _, last_text = events[-1]
         events[-1] = (last_begin, total_frames, last_text)
     return events

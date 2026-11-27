@@ -1,10 +1,11 @@
 """Edit stage: burn one-word captions into video.mp4 and master the narration.
 
-Usage: python -m pipeline.edit --job <folder> [--out final.mp4] [--music bed.wav] [--tail 0.1]
+Usage: python -m pipeline.edit --job <folder> [--out final.mp4] [--music bed.wav] [--music-offset 11] [--tail 0.1]
 """
 from __future__ import annotations
 
 import argparse
+import array
 import json
 import math
 import os
@@ -16,7 +17,7 @@ import tempfile
 import time
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from . import captions, handoff
 
@@ -24,6 +25,8 @@ FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 TARGET_LUFS = -14.0
 TARGET_TP = -1.0
 MUSIC_OFFSET_LU = 11.0
+DEFAULT_TAIL = 0.1
+RATE = 48000
 MUSIC_FADE_SECONDS = 0.3
 WIDTH, HEIGHT = 1080, 1920
 
@@ -124,7 +127,100 @@ def summarize_shots(shots: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def build_premaster(job: Path, narration: Path, music: Optional[Path], total: float, work: Path) -> Dict[str, Any]:
+def music_offset_setting(job: Path, flag: Optional[float] = None) -> float:
+    """Music bed level under the voice in LU: the flag, else story.json mix.music_offset_lu, else the default."""
+    value = flag
+    where = "--music-offset"
+    story = Path(job) / "story.json"
+    if value is None and story.is_file():
+        with open(story, "r", encoding="utf-8") as handle:
+            mix = json.load(handle).get("mix") or {}
+        value, where = mix.get("music_offset_lu"), "story.json mix.music_offset_lu"
+    if value is None:
+        return MUSIC_OFFSET_LU
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 60:
+        raise EditError("%s must be a number of LU between 0 and 60, got %r" % (where, value))
+    return float(value)
+
+
+def decode_mono(inputs: List[str], chain: str) -> "array.array":
+    """Decode through a filter chain to mono 48 kHz float samples."""
+    cmd = [ffmpeg_bin(), "-hide_banner", "-loglevel", "error"] + inputs + [
+        "-af", chain + "aformat=channel_layouts=mono", "-f", "f32le", "-ar", "48000", "-ac", "1", "-"]
+    try:
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        raise EditError("cannot run %s: not found (set FFMPEG / FFPROBE or add FFmpeg to PATH)" % cmd[0])
+    if proc.returncode != 0:
+        raise EditError("command failed (%d): %s\n%s" % (proc.returncode, " ".join(cmd), proc.stderr.decode("utf-8", "replace")[-2000:]))
+    samples = array.array("f")
+    samples.frombytes(proc.stdout[:len(proc.stdout) // 4 * 4])
+    if sys.byteorder == "big":
+        samples.byteswap()
+    return samples
+
+
+def _new_sentence(before: Dict[str, Any], after: Dict[str, Any]) -> bool:
+    if "sentence" in before and "sentence" in after:
+        return before["sentence"] != after["sentence"]
+    return re.search(r"[.!?][\"')\]]*$", before["token"]) is not None
+
+
+def sentence_gaps(words: List[Dict[str, Any]], total: float) -> List[Tuple[float, float]]:
+    """Spans with no sentence being spoken: before the first word, between sentences, after the last word."""
+    gaps = [(0.0, words[0]["start"])]
+    for before, after in zip(words, words[1:]):
+        if _new_sentence(before, after):
+            gaps.append((before["end"], after["start"]))
+    gaps.append((words[-1]["end"], total))
+    return [(start, min(end, total)) for start, end in gaps if min(end, total) > start]
+
+
+def speech_spans(words: List[Dict[str, Any]], total: float) -> List[Tuple[float, float]]:
+    """Word spans merged where they touch or overlap."""
+    merged: List[List[float]] = []
+    for word in words:
+        start, end = word["start"], min(word["end"], total)
+        if merged and start <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        elif end > start:
+            merged.append([start, end])
+    return [(start, end) for start, end in merged]
+
+
+def _mean_square(samples: "array.array", spans: List[Tuple[float, float]]) -> Tuple[float, int]:
+    total, count = 0.0, 0
+    for start, end in spans:
+        piece = samples[int(start * RATE):int(end * RATE)]
+        total += sum(value * value for value in piece)
+        count += len(piece)
+    return total, count
+
+
+def _db(total: float, count: int) -> Optional[float]:
+    return round(10 * math.log10(total / count), 2) if count and total > 0 else None
+
+
+def _diff(a: Optional[float], b: Optional[float]) -> Optional[float]:
+    return None if a is None or b is None else round(a - b, 2)
+
+
+def measure_levels(voice: "array.array", bed: "array.array", words: List[Dict[str, Any]], total: float) -> Dict[str, Any]:
+    """RMS levels in dBFS of the voice while words are spoken and of the bed overall and inside the sentence gaps."""
+    gaps = sentence_gaps(words, total)
+    speech = speech_spans(words, total)
+    bed_all = _db(*_mean_square(bed, [(0.0, total)]))
+    bed_gaps = _db(*_mean_square(bed, gaps))
+    voice_speech = _db(*_mean_square(voice, speech))
+    return {
+        "bed_rms_dbfs": bed_all, "bed_gap_rms_dbfs": bed_gaps, "voice_speech_rms_dbfs": voice_speech,
+        "bed_minus_voice_db": _diff(bed_all, voice_speech), "bed_gap_minus_voice_db": _diff(bed_gaps, voice_speech),
+        "gap_seconds": round(sum(end - start for start, end in gaps), 3), "gap_count": len(gaps),
+        "speech_seconds": round(sum(end - start for start, end in speech), 3)}
+
+
+def build_premaster(job: Path, narration: Path, music: Optional[Path], total: float, work: Path,
+                    offset: float = MUSIC_OFFSET_LU, words: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Write the pre-master wav (voice, or voice plus bed) and return measurements."""
     voice_chain = "aresample=48000,apad,atrim=0:%.6f,asetpts=N/SR/TB," % total
     voice_in = ["-i", str(narration)]
@@ -138,16 +234,21 @@ def build_premaster(job: Path, narration: Path, music: Optional[Path], total: fl
     bed_in = ["-stream_loop", "-1", "-t", "%.6f" % total, "-i", str(music)]
     bed_chain = "aresample=48000,aformat=channel_layouts=stereo,"
     bed_measure = measure_loudness(bed_in, bed_chain)
-    gain = voice_measure["input_i"] - MUSIC_OFFSET_LU - bed_measure["input_i"]
+    gain = voice_measure["input_i"] - offset - bed_measure["input_i"]
+    bed_filter = (
+        "aresample=48000,aformat=channel_layouts=stereo,volume=%.3fdB,"
+        "atrim=0:%.6f,afade=t=out:st=%.6f:d=%.3f"
+    ) % (gain, total, max(0.0, total - MUSIC_FADE_SECONDS), MUSIC_FADE_SECONDS)
     graph = (
-        "[0:a]%saformat=channel_layouts=stereo[v];"
-        "[1:a]aresample=48000,aformat=channel_layouts=stereo,volume=%.3fdB,"
-        "atrim=0:%.6f,afade=t=out:st=%.6f:d=%.3f[b];"
+        "[0:a]%saformat=channel_layouts=stereo[v];[1:a]%s[b];"
         "[v][b]amix=inputs=2:duration=first:normalize=0[m]"
-    ) % (voice_chain, gain, total, max(0.0, total - MUSIC_FADE_SECONDS), MUSIC_FADE_SECONDS)
+    ) % (voice_chain, bed_filter)
     run([ffmpeg_bin(), "-y", "-hide_banner"] + voice_in + bed_in + [
         "-filter_complex", graph, "-map", "[m]", "-c:a", "pcm_f32le", "-ar", "48000", str(premaster)])
     info.update({"music": bed_measure, "music_gain_db": round(gain, 2)})
+    if words:
+        info["music_levels"] = measure_levels(
+            decode_mono(voice_in, voice_chain), decode_mono(bed_in, bed_filter + ","), words, total)
     return info
 
 
@@ -164,14 +265,19 @@ def bed_source(job: Path, music: Path) -> str:
             parts.append("%d generated ambience loop(s)" % kinds.count("ambience"))
         if "cue" in kinds:
             parts.append("%d generated cue(s)" % kinds.count("cue"))
+        if data.get("drone"):
+            parts.append("synthesised drone")
         if data.get("pad"):
             parts.append("synthetic pad")
         return "sound stage: " + ", ".join(parts)
     return music.name
 
 
-def render(job: Path, out: Path, music: Optional[Path], tail: float) -> Dict[str, Any]:
+def render(job: Path, out: Path, music: Optional[Path], tail: Optional[float] = None,
+           music_offset: Optional[float] = None) -> Dict[str, Any]:
+    """tail None follows the picture: the longer of narration plus 0.1 s and the content in shots.json."""
     started = time.time()
+    offset = music_offset_setting(job, music_offset)
     check_libass()
     video_path, narration = job / "video.mp4", job / "narration.wav"
     for path in (video_path, narration):
@@ -187,17 +293,24 @@ def render(job: Path, out: Path, music: Optional[Path], tail: float) -> Dict[str
     if abs(narration_duration - words["duration"]) > 0.25:
         raise EditError("words.json duration %.3f does not match narration.wav %.3f" % (words["duration"], narration_duration))
 
-    out_frames = int(round((narration_duration + tail) * fps))
-    total = float(out_frames / fps)
     first = int(round(Fraction(str(shots["content_start"])) * fps))
     last = min(int(round(Fraction(str(shots["content_end"])) * fps)), video["frames"])
-    events = captions.caption_events(words["words"], fps, out_frames)
+    if tail is None:
+        length = max(narration_duration + DEFAULT_TAIL, float(Fraction(str(shots["content_end"])) - Fraction(str(shots["content_start"]))))
+        tail_source = "timeline"
+    else:
+        length = narration_duration + tail
+        tail_source = "flag"
+    out_frames = int(round(length * fps))
+    total = float(out_frames / fps)
+    tail_used = total - narration_duration
+    events = captions.caption_events(words["words"], fps, out_frames, narration_duration)
 
     work = Path(tempfile.mkdtemp(prefix="edit-"))
     try:
         ass_path = work / "captions.ass"
         ass_path.write_text(captions.build_ass(events, fps, WIDTH, HEIGHT), encoding="utf-8")
-        audio = build_premaster(job, narration, music, total, work)
+        audio = build_premaster(job, narration, music, total, work, offset, words["words"])
         measured = measure_loudness(["-i", str(audio["premaster"])], "")
         vf = (
             "trim=start_frame=%d:end_frame=%d,setpts=PTS-STARTPTS,"
@@ -225,6 +338,7 @@ def render(job: Path, out: Path, music: Optional[Path], tail: float) -> Dict[str
             "input_narration_duration": round(narration_duration, 3),
             "output_duration": round(float(out_info["format"]["duration"]), 3),
             "fps": "%d/%d" % (fps.numerator, fps.denominator),
+            "tail": {"seconds": round(tail_used, 3), "source": tail_source},
             "output_frames": out_frames,
             "picture_frames_used": [first, min(last, first + out_frames)],
             "picture_held_frames": max(0, out_frames - (last - first)),
@@ -236,7 +350,7 @@ def render(job: Path, out: Path, music: Optional[Path], tail: float) -> Dict[str
             },
             "music": None if music is None else {
                 "file": str(music), "bed_integrated_lufs": audio["music"]["input_i"], "gain_db": audio["music_gain_db"],
-                "offset_below_voice_lu": MUSIC_OFFSET_LU, "source": bed_source(job, music)},
+                "offset_below_voice_lu": offset, "levels": audio["music_levels"], "source": bed_source(job, music)},
             "caption_events": len(events),
             "shots": summarize_shots(shots),
             "video_codec": {"codec": out_video["codec_name"], "profile": out_video.get("profile"), "pix_fmt": out_video["pix_fmt"]},
@@ -253,7 +367,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--job", required=True, type=Path, help="job folder")
     parser.add_argument("--out", default="final.mp4", help="output file; a relative name is placed in the job folder")
     parser.add_argument("--music", type=Path, help="optional music bed")
-    parser.add_argument("--tail", type=float, default=0.1, help="seconds after the narration ends (default 0.1)")
+    parser.add_argument("--tail", type=float, help="seconds after the narration ends (default: follow shots.json, at least 0.1)")
+    parser.add_argument("--music-offset", type=float, help="music bed LU under the voice (default: story.json mix.music_offset_lu, else 11)")
     args = parser.parse_args(argv)
     out = Path(args.out)
     if not out.is_absolute() and out.parent == Path("."):
@@ -261,12 +376,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         if args.music is not None and not args.music.is_file():
             raise EditError("music file %s not found" % args.music)
-        report = render(args.job, out, args.music, args.tail)
+        report = render(args.job, out, args.music, args.tail, args.music_offset)
     except (EditError, handoff.HandoffError) as exc:
         print("error: %s" % exc, file=sys.stderr)
         return 1
     print("wrote %s (%.2f s, %d caption events, %.1f LUFS)" % (
         out, report["output_duration"], report["caption_events"], report["loudness"]["output"]["integrated_lufs"]))
+    if report["music"]:
+        levels = report["music"]["levels"]
+        print("music bed %s dB vs voice overall, %s dB in the %d sentence gaps (%.1f s); offset %.1f LU, bed %s dBFS, voice %s dBFS" % (
+            levels["bed_minus_voice_db"], levels["bed_gap_minus_voice_db"], levels["gap_count"], levels["gap_seconds"],
+            report["music"]["offset_below_voice_lu"], levels["bed_rms_dbfs"], levels["voice_speech_rms_dbfs"]))
     return 0
 
 
