@@ -101,6 +101,10 @@ def test_verdict_rules():
     assert quality.verdict(spec, {"score": 8, "defects": [{"key": "idle"}]})["status"] == "pass"
     assert quality.verdict(spec, {"score": 7, "defects": [{"key": "made_up"}]})["status"] == "pass"
     assert quality.verdict(spec, {"defects": []})["status"] == "fail"
+    flagged = dict(spec, flags={"frozen_character": {"defect": "statue", "text": ""}})
+    frozen = quality.verdict(flagged, {"score": 9, "defects": [], "frozen_character": True})
+    assert frozen["status"] == "fail" and frozen["defects"] == [{"key": "statue", "where": "frozen_character"}]
+    assert quality.verdict(flagged, {"score": 9, "defects": [], "frozen_character": False})["status"] == "pass"
     skipped = quality.verdict(spec, {"applicable": False, "score": 2, "defects": [{"key": "idle"}]})
     assert (skipped["status"], skipped["score"], skipped["defects"]) == ("pass", None, [])
 
@@ -115,7 +119,7 @@ def test_full_run_writes_one_report(job, monkeypatch):
     assert [shots[i]["status"] for i in ("s01", "s02", "s03", "s04")] == ["pass", "fail", "fail", "pass"]
     assert shots["s02"]["failed"] == ["posture"] and shots["s03"]["failed"] == ["motion"]
     assert shots["s01"]["judges"]["continuity"]["reason"].startswith("first shot")
-    assert ("s01", "continuity") not in log and len(log) == 4 * 7 - 1 + 3
+    assert ("s01", "continuity") not in log and len(log) == 4 * 8 - 1 + 3
     summary = doc["summary"]
     assert summary["judges"]["posture"]["failing"] == ["s02"] and summary["judges"]["motion"]["fail"] == 1
     assert summary["failing_by_set"] == {"hall": ["s02"], "bedroom": ["s03"]}
@@ -147,9 +151,41 @@ def test_geometry_and_picture_each_fail_on_their_own(job, monkeypatch):
     assert shots["s01"]["judges"]["clipping"]["reason"] == "clean; geometry: me intersect: hand in door (frame 12)"
     assert shots["s01"]["judges"]["posture"]["status"] == "pass"
     assert shots["s02"]["judges"]["clipping"]["status"] == "fail" and shots["s02"]["judges"]["clipping"]["geometry"]["status"] == "pass"
-    assert shots["s03"]["failed"] == ["posture"]
-    again = by_id(quality.run_quality(job, report_only=True))
-    assert again["s01"]["judges"]["clipping"]["reason"].count("geometry:") == 1
+    assert shots["s03"]["failed"] == ["posture"] and shots["s03"]["judges"]["posture"]["picture_status"] == "pass"
+    doc = quality.run_quality(job, report_only=True)
+    assert by_id(doc)["s01"]["judges"]["clipping"]["reason"].count("geometry:") == 1
+    assert doc["summary"]["judges"]["clipping"]["geometry_only"] == ["s01"] and doc["summary"]["judges"]["posture"]["geometry_only"] == ["s03"]
+    other = job / "later.json"
+    other.write_text(json.dumps({"version": 1, "described": "pass 7", "shots": {
+        "s01": {"status": "pass", "frames": [{"frame": 12, "issues": [{"kind": "intersect", "actor": "me", "in_frame": False}]}]},
+        "s04": {"status": "fail", "frames": [{"frame": 100, "issues": [{"kind": "reach_miss", "actor": "me", "detail": "", "in_frame": True},
+                                                                      {"kind": "prop_missing", "actor": "me", "in_frame": False}]}]}}}))
+    shots = by_id(quality.run_quality(job, report_only=True, posture=other))
+    assert shots["s01"]["judges"]["clipping"]["status"] == "pass" and shots["s01"]["judges"]["clipping"]["reason"] == "clean"
+    assert shots["s04"]["failed"] == ["posture"] and shots["s04"]["judges"]["clipping"]["status"] == "pass"
+    assert "Geometry merged from @@later.json@" in (job / "QUALITY.md").read_text().replace(chr(96), "@@")
+
+
+def test_geometry_in_the_earlier_shape_counts_measured_reasons_only(job):
+    quality.run_quality(job, judges=["posture", "clipping"])
+    earlier = job / "earlier.json"
+    earlier.write_text(json.dumps({"version": 1, "shots": [], "posture": {"model": "some-model", "shots": [
+        {"id": "s01", "status": "fail", "reasons": ["vision_posture", "vision_clipping"],
+         "geometry": [{"who": "me", "code": "clip_scenery", "detail": "LeftFoot->Part", "seen": False, "at": [0, 1], "depth": 0.48}]},
+        {"id": "s02", "status": "fail", "reasons": ["arm_out", "clip_scenery", "vision_action"], "geometry": [
+            {"who": "mom", "code": "arm_out", "detail": "L arm held out", "seen": True, "at": [0], "depth": None},
+            {"who": "mom", "code": "clip_scenery", "detail": "LeftFoot->Part", "seen": True, "at": [0, 0.25], "depth": 0.38},
+            {"who": "mom", "code": "stance_wide", "detail": "both legs angled outwards", "seen": False, "at": [0.25], "depth": None}]},
+        {"id": "s03", "status": "no_character", "reasons": [], "geometry": []},
+        {"id": "s04", "status": "fail", "current": False, "reasons": ["no_action"], "geometry": []}]}}))
+    doc = quality.run_quality(job, report_only=True, posture=earlier)
+    shots = by_id(doc)
+    assert shots["s01"]["failed"] == [] and shots["s01"]["judges"]["clipping"]["geometry"] == {"status": "pass", "issues": []}
+    assert shots["s02"]["failed"] == ["posture", "clipping"]
+    assert shots["s02"]["judges"]["posture"]["geometry"]["issues"] == ["mom arm_out: L arm held out (at 0 of the shot)"]
+    assert shots["s02"]["judges"]["clipping"]["geometry"]["issues"] == ["mom clip_scenery: LeftFoot->Part by 0.38 studs (at 0, 0.25 of the shot)"]
+    assert shots["s03"]["failed"] == [] and shots["s04"]["failed"] == [] and "geometry" not in shots["s04"]["judges"]["posture"]
+    assert doc["geometry_stale"] == ["s04"] and "marks them stale: s04" in (job / "QUALITY.md").read_text()
 
 
 def test_ceiling_holds_across_threads_and_runs(job, monkeypatch):
@@ -240,6 +276,20 @@ def test_missing_model_and_unknown_names_are_refused(tmp_path, monkeypatch):
         quality.run_quality(job, judges=["vibes"], overrides={"model": "m"})
     with pytest.raises(quality.QualityError, match="unknown shot ids"):
         quality.run_quality(job, shots=["zz"], overrides={"model": "m"})
+
+
+def test_motion_gets_a_larger_second_sheet_and_the_frozen_flag(job, monkeypatch):
+    seen = {}
+
+    def ask(provider, model, system, prompt, images, **kwargs):
+        seen["images"], seen["prompt"] = [Path(i).name for i in images], prompt
+        reply = {"applicable": True, "defects": [], "score": 8, "frozen_character": True, "reason": "holds one pose"}
+        return {"text": "", "json": reply, "usage": {"input_tokens": 1, "output_tokens": 1}, "cost_usd": 0.0}
+
+    monkeypatch.setattr(vision, "ask", ask)
+    record = by_id(quality.run_quality(job, shots=["s02"], judges=["motion"]))["s02"]["judges"]["motion"]
+    assert seen["images"] == ["s02_cle8_480.jpg", "s02_cle3_720.jpg"] and '"frozen_character": false' in seen["prompt"]
+    assert record["status"] == "fail" and record["defects"] == [{"key": "statue", "where": "frozen_character"}]
 
 
 def test_prompt_carries_the_line_the_tiles_and_the_fail_keys(job):

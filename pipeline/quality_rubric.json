@@ -49,6 +49,32 @@
       "not_applicable": "no character and no part of a character (such as a hand) is visible in any frame",
       "defect_pass_score": 8
     },
+    "expression": {
+      "title": "Expression",
+      "video": "clean",
+      "frames": 3,
+      "tile_height": 720,
+      "threshold": 6,
+      "defect_pass_score": 8,
+      "script": true,
+      "question": "Look at every face you can read in every frame. Does each expression fit the moment: what that character feels as these words are spoken?",
+      "notes": "Work out the moment from the script: who is afraid, who is asleep, who is calm at work, who is worried, who is pretending. Judge the face only: eyes, brows and mouth. A dark silhouette with only lit eyes has no expression to judge, and a face turned away, hidden, or too small or dark to read does not count.",
+      "fail_if": [
+        {
+          "key": "wrong_emotion",
+          "text": "a face shows the opposite of the moment: smiling, smirking or looking pleased during fear, danger or a scare; cheerful where the words describe crying, pleading or worry"
+        },
+        {
+          "key": "blank",
+          "text": "a blank, neutral default face on a moment of fear, shock, crying, pain or urgency for that character"
+        },
+        {
+          "key": "frozen_face",
+          "text": "eyes or mouth stuck in an unnatural state: a fixed doll stare through the whole shot, a mouth hanging open in every frame, eyes wide open while the words say the character is asleep"
+        }
+      ],
+      "not_applicable": "no face can be read in any frame (no character, only silhouettes, or faces turned away or hidden)"
+    },
     "clipping": {
       "title": "Clipping and floating",
       "video": "clean",
@@ -174,6 +200,10 @@
         {
           "key": "text_wrong",
           "text": "on-screen text the words depend on (a phone message, a sign) is missing, unreadable or says something else"
+        },
+        {
+          "key": "wrong_time",
+          "text": "the script puts this shot at a time of day and the light in the picture contradicts it: every shot from the words 'the next morning' (or 'at dawn', 'that afternoon') onwards must read as daylight until the script says otherwise, and a shot set in the middle of the night must not read as day"
         }
       ],
       "defect_pass_score": 8
@@ -186,7 +216,7 @@
       "threshold": 6,
       "neighbours": true,
       "question": "Compare this shot (the unprefixed tiles) with the shot before it (PREV) and, when present, the last earlier shot in the same set (EARLIER). Would a viewer feel a break?",
-      "notes": "A cut to another place or to an insert is normal. Judge whether the same character is the same avatar in the same outfit, whether positions and props follow from the previous shot when the place and action are continuous, whether time of day and lamp states agree within one place, and whether every character belongs to one visual style. Report a defect only when this shot's own tiles show it: a problem that exists only inside the PREV or EARLIER tile belongs to that shot, not this one.",
+      "notes": "A cut to another place or to an insert is normal. Judge whether the same character is the same avatar in the same outfit, whether positions and props follow from the previous shot when the place and action are continuous, whether time of day and lamp states agree within one place, and whether every character belongs to one visual style. Report a defect only when this shot's own tiles show it: a problem that exists only inside the PREV or EARLIER tile belongs to that shot, not this one. Characters drawn in different detailed art styles are not a defect here; only a blocky classic or default avatar is.",
       "fail_if": [
         {
           "key": "avatar_changed",
@@ -243,7 +273,17 @@
           "text": "the camera move starts or ends on nothing (an empty wall, floor or blur) or drifts off the subject"
         }
       ],
-      "defect_pass_score": 8
+      "defect_pass_score": 8,
+      "detail": {
+        "frames": 3,
+        "tile_height": 720
+      },
+      "flags": {
+        "frozen_character": {
+          "defect": "statue",
+          "text": "a visible character whose words or moment call for action, speech or a reaction shows no change of pose at all between the first and the last frame of the shot: same limbs, same hands, same head angle, same mouth. Ignore camera movement, zoom, lighting changes and eye blinks; compare the body against itself, using the larger second image. A character who is asleep, hiding or deliberately still is not frozen."
+        }
+      }
     }
   },
   "video": {
