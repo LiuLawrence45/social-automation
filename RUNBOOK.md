@@ -183,7 +183,7 @@ Each rule is something the first video failed on after a render. They are checke
 | no pose in more than a quarter of a character's shots, or more than 2 running | pipeline.checks rule pose_variety | before Studio |
 | no camera type over a fifth of the time, half the time on a moving camera, neighbours differ | pipeline.checks rule camera_variety, and the camera judge | before Studio, in Studio |
 | every camera the judge may replace names its type, so the judge chooses the side and never the kind of shot | pipeline.checks rule camera_tag | before Studio |
-| the light agrees with the time of day the script has reached | pipeline.checks rule time_of_day ("daypart" on a shot overrides); again by the story judge | before Studio, on the picture |
+| the light agrees with the time of day the script has reached | pipeline.checks rule time_of_day ("daypart" on a shot overrides, see below); again by the story judge | before Studio, on the picture |
 | no sun_patch prop | pipeline.checks rule sun_patch | before Studio |
 | a hand is sent where it can reach (not thigh when standing, not ribs beside a held prop) | pipeline.checks rule reach (a warning); then geometry: reach_miss, intersect | before Studio, in Studio |
 | a pose new in this job has passed geometry | pipeline.checks rule new_pose (a warning), then the posture stage | before Studio, in Studio |
@@ -193,6 +193,13 @@ Each rule is something the first video failed on after a render. They are checke
 
 Tune the first group per job in story.json: "checks": {"pose_share": 0.25, "pose_run": 2, "still_seconds": 2.0,
 "off": ["rule"]}. Turning a rule off is a decision to report, not a fix.
+
+time_of_day follows the script's words from shot to shot. A word that says a time has come ("the next morning",
+"at dawn", "that night", "by nightfall") sets the time from that shot on. "before dawn", "before sunrise", "until
+morning" and "waiting for daylight" are still night, and "before nightfall" changes nothing. Words cannot say
+everything (the sun rises with no word for it, a line recalls another day), so the supported way out is "daypart" on
+the shot where the time changes: "daypart": "day" or "night" sets the time from that shot on whatever its words
+say, and "daypart": "any" clears it until the next word that names a time. Use it instead of turning the rule off.
 
 ## 7. Cast
 

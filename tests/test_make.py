@@ -387,6 +387,37 @@ def test_checks_unknown_face_sun_patch_and_reach(tmp_path):
     assert rules(result, "warnings") == [("reach", "b"), ("reach", "c")]
 
 
+def test_time_of_day_words_that_say_the_time_has_not_come():
+    def said(text):
+        return checks.said_daypart([checks._norm(token) for token in text.split()])
+    for text in ("Just before dawn,", "hours before sunrise.", "I did not sleep until morning.", "We hid till the morning.", "'til dawn",
+                 "I sat waiting for daylight.", "before midnight", "I had never seen it before tonight."):
+        assert said(text) == "night", text
+    for text in ("The next morning", "At dawn it stopped.", "By sunrise", "I never believed it until that morning.", "before noon",
+                 "Morning came. Before, I had slept."):
+        assert said(text) == "day", text
+    for text in ("We had to be home before nightfall.", "Nothing moved until the evening.", "Nobody spoke."):
+        assert said(text) is None, text
+    assert said("I never believed in it until that night.") == "night"
+    assert said("All night I waited, and at dawn it left.") == "day"
+    assert said("At dawn I slept, and woke before the next night.") == "night"
+
+
+def test_checks_before_dawn_is_still_night(tmp_path):
+    me = {"who": "me", "at": "hall_mid", "face": "uneasy", "pose": "listen"}
+    job = avatar_job(tmp_path, [
+        {"id": "a", "text": "That night it came.", "time": "night_hall", "cast": [me]},
+        {"id": "b", "text": "Just before dawn", "time": "night_hall", "cast": [dict(me, pose="hug_self")]},
+        {"id": "c", "text": "it was still there.", "time": "night_hall", "cast": [dict(me, pose="clutch_chest")]},
+        {"id": "d", "text": "I stayed awake until morning.", "time": "night_dread", "cast": [dict(me, pose="rub_eye")]},
+        {"id": "e", "text": "Then the sun rose.", "time": "grey_morning", "daypart": "day", "cast": [dict(me, pose="explain")]},
+        {"id": "f", "text": "It was gone.", "time": "night_hall", "cast": [dict(me, pose="recoil")]},
+    ])
+    result = checks.check_job(job)
+    assert rules(result) == [("time_of_day", "f")]
+    assert "\"daypart\": \"night\"" in result["errors"][0]["message"]
+
+
 def test_checks_time_of_day_and_allow(tmp_path):
     me = {"who": "me", "at": "hall_mid", "face": "uneasy", "pose": "listen"}
     job = avatar_job(tmp_path, [

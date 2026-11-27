@@ -16,7 +16,8 @@ camera judge; warnings are printed and kept in <job>/checks.json.
   camera_variety  neighbouring locked cameras share type and side, a type exceeds its share, too little camera movement
   camera_tag    a camera the judge may replace names no "type", so the judge picks the kind of shot and the variety
                 checked here will not hold after it
-  time_of_day   a line says morning or night and the shot's light says the opposite, from that line on
+  time_of_day   a line says morning or night has come and the shot's light says the opposite, from that line on;
+                "before dawn", "until morning" and "waiting for sunrise" are still night
   sun_patch     a shot uses the sun_patch prop, which reads as translucent paper in the render; daylight comes from
                 the scene light and bright windows
   reach         warning: a standing hand sent to the thigh (it misses), or a hand at the ribs beside an arm that holds a prop
@@ -55,6 +56,12 @@ ACTION_WORDS = {"walk", "walked", "walking", "ran", "run", "running", "grab", "g
                 "threw", "typed", "dialed", "dialled", "scanned", "pressed", "tapped", "taped", "shrugged", "waved", "pointed", "nodded", "hurried", "rushed", "bolted", "fled"}
 DAY_WORDS = {"morning", "sunrise", "dawn", "noon", "afternoon", "daylight", "midday"}
 NIGHT_WORDS = {"night", "midnight", "tonight", "evening", "dusk", "nightfall", "overnight"}
+# "before dawn" and "until morning" say the time named has not come: the hours before daylight are night, and
+# "before nightfall" leaves the time of day as it was.
+NOT_YET = {"before", "until", "till", "til", "'til"}
+WAITING = {"wait", "waits", "waited", "waiting"}
+DAYBREAK = {"morning", "sunrise", "dawn", "daylight"}
+NIGHTFALL = {"night", "evening", "dusk", "nightfall"}
 LIGHT = {"day": "day", "grey_morning": "day", "interior_golden": "day", "evening": "night", "night_room": "night", "night_hall": "night",
          "night_dread": "night", "interior_night": "night", "interior_dim": "night"}
 
@@ -70,6 +77,30 @@ def light_class(name: Optional[str]) -> str:
     if "day" in name or "morning" in name or "noon" in name or "sun" in name:
         return "day"
     return "neutral"
+
+
+def said_daypart(tokens: List[str]) -> Optional[str]:
+    """day or night when the words say which it now is, else None; the last such word in the line decides.
+
+    A word for a time of day counts as that time having come ("the next morning", "at dawn", "by nightfall")
+    unless "before", "until", "till" or "waiting for" stands right in front of it, with at most "the" between:
+    then daybreak has not come, so it is night, and nightfall has not come, so nothing changes. "until that
+    night" and "before this morning" name a time that did come and count as it.
+    """
+    words = [word for word in tokens if word]
+    state = None  # type: Optional[str]
+    for index, word in enumerate(words):
+        if word not in DAY_WORDS and word not in NIGHT_WORDS:
+            continue
+        lead = index - 2 if index >= 1 and words[index - 1] == "the" else index - 1
+        ahead = lead >= 0 and (words[lead] in NOT_YET or (words[lead] == "for" and lead >= 1 and words[lead - 1] in WAITING))
+        if ahead and word in DAYBREAK:
+            state = "night"
+        elif ahead and word in NIGHTFALL:
+            continue
+        else:
+            state = "day" if word in DAY_WORDS else "night"
+    return state
 
 
 def _norm(token: str) -> str:
@@ -178,14 +209,12 @@ def check_job(job: Path) -> Dict[str, Any]:
         elif shot.get("daypart") == "any":
             state = None
         else:
-            said = [word for word in text_tokens if word in DAY_WORDS or word in NIGHT_WORDS]
-            if said:
-                state = "day" if said[-1] in DAY_WORDS else "night"
+            state = said_daypart(text_tokens) or state
         lit = light_class(mood)
         if state == "day" and lit == "night":
-            report("time_of_day", shot, "the script has reached daytime but the light is %r (a night mood); use a day mood, or set \"daypart\" on the shot if the line does not mean now" % mood)
+            report("time_of_day", shot, "the script has reached daytime but the light is %r (a night mood); use a day mood, or set \"daypart\": \"night\" on the shot if the line does not mean now" % mood)
         elif state == "night" and lit == "day":
-            report("time_of_day", shot, "the script has reached night but the light is %r (a day mood); use a night mood, or set \"daypart\" on the shot" % mood)
+            report("time_of_day", shot, "the script has reached night but the light is %r (a day mood); use a night mood, or set \"daypart\": \"day\" on the shot if the line does not mean now" % mood)
         elif state == "day" and lit == "neutral":
             report("time_of_day", shot, "daytime in the script, light %r shows no time of day; the story judge wants visible daylight (a day mood, bright windows in the set)" % mood, warn=True)
         if any(isinstance(prop, dict) and prop.get("prop") == "sun_patch" for prop in shot.get("props") or []):
