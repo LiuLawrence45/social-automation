@@ -903,7 +903,7 @@ def markdown(doc: Dict[str, Any]) -> str:
     if overrules.get("applied") or overrules.get("void"):
         out += ["## Overruled fails", "",
                 "Read from the frames by %s. Each row is a judge's fail that no longer fails its shot, with the judge's reason and the "
-                "reader's beside it; %d shots pass on these. Disagree with a row and that fail stands again."
+                "reader's beside it. Shots that pass because of them: %d. Disagree with a row and that fail stands again."
                 % (overrules.get("reader") or "a reader", summary["pass_by_overrule"]), ""]
         if overrules.get("applied"):
             out += ["| shot | judge | the judge's reason | the reader's reason | frames read |", "|---|---|---|---|---|"]
