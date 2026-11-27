@@ -38,6 +38,7 @@ GROUPS = {
     "hand_off_target": "hand misses what it reaches for",
     "no_action": "standing with nothing to do",
     "prop_missing": "posed to hold something that is not there",
+    "face_fixed": "a face is set on a head that cannot move",
     "piece_floating": "a prop or set piece floats free",
     "piece_twice": "a set piece is built twice",
     "vision_posture": "posture looks unnatural (vision)",
@@ -84,7 +85,7 @@ def load_poses() -> Dict[str, Any]:
 
 KINDS = {"clip_scenery": "intersect", "clip_self": "intersect", "clip_other": "intersect", "clip_prop": "intersect", "joint_limit": "joint_limit",
          "floating": "floating", "arms_out": "stiff_arms", "arm_out": "stiff_arms", "arms_splayed": "stiff_arms", "stance_wide": "stiff_arms",
-         "no_action": "idle", "hand_off_target": "reach_miss", "prop_missing": "prop_missing",
+         "no_action": "idle", "hand_off_target": "reach_miss", "prop_missing": "prop_missing", "face_fixed": "frozen_face",
          "piece_floating": "floating_piece", "piece_twice": "duplicate_piece"}
 # Findings about the set and the props, not about a character; they count in shots that show nobody too.
 SCENE = "the set"

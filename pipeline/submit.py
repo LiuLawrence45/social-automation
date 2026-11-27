@@ -119,6 +119,15 @@ def command_send(args: argparse.Namespace) -> Dict[str, Any]:
     return {"submission": str(folder / name), "shots": ids, "sets": [path.name for path in sets]}
 
 
+def strings(value: Any) -> set:
+    """Every string anywhere inside a shot (pose names among them)."""
+    if isinstance(value, str):
+        return {value}
+    if isinstance(value, dict):
+        value = list(value.values())
+    return set().union(*[strings(item) for item in value]) if isinstance(value, list) else set()
+
+
 def pending(main: Path, only: Optional[str] = None) -> List[Path]:
     folder = main / "submissions"
     found = [path for path in sorted(folder.iterdir()) if path.is_dir() and not path.name.startswith(".") and (path / "meta.json").is_file()] if folder.is_dir() else []
@@ -144,19 +153,27 @@ def command_merge(args: argparse.Namespace) -> Dict[str, Any]:
     library = read(studio.LIBRARY_DIR / "avatar_poses.json")
     owners = read(main / "submissions" / "pose_owners.json", {})
     report = {"merged": [], "changed": [], "camera_changed": [], "staging_changed": [], "sets": [], "poses": []}  # type: Dict[str, List[Any]]
+    taken, set_files = [], []  # type: List[Path], List[Path]
     for path in pending(main, args.only):
         meta = read(path / "meta.json")
         group = meta.get("group")
         allowed = groups(main).get(group)
         incoming = read(path / "poses.json", {})
+        sent = read(path / "shots.json")
+        foreign = set()  # type: set
         for name, pose in incoming.items():
             if name.startswith("_"):
                 continue
             if name in library and library[name] != pose:
                 raise SubmitError("%s: pose '%s' redefines a library pose; give it a new name" % (path.name, name))
+            # A fix folder carries the whole poses.json it was copied with. Its copy of another group's pose is not
+            # its change: it is left out, unless one of the shots sent was staged with it, which would then look
+            # different from what its fixer previewed.
             if name in poses and poses[name] != pose and owners.get(name) not in (None, group):
-                raise SubmitError("%s: pose '%s' is already defined differently by group %s" % (path.name, name, owners.get(name)))
-        for shot in read(path / "shots.json"):
+                if name in strings(sent):
+                    raise SubmitError("%s: pose '%s' is already defined differently by group %s" % (path.name, name, owners.get(name)))
+                foreign.add(name)
+        for shot in sent:
             if shot["id"] not in position:
                 raise SubmitError("%s: unknown shot %s" % (path.name, shot["id"]))
             current = shotlist["shots"][position[shot["id"]]]
@@ -175,25 +192,29 @@ def command_merge(args: argparse.Namespace) -> Dict[str, Any]:
                     report["staging_changed"].append(shot["id"])
             shotlist["shots"][position[shot["id"]]] = shot
         for name, pose in incoming.items():
-            if not name.startswith("_") and name not in library and poses.get(name) != pose:
+            if not name.startswith("_") and name not in library and name not in foreign and poses.get(name) != pose:
                 poses[name] = pose
                 owners[name] = group
                 report["poses"].append(name)
         for source in sorted((path / "sets").glob("*.luau")) if (path / "sets").is_dir() else []:
             if allowed is not None and source.stem not in allowed.get("sets", []):
                 raise SubmitError("%s: set file %s does not belong to group %s" % (path.name, source.name, group))
-            if not args.dry_run:
-                (main / "sets").mkdir(exist_ok=True)
-                shutil.copy2(source, main / "sets" / source.name)
+            set_files.append(source)
             report["sets"].append(source.stem)
         report["merged"].append(path.name)
-        if not args.dry_run:
-            write(path / "merged.json", {"at": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
+        taken.append(path)
+    # Nothing is written until every submission has been read without a refusal, so one refused submission
+    # cannot leave the others marked as merged with their shots left out.
     if not args.dry_run and report["merged"]:
+        for source in set_files:
+            (main / "sets").mkdir(exist_ok=True)
+            shutil.copy2(source, main / "sets" / source.name)
         write(main / "shotlist.json", shotlist)
         if poses:
             write(main / "poses.json", poses)
             write(main / "submissions" / "pose_owners.json", owners)
+        for path in taken:
+            write(path / "merged.json", {"at": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
     for key in ("changed", "camera_changed", "staging_changed", "sets", "poses"):
         report[key] = sorted(set(report[key]), key=lambda value: position.get(value, 0))
     report["judge_cameras"] = [shot_id for shot_id in report["staging_changed"] if shot_id not in report["camera_changed"]
