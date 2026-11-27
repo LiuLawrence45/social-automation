@@ -193,14 +193,14 @@ def test_a_stray_set_piece_in_frame_fails_clipping_and_names_the_piece(job, monk
 def test_a_face_set_on_a_head_that_cannot_show_it_fails_expression(job, monkeypatch):
     (job / "posture.json").write_text(json.dumps({"version": 1, "shots": {
         "s02": {"status": "fail", "reasons": ["face_fixed"], "frames": [{"frame": 40, "issues": [
-            {"kind": "frozen_face", "actor": "jesslyn", "detail": "the head has no face controls", "code": "face_fixed", "in_frame": True}]}]},
+            {"kind": "frozen_face", "actor": "dispatcher", "detail": "the head has no face controls", "code": "face_fixed", "in_frame": True}]}]},
         "s03": {"status": "pass", "frames": []}}}))
     monkeypatch.setattr(vision, "ask", fake_ask())
     doc = quality.run_quality(job, judges=["posture", "expression", "clipping"])
     shots = by_id(doc)
     face = shots["s02"]["judges"]["expression"]
     assert shots["s02"]["failed"] == ["expression"] and face["picture_status"] == "pass" and "votes" not in face
-    assert face["reason"] == "clean; geometry: jesslyn frozen_face: the head has no face controls (frame 40)"
+    assert face["reason"] == "clean; geometry: dispatcher frozen_face: the head has no face controls (frame 40)"
     assert shots["s03"]["judges"]["expression"]["geometry"]["status"] == "pass" and shots["s03"]["status"] == "pass"
     assert doc["summary"]["judges"]["expression"]["geometry_only"] == ["s02"]
 
