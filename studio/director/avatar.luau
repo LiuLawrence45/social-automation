@@ -3,6 +3,7 @@ local AssetService = game:GetService("AssetService")
 local ClipProvider = game:GetService("AnimationClipProvider")
 local HttpService = game:GetService("HttpService")
 local Util = __require("util")
+local Pose = __require("pose")
 
 local M = {}
 
@@ -130,10 +131,8 @@ function M.build(parent, name, spec)
 	end
 	local root = model.HumanoidRootPart
 	root.Anchored = true
-	local foot = model.LeftFoot
 	model:SetAttribute("Rig", "avatar")
 	model:SetAttribute("Scale", spec.size or 1)
-	model:SetAttribute("Lift", root.Position.Y - (foot.Position.Y - foot.Size.Y / 2))
 	if spec.silhouette then
 		silhouette(model, Util.color(spec.silhouette))
 		model:SetAttribute("Silhouette", true)
@@ -182,19 +181,22 @@ local function trackFor(model, content)
 	return track
 end
 
-local function jointCFrame(values)
-	return CFrame.new(values[4] or 0, values[5] or 0, values[6] or 0)
-		* CFrame.Angles(0, math.rad(values[2] or 0), 0)
-		* CFrame.Angles(math.rad(values[1] or 0), 0, 0)
-		* CFrame.Angles(0, 0, math.rad(values[3] or 0))
-end
+local jointCFrame = Pose.jointCFrame
 
-function M.clip(keys)
-	local signature = HttpService:JSONEncode(keys)
+-- options.full: every joint is driven, so nothing of an animation underneath shows through.
+-- options.linear: keys are close together and are joined straight, not eased one by one.
+function M.clip(keys, options)
+	options = options or {}
+	local signature = HttpService:JSONEncode({ keys, options.full or false, options.linear or false })
 	if clips[signature] then
 		return clips[signature]
 	end
 	local joints, controls = {}, {}
+	if options.full then
+		for _, name in ipairs(ORDER) do
+			joints[name] = true
+		end
+	end
 	for _, key in ipairs(keys) do
 		for name in pairs(key.joints or {}) do
 			if not PARENT[name] then
@@ -224,7 +226,7 @@ function M.clip(keys)
 			if joints[name] then
 				pose.Weight = 1
 				pose.CFrame = jointCFrame((key.joints or {})[name] or {})
-				pose.EasingStyle = Enum.PoseEasingStyle.Cubic
+				pose.EasingStyle = options.linear and Enum.PoseEasingStyle.Linear or Enum.PoseEasingStyle.Cubic
 				pose.EasingDirection = Enum.PoseEasingDirection.InOut
 			else
 				pose.Weight = 0
@@ -266,7 +268,7 @@ end
 
 function M.apply(model, rootCF, t, u)
 	local rig = rigOf(model)
-	model.HumanoidRootPart.CFrame = rootCF * CFrame.new(0, model:GetAttribute("Lift") or 3, 0)
+	model.HumanoidRootPart.CFrame = rootCF * CFrame.new(0, Pose.restLift(model), 0)
 	for _, item in ipairs(rig.playing) do
 		local layer, track = item.layer, item.track
 		if layer.normalized then

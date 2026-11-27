@@ -148,6 +148,10 @@ class StudioMCP:
             except Exception:
                 self.proc.kill()
         self.proc = None
+        lock = getattr(self, "lock", None)
+        if lock is not None:
+            self.lock = None
+            lock.release()
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -166,8 +170,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     luau_cmd.add_argument("file")
     luau_cmd.add_argument("--mode", default="Edit", choices=["Edit", "Client", "Server"])
     args = parser.parse_args(argv)
+    from .lock import StudioLock
     try:
-        with StudioMCP(timeout=args.timeout) as client:
+        with StudioLock(), StudioMCP(timeout=args.timeout) as client:
             client.studio_id = args.studio
             if args.command == "tools":
                 for tool in client.list_tools():

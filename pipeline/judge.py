@@ -875,6 +875,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     spread = sub.add_parser("variety", help="print the shot-type and move distribution and any broken variety rule")
     spread.add_argument("--job", required=True, type=Path)
     spread.add_argument("--authored", action="store_true", help="use the shot list's own cameras, ignoring judge.json")
+    pose = sub.add_parser("posture", help="check every shot for clipping, unnatural posture and characters with nothing to do")
+    pose.add_argument("--job", required=True, type=Path)
+    pose.add_argument("--shots", help="comma separated shot ids to (re)check")
+    pose.add_argument("--no-vision", action="store_true", help="geometry only")
+    pose.add_argument("--show", action="store_true", help="print the recorded result without checking again")
+    _add_model_flags(pose)
     args = parser.parse_args(argv)
     try:
         if args.command == "models":
@@ -892,6 +898,18 @@ def main(argv: Optional[List[str]] = None) -> int:
                 print("problem: " + problem)
             return 1 if report["problems"] else 0
         config = {"provider": args.provider, "model": args.model, "ceiling_usd": args.ceiling}
+        if args.command == "posture":
+            from . import posture
+            if not args.show:
+                cfg = resolve_config(read_job(args.job)["story"], config, load_rubric())
+                stager = make_stager(args.job)
+                try:
+                    posture.check_shots(args.job, stager, cfg, [s for s in args.shots.split(",") if s] if args.shots else None, not args.no_vision)
+                finally:
+                    stager.close()
+            record = _load_judge(args.job).get("posture") or {}
+            print(posture.table(record))
+            return 1 if (record.get("summary") or {}).get("failed") else 0
         if args.command == "video":
             doc = judge_video(args.job, config, args.references)
             print("video pass: %d frames, weakest %s, $%.4f" % (

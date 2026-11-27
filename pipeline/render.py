@@ -33,11 +33,11 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import judge, story
+from . import judge, posture, story
 from .edit import ffmpeg_bin
-from .studio import Director, DirectorError, connect, director_hash
+from .studio import Director, DirectorError, connect, director_hash, use_job
 from .studio_mcp import MCPError
 
 REPO = Path(__file__).resolve().parent.parent
@@ -322,6 +322,7 @@ class JudgeStager:
 
     def __init__(self, job: Path, studio: Optional[str] = None, roll: float = ROLL, height: int = 480, at: float = 0.6) -> None:
         self.job = Path(job)
+        use_job(self.job)
         self.timeline = load_timeline(self.job, judged=False)
         self.shots = {shot["id"]: shot for shot in self.timeline["shots"]}
         self.stage = Stage(Director(connect(studio)), roll=roll)
@@ -344,11 +345,28 @@ class JudgeStager:
                 result["issues"] = []
         return results
 
+    def posture(self, shot_id: str, camera: Optional[Dict[str, Any]], samples: Sequence[float]) -> Dict[str, Any]:
+        """Geometric posture findings for one shot under one camera at the given moments (0 to 1)."""
+        return self.stage.director.run("posture", {"shot": shot_id, "camera": camera, "samples": list(samples), "roll": self.stage.roll})
+
+    def frames_at(self, shot_id: str, moments: Sequence[float]) -> List[int]:
+        shot = self.shots[shot_id]
+        last = max(shot["frame_start"], shot["frame_end"] - 1)
+        return [shot["frame_start"] + int(round((last - shot["frame_start"]) * u)) for u in moments]
+
+    def moments(self, shot_id: str, camera: Dict[str, Any], moments: Sequence[float], out_dir: Path, height: Optional[int] = None,
+                extension: str = "jpg") -> List[Path]:
+        """Frames of one shot under one camera at several moments, as the render would draw them."""
+        return self._grab(shot_id, [(camera, frame) for frame in self.frames_at(shot_id, moments)], out_dir, height or self.height, extension)
+
     def stills(self, shot_id: str, cameras: List[Dict[str, Any]], out_dir: Path) -> List[Path]:
         shot = self.shots[shot_id]
         frame = shot["frame_start"] + int((shot["frame_end"] - shot["frame_start"] - 1) * self.at)
+        return self._grab(shot_id, [(camera, frame) for camera in cameras], out_dir, self.height)
+
+    def _grab(self, shot_id: str, wanted: Sequence[Tuple[Dict[str, Any], int]], out_dir: Path, height: int, extension: str = "jpg") -> List[Path]:
         variants = []
-        for camera in cameras:
+        for camera, frame in wanted:
             self.marker += 1
             variants.append({"shot": shot_id, "camera": camera, "frame": frame, "marker": self.marker})
         got = {}  # type: Dict[int, Tuple[bytes, Bitmap]]
@@ -358,9 +376,9 @@ class JudgeStager:
         paths = []
         for position, variant in enumerate(variants):
             pixels, image = got[variant["marker"]]
-            target = out_dir / ("%s.jpg" % "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[position])
-            cmd = self.stage.ffmpeg_input(image, 1) + ["-vf", self.stage.video_filter(self.height * WIDTH // HEIGHT, self.height),
-                                                       "-frames:v", "1", "-q:v", "3", str(target)]
+            target = out_dir / ("%s.%s" % ("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[position], extension))
+            cmd = self.stage.ffmpeg_input(image, 1) + ["-vf", self.stage.video_filter(height * WIDTH // HEIGHT // 2 * 2, height),
+                                                       "-frames:v", "1", "-q:v", "3", "-y", str(target)]
             subprocess.run(cmd, input=pixels, check=True)
             paths.append(target)
         return paths
@@ -438,6 +456,14 @@ def command_video(stage: Stage, args: argparse.Namespace) -> Dict[str, Any]:
     """
     job = Path(args.job)
     timeline = load_timeline(job)
+    if not args.skip_posture:
+        try:
+            with open(job / "story.json", "r", encoding="utf-8") as handle:
+                posture.require_clean(job, load_timeline(job, judged=False), json.load(handle))
+        except FileNotFoundError:
+            pass
+        except posture.PostureError as exc:
+            raise RenderError(str(exc))
     started = time.time()
     stage.director.load(timeline)
     calibration = stage.calibrate()
@@ -531,6 +557,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     video.add_argument("--force", action="store_true")
     video.add_argument("--reuse", action="store_true")
     video.add_argument("--crf", type=int, default=14)
+    video.add_argument("--skip-posture", action="store_true", help="render even when shots fail the posture check")
     args = parser.parse_args(argv)
     stage = None
     try:
@@ -540,6 +567,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 helper("frame", str(visible["x"]), str(visible["y"]), str(visible["width"]), str(visible["height"]))
             print(json.dumps(helper("list"), indent=1))
             return 0
+        use_job(getattr(args, "job", None))
         stage = open_stage(args)
         if args.command == "calibrate":
             result = stage.calibrate()

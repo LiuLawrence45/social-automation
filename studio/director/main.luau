@@ -8,6 +8,7 @@ local Sets = __require("sets")
 local Stage = __require("stage")
 local Capture = __require("capture")
 local Judge = __require("judge")
+local Posture = __require("posture")
 
 local commands = {}
 local cached = { key = nil, stage = nil, lit = nil }
@@ -64,10 +65,29 @@ function commands.build_sets(args)
 			local builder = Sets.begin(root(), name, index, nil, args.text)
 			__require("set_" .. name)(builder)
 			local model = builder:finish()
+			model:SetAttribute("Source", args.sources and args.sources[name] or nil)
 			built[name] = #model:GetDescendants()
 		end
 	end
 	return built
+end
+
+-- Rebuilds each named set unless the one standing in the place was built from the same source (a hash from the pipeline).
+function commands.ensure_sets(args)
+	local folder = Util.folder(root(), "Sets")
+	local built = {}
+	for index, name in ipairs(__SET_NAMES) do
+		local wanted = args.sets[name]
+		local existing = folder:FindFirstChild(name)
+		if wanted and (not existing or existing:GetAttribute("Source") ~= wanted) then
+			local builder = Sets.begin(root(), name, index, nil, args.text)
+			__require("set_" .. name)(builder)
+			local model = builder:finish()
+			model:SetAttribute("Source", wanted)
+			built[name] = #model:GetDescendants()
+		end
+	end
+	return { rebuilt = built }
 end
 
 function commands.build_cast(args, lib)
@@ -234,6 +254,19 @@ function commands.judge(args, lib)
 	stage.cameras = nil
 	stage.current = nil
 	return results
+end
+
+function commands.posture(args, lib)
+	local stage = stageFor(args, lib)
+	for position, shot in ipairs(stage.timeline.shots) do
+		if shot.id == args.shot then
+			local result = Posture.check(stage, position, args.camera, args.samples or { 0, 0.25, 0.5, 0.75, 1 })
+			stage.cameras = nil
+			stage.current = nil
+			return result
+		end
+	end
+	error("unknown shot '" .. tostring(args.shot) .. "'")
 end
 
 function commands.calibrate(args)

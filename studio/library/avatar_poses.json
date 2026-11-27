@@ -1,444 +1,576 @@
 {
+ "_defaults": {
+  "stand": "stand",
+  "walk": "walk"
+ },
+ "stand": {
+  "rest": true,
+  "action": "standing at rest",
+  "joints": {
+   "UpperTorso": [-2, 0, 0],
+   "Head": [-2, 0, 0],
+   "LeftUpperArm": [3, 0, -4],
+   "RightUpperArm": [5, 0, 4],
+   "LeftLowerArm": [14, 0, 0],
+   "RightLowerArm": [18, 0, 0]
+  }
+ },
  "still": {
-  "LeftUpperArm": [
-   0,
-   0,
-   0
-  ],
-  "RightUpperArm": [
-   0,
-   0,
-   0
-  ],
-  "LeftLowerArm": [
-   0,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   0,
-   0,
-   0
-  ],
-  "UpperTorso": [
-   0,
-   0,
-   0
-  ],
-  "Head": [
-   0,
-   0,
-   0
+  "rest": true,
+  "action": "standing at rest",
+  "joints": {
+   "UpperTorso": [-2, 0, 0],
+   "LeftUpperArm": [3, 0, -4],
+   "RightUpperArm": [5, 0, 4],
+   "LeftLowerArm": [14, 0, 0],
+   "RightLowerArm": [18, 0, 0]
+  }
+ },
+ "walk": {
+  "action": "walking",
+  "joints": {
+   "UpperTorso": [-3, 0, 0],
+   "LeftUpperArm": [0, 0, -4],
+   "RightUpperArm": [0, 0, 4],
+   "LeftLowerArm": [18, 0, 0],
+   "RightLowerArm": [18, 0, 0],
+   "LeftLowerLeg": [-20, 0, 0],
+   "RightLowerLeg": [-20, 0, 0]
+  },
+  "wobble": [
+   ["LeftUpperLeg", 1, 24, 1.5, 0],
+   ["RightUpperLeg", 1, 24, 1.5, 0.5],
+   ["LeftLowerLeg", 1, 16, 1.5, 0.75],
+   ["RightLowerLeg", 1, 16, 1.5, 0.25],
+   ["LeftUpperArm", 1, 14, 1.5, 0.5],
+   ["RightUpperArm", 1, 14, 1.5, 0]
   ]
  },
- "reach_handle": {
-  "RightUpperArm": [
-   72,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   14,
-   0,
-   0
-  ],
-  "UpperTorso": [
-   6,
-   0,
-   0
+ "listen": {
+  "action": "standing tense and listening, a hand at the chest",
+  "joints": {
+   "UpperTorso": [-5, 0, 0],
+   "Head": [0, 0, 5],
+   "LeftUpperArm": [2, 0, -4],
+   "LeftLowerArm": [24, 0, 0]
+  },
+  "reach": {
+   "R": "heart"
+  }
+ },
+ "clutch_chest": {
+  "action": "hands drawn in to the chest, shoulders hunched",
+  "joints": {
+   "UpperTorso": [-8, 0, 0],
+   "Head": [-5, 0, 0]
+  },
+  "reach": {
+   "R": "chest",
+   "L": "ribs"
+  }
+ },
+ "hand_over_mouth": {
+  "action": "a hand clapped over the mouth",
+  "joints": {
+   "UpperTorso": [3, 0, 0],
+   "Head": [0, 0, 0]
+  },
+  "reach": {
+   "R": "mouth",
+   "L": "belly"
+  }
+ },
+ "recoil": {
+  "action": "leaning back on the heels, hands pulled in to the chest",
+  "joints": {
+   "UpperTorso": [7, 0, 0],
+   "Head": [-4, 0, 0],
+   "RightUpperLeg": [-12, 0, 2],
+   "RightLowerLeg": [-8, 0, 0],
+   "RightFoot": [20, 0, 0],
+   "LeftUpperLeg": [9, 0, -2],
+   "LeftLowerLeg": [-10, 0, 0]
+  },
+  "reach": {
+   "R": "chest",
+   "L": "ribs"
+  }
+ },
+ "hands_face": {
+  "action": "face buried in both hands, shoulders shaking",
+  "joints": {
+   "UpperTorso": [-12, 0, 0],
+   "Head": [-14, 0, 0]
+  },
+  "reach": {
+   "R": "eye",
+   "L": "eye"
+  },
+  "wobble": [
+   ["UpperTorso", 1, 2.5, 3.2, 0]
   ]
  },
- "hold_phone": {
-  "RightUpperArm": [
-   42,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   88,
-   0,
-   0
-  ],
-  "Head": [
-   -22,
-   0,
-   0
-  ],
-  "UpperTorso": [
-   4,
-   0,
-   0
-  ]
+ "hug_self": {
+  "action": "arms wrapped around the body",
+  "joints": {
+   "UpperTorso": [-6, 0, 0],
+   "Head": [-4, 0, 0]
+  },
+  "reach": {
+   "R": "collar",
+   "L": "waist"
+  }
  },
- "phone_ear": {
-  "RightUpperArm": [
-   30,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   140,
-   0,
-   0
-  ],
-  "RightHand": [
-   0,
-   0,
-   0
-  ],
-  "Head": [
-   0,
-   0,
-   -8
-  ]
- },
- "scared_back": {
-  "LeftUpperArm": [
-   48,
-   0,
-   18
-  ],
-  "RightUpperArm": [
-   48,
-   0,
-   -18
-  ],
-  "LeftLowerArm": [
-   82,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   82,
-   0,
-   0
-  ],
-  "UpperTorso": [
-   -9,
-   0,
-   0
-  ],
-  "Head": [
-   4,
-   0,
-   0
-  ]
- },
- "cower": {
-  "LowerTorso": [
-   0,
-   0,
-   0,
-   0,
-   -1.35,
-   0
-  ],
-  "LeftUpperLeg": [
-   84,
-   0,
-   0
-  ],
-  "RightUpperLeg": [
-   84,
-   0,
-   0
-  ],
-  "LeftLowerLeg": [
-   -118,
-   0,
-   0
-  ],
-  "RightLowerLeg": [
-   -118,
-   0,
-   0
-  ],
-  "UpperTorso": [
-   22,
-   0,
-   0
-  ],
-  "LeftUpperArm": [
-   64,
-   0,
-   28
-  ],
-  "RightUpperArm": [
-   64,
-   0,
-   -28
-  ],
-  "LeftLowerArm": [
-   104,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   104,
-   0,
-   0
-  ],
-  "Head": [
-   -6,
-   0,
-   0
-  ]
- },
- "lie_bed": {
-  "LowerTorso": [
-   90,
-   0,
-   0,
-   0,
-   -2.2,
-   0
-  ],
-  "LeftUpperArm": [
-   0,
-   0,
-   6
-  ],
-  "RightUpperArm": [
-   0,
-   0,
-   -6
-  ],
-  "Head": [
-   0,
-   0,
-   0
-  ]
- },
- "sit_up_bed": {
-  "LowerTorso": [
-   0,
-   0,
-   0,
-   0,
-   -1.75,
-   0
-  ],
-  "LeftUpperLeg": [
-   88,
-   0,
-   0
-  ],
-  "RightUpperLeg": [
-   88,
-   0,
-   0
-  ],
-  "UpperTorso": [
-   8,
-   0,
-   0
-  ],
-  "LeftUpperArm": [
-   -25,
-   0,
-   8
-  ],
-  "RightUpperArm": [
-   -25,
-   0,
-   -8
-  ]
- },
- "lean_door": {
-  "UpperTorso": [
-   14,
-   0,
-   0
-  ],
-  "Head": [
-   18,
-   0,
-   24
-  ],
-  "LeftUpperArm": [
-   104,
-   0,
-   0
-  ],
-  "RightUpperArm": [
-   104,
-   0,
-   0
-  ],
-  "LeftLowerArm": [
-   34,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   34,
-   0,
-   0
+ "shiver": {
+  "action": "hugging itself and shivering",
+  "joints": {
+   "UpperTorso": [-8, 0, 0],
+   "Head": [-8, 0, 6]
+  },
+  "reach": {
+   "R": "collar",
+   "L": "waist"
+  },
+  "wobble": [
+   ["UpperTorso", 2, 2.5, 6, 0],
+   ["UpperTorso", 1, 1.5, 7, 0.2],
+   ["Head", 2, 2, 6, 0.4]
   ]
  },
  "head_tilt": {
-  "Head": [
-   6,
-   0,
-   30
-  ],
-  "LeftUpperArm": [
-   0,
-   0,
-   0
-  ],
-  "RightUpperArm": [
-   0,
-   0,
-   0
-  ],
-  "LeftLowerArm": [
-   0,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   0,
-   0,
-   0
+  "action": "standing dead still with the head cocked to one side",
+  "joints": {
+   "Head": [4, 0, 26],
+   "LeftUpperArm": [0, 0, -2],
+   "RightUpperArm": [0, 0, 2],
+   "LeftLowerArm": [6, 0, 0],
+   "RightLowerArm": [6, 0, 0]
+  }
+ },
+ "text_phone": {
+  "holds": "R",
+  "action": "typing on a phone held in both hands",
+  "joints": {
+   "UpperTorso": [-4, 0, 0],
+   "Head": [-24, 0, 0]
+  },
+  "reach": {
+   "R": {
+    "to": "front",
+    "offset": [0.12, -0.45, -0.42]
+   },
+   "L": {
+    "to": "front",
+    "offset": [0.12, -0.55, -0.4]
+   }
+  },
+  "wobble": [
+   ["LeftHand", 1, 6, 3.5, 0],
+   ["RightHand", 3, 4, 3.1, 0.3]
   ]
  },
- "knob": {
-  "RightUpperArm": [
-   50,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   28,
-   0,
-   0
-  ],
-  "Head": [
-   -10,
-   0,
-   0
+ "phone_read": {
+  "holds": "R",
+  "action": "staring at a phone held up in one hand",
+  "joints": {
+   "UpperTorso": [-3, 0, 0],
+   "Head": [-16, 0, 0],
+   "LeftUpperArm": [3, 0, -4],
+   "LeftLowerArm": [20, 0, 0]
+  },
+  "reach": {
+   "R": {
+    "to": "front",
+    "offset": [0.05, -0.2, -0.5]
+   }
+  }
+ },
+ "phone_ear": {
+  "holds": "R",
+  "action": "a phone pressed to the ear",
+  "joints": {
+   "UpperTorso": [-4, 0, 0],
+   "Head": [0, 0, -6]
+  },
+  "reach": {
+   "R": "ear",
+   "L": "belly"
+  }
+ },
+ "reach_out": {
+  "action": "reaching a hand out",
+  "joints": {
+   "UpperTorso": [-6, 0, 0],
+   "Head": [-6, 0, 0],
+   "LeftUpperArm": [3, 0, -4],
+   "LeftLowerArm": [16, 0, 0],
+   "RightUpperArm": [5, 0, 4],
+   "RightLowerArm": [18, 0, 0]
+  }
+ },
+ "lean_listen": {
+  "action": "leaning in close with a hand flat on the door",
+  "joints": {
+   "UpperTorso": [-12, 0, 0],
+   "Head": [0, 30, 10],
+   "LeftUpperArm": [2, 0, -3],
+   "LeftLowerArm": [12, 0, 0]
+  }
+ },
+ "lie_sleep": {
+  "ground": "body",
+  "action": "asleep on the back, a hand on the stomach",
+  "joints": {
+   "LowerTorso": [90, 0, 0],
+   "Head": [0, 14, 0],
+   "LeftUpperArm": [0, 0, -8],
+   "LeftLowerArm": [10, 0, 0],
+   "RightUpperLeg": [0, 0, 3]
+  },
+  "reach": {
+   "R": "belly"
+  }
+ },
+ "sit_up_bed": {
+  "ground": "body",
+  "action": "bolt upright in bed, hands clutched to the chest",
+  "joints": {
+   "UpperTorso": [-6, 0, 0],
+   "LeftUpperLeg": [86, 0, -4],
+   "RightUpperLeg": [86, 0, 4],
+   "LeftLowerLeg": [-4, 0, 0],
+   "RightLowerLeg": [-4, 0, 0]
+  },
+  "reach": {
+   "R": "chest",
+   "L": "ribs"
+  }
+ },
+ "sit_edge": {
+  "ground": "hips",
+  "action": "sitting on the edge of the bed, hands on the thighs",
+  "joints": {
+   "UpperTorso": [-6, 0, 0],
+   "LeftUpperLeg": [84, 0, -5],
+   "RightUpperLeg": [84, 0, 5],
+   "LeftLowerLeg": [-84, 0, 0],
+   "RightLowerLeg": [-84, 0, 0]
+  },
+  "reach": {
+   "R": "thigh",
+   "L": "thigh"
+  }
+ },
+ "crouch": {
+  "action": "crouched low, hands on the knees",
+  "joints": {
+   "UpperTorso": [-24, 0, 0],
+   "Head": [8, 0, 0],
+   "LeftUpperLeg": [100, 0, -4],
+   "RightUpperLeg": [100, 0, 4],
+   "LeftLowerLeg": [-128, 0, 0],
+   "RightLowerLeg": [-128, 0, 0],
+   "LeftFoot": [28, 0, 0],
+   "RightFoot": [28, 0, 0]
+  },
+  "reach": {
+   "R": "knee",
+   "L": "knee"
+  }
+ },
+ "cower": {
+  "ground": "body",
+  "action": "huddled on the floor, arms around the knees",
+  "joints": {
+   "LowerTorso": [10, 0, 0],
+   "UpperTorso": [-22, 0, 0],
+   "Head": [6, 0, 0],
+   "LeftUpperLeg": [118, 0, -6],
+   "RightUpperLeg": [118, 0, 6],
+   "LeftLowerLeg": [-115, 0, 0],
+   "RightLowerLeg": [-115, 0, 0],
+   "LeftFoot": [-13, 0, 0],
+   "RightFoot": [-13, 0, 0]
+  },
+  "reach": {
+   "R": "knee",
+   "L": "knee"
+  }
+ },
+ "cower_call": {
+  "ground": "body",
+  "holds": "R",
+  "action": "huddled on the floor with a phone to the ear",
+  "joints": {
+   "LowerTorso": [10, 0, 0],
+   "UpperTorso": [-22, 0, 0],
+   "Head": [6, 0, -6],
+   "LeftUpperLeg": [118, 0, -6],
+   "RightUpperLeg": [118, 0, 6],
+   "LeftLowerLeg": [-115, 0, 0],
+   "RightLowerLeg": [-115, 0, 0],
+   "LeftFoot": [-13, 0, 0],
+   "RightFoot": [-13, 0, 0]
+  },
+  "reach": {
+   "R": "ear",
+   "L": "knee"
+  }
+ },
+ "sit_type": {
+  "ground": "hips",
+  "action": "seated at a desk, typing",
+  "joints": {
+   "UpperTorso": [-8, 0, 0],
+   "Head": [-4, 0, 0],
+   "LeftUpperLeg": [86, 0, -5],
+   "RightUpperLeg": [86, 0, 5],
+   "LeftLowerLeg": [-86, 0, 0],
+   "RightLowerLeg": [-86, 0, 0]
+  },
+  "wobble": [
+   ["LeftHand", 1, 7, 5, 0],
+   ["RightHand", 1, 7, 5, 0.4]
   ]
  },
- "flashlight": {
-  "RightUpperArm": [
-   66,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   22,
-   0,
-   0
+ "stand_type": {
+  "action": "typing at a keyboard on the counter",
+  "joints": {
+   "UpperTorso": [-10, 0, 0],
+   "Head": [-18, 0, 0]
+  },
+  "wobble": [
+   ["LeftHand", 1, 7, 5, 0],
+   ["RightHand", 1, 7, 5, 0.4]
   ]
  },
- "crouch_look": {
-  "LowerTorso": [
-   0,
-   0,
-   0,
-   0,
-   -1.3,
-   0
-  ],
-  "LeftUpperLeg": [
-   86,
-   0,
-   0
-  ],
-  "RightUpperLeg": [
-   86,
-   0,
-   0
-  ],
-  "LeftLowerLeg": [
-   -120,
-   0,
-   0
-  ],
-  "RightLowerLeg": [
-   -120,
-   0,
-   0
-  ],
-  "UpperTorso": [
-   26,
-   0,
-   0
-  ],
-  "Head": [
-   -20,
-   0,
-   0
-  ],
-  "RightUpperArm": [
-   70,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   20,
-   0,
-   0
+ "flashlight_search": {
+  "holds": "R",
+  "action": "sweeping a flashlight across the room, the other hand on the belt",
+  "joints": {
+   "UpperTorso": [-3, 0, 0]
+  },
+  "reach": {
+   "R": {
+    "to": "front",
+    "offset": [0.2, -0.55, -0.6]
+   },
+   "L": "belt"
+  },
+  "wobble": [
+   ["UpperTorso", 2, 14, 0.55, 0],
+   ["Head", 2, 10, 0.55, 0.1]
   ]
  },
- "hands_face": {
-  "LeftUpperArm": [
-   70,
-   0,
-   22
-  ],
-  "RightUpperArm": [
-   70,
-   0,
-   -22
-  ],
-  "LeftLowerArm": [
-   128,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   128,
-   0,
-   0
-  ],
-  "Head": [
-   -14,
-   0,
-   0
-  ],
-  "UpperTorso": [
-   10,
-   0,
-   0
+ "guard": {
+  "action": "hands on the belt, looking around",
+  "joints": {
+   "UpperTorso": [-2, 0, 0]
+  },
+  "reach": {
+   "R": "belt",
+   "L": "belt"
+  },
+  "wobble": [
+   ["Head", 2, 22, 0.5, 0]
   ]
  },
- "desk_type": {
-  "LeftUpperArm": [
-   38,
-   0,
-   0
-  ],
-  "RightUpperArm": [
-   38,
-   0,
-   0
-  ],
-  "LeftLowerArm": [
-   64,
-   0,
-   0
-  ],
-  "RightLowerArm": [
-   64,
-   0,
-   0
-  ],
-  "Head": [
-   -8,
-   0,
-   0
+ "explain": {
+  "action": "talking, one hand turned up in explanation",
+  "joints": {
+   "UpperTorso": [-3, 0, 0]
+  },
+  "reach": {
+   "R": {
+    "to": "front",
+    "offset": [0.3, -0.45, -0.55],
+    "palm": [0, 1, 0]
+   },
+   "L": "belt"
+  },
+  "wobble": [
+   ["RightUpperArm", 1, 3, 1.2, 0],
+   ["Head", 1, 3, 1.2, 0.2]
   ]
+ },
+ "rub_eye": {
+  "action": "rubbing an eye, half asleep",
+  "joints": {
+   "UpperTorso": [-3, 0, 0],
+   "Head": [-6, 0, -6],
+   "LeftUpperArm": [3, 0, -4],
+   "LeftLowerArm": [14, 0, 0]
+  },
+  "reach": {
+   "R": "eye"
+  },
+  "wobble": [
+   ["RightHand", 1, 8, 2.2, 0]
+  ]
+ },
+ "hand_on_neck": {
+  "action": "a hand on the back of the neck, staring down",
+  "joints": {
+   "UpperTorso": [-6, 0, 0],
+   "Head": [-10, 0, 0],
+   "LeftUpperArm": [3, 0, -4],
+   "LeftLowerArm": [16, 0, 0]
+  },
+  "reach": {
+   "R": "neck"
+  }
+ },
+ "creep": {
+  "action": "creeping forward, a hand at the chest",
+  "joints": {
+   "UpperTorso": [-8, 0, 0],
+   "Head": [-3, 0, 0],
+   "LeftUpperArm": [0, 0, -4],
+   "LeftLowerArm": [22, 0, 0],
+   "LeftLowerLeg": [-16, 0, 0],
+   "RightLowerLeg": [-16, 0, 0]
+  },
+  "reach": {
+   "R": "chest"
+  },
+  "wobble": [
+   ["LeftUpperLeg", 1, 16, 1.0, 0],
+   ["RightUpperLeg", 1, 16, 1.0, 0.5],
+   ["LeftLowerLeg", 1, 12, 1.0, 0.75],
+   ["RightLowerLeg", 1, 12, 1.0, 0.25],
+   ["LeftUpperArm", 1, 6, 1.0, 0.5]
+  ]
+ },
+ "carry_light": {
+  "holds": "R",
+  "action": "holding a flashlight out ahead",
+  "joints": {},
+  "reach": {
+   "R": {
+    "to": "front",
+    "offset": [0.2, -0.55, -0.6]
+   }
+  }
+ },
+ "cover_ears": {
+  "action": "hands clamped over the ears",
+  "joints": {
+   "UpperTorso": [-8, 0, 0],
+   "Head": [-10, 0, 0]
+  },
+  "reach": {
+   "R": "ear",
+   "L": "ear"
+  }
+ },
+ "sit_text": {
+  "ground": "hips",
+  "holds": "R",
+  "action": "sitting on the edge of the bed, typing on a phone",
+  "joints": {
+   "UpperTorso": [-8, 0, 0],
+   "Head": [-22, 0, 0],
+   "LeftUpperLeg": [84, 0, -5],
+   "RightUpperLeg": [84, 0, 5],
+   "LeftLowerLeg": [-84, 0, 0],
+   "RightLowerLeg": [-84, 0, 0]
+  },
+  "reach": {
+   "R": {
+    "to": "front",
+    "offset": [0.12, -0.45, -0.42]
+   },
+   "L": {
+    "to": "front",
+    "offset": [0.12, -0.55, -0.4]
+   }
+  },
+  "wobble": [
+   ["LeftHand", 1, 6, 3.5, 0],
+   ["RightHand", 3, 4, 3.1, 0.3]
+  ]
+ },
+ "sit_bed_mouth": {
+  "ground": "body",
+  "action": "sitting up in bed, a hand pressed over the mouth",
+  "joints": {
+   "UpperTorso": [-2, 0, 0],
+   "LeftUpperLeg": [86, 0, -4],
+   "RightUpperLeg": [86, 0, 4],
+   "LeftLowerLeg": [-4, 0, 0],
+   "RightLowerLeg": [-4, 0, 0]
+  },
+  "reach": {
+   "R": "mouth",
+   "L": "ribs"
+  }
+ },
+ "read_chart": {
+  "holds": "R",
+  "action": "reading a chart held up in one hand",
+  "joints": {
+   "UpperTorso": [-3, 0, 0],
+   "Head": [-14, 0, 0],
+   "LeftUpperArm": [3, 0, -4],
+   "LeftLowerArm": [20, 0, 0]
+  },
+  "reach": {
+   "R": {
+    "to": "front",
+    "offset": [0.05, -0.1, -0.5]
+   }
+  }
+ },
+ "palm_door": {
+  "action": "a palm pressed flat against the door, head cocked to one side",
+  "joints": {
+   "UpperTorso": [-4, 0, 0],
+   "Head": [4, 0, 22],
+   "LeftUpperArm": [0, 0, -2],
+   "LeftLowerArm": [6, 0, 0]
+  }
+ },
+ "hand_frame": {
+  "action": "standing in the doorway with one hand on the door frame, head cocked",
+  "joints": {
+   "Head": [4, 0, -22],
+   "RightUpperArm": [0, 0, 2],
+   "RightLowerArm": [6, 0, 0]
+  }
+ },
+ "back_away": {
+  "action": "backing away, hands pulled in to the chest",
+  "joints": {
+   "UpperTorso": [5, 0, 0],
+   "Head": [-4, 0, 0],
+   "LeftLowerLeg": [-14, 0, 0],
+   "RightLowerLeg": [-14, 0, 0]
+  },
+  "reach": {
+   "R": "chest",
+   "L": "ribs"
+  },
+  "wobble": [
+   ["LeftUpperLeg", 1, 12, 1.2, 0.5],
+   ["RightUpperLeg", 1, 12, 1.2, 0],
+   ["LeftLowerLeg", 1, 10, 1.2, 0.25],
+   ["RightLowerLeg", 1, 10, 1.2, 0.75]
+  ]
+ },
+ "gasp_back": {
+  "action": "weight thrown back on the heels, a hand clapped over the mouth",
+  "joints": {
+   "UpperTorso": [7, 0, 0],
+   "Head": [-4, 0, 0],
+   "RightUpperLeg": [-12, 0, 2],
+   "RightLowerLeg": [-8, 0, 0],
+   "RightFoot": [20, 0, 0],
+   "LeftUpperLeg": [9, 0, -2],
+   "LeftLowerLeg": [-10, 0, 0]
+  },
+  "reach": {
+   "R": "mouth",
+   "L": "ribs"
+  }
  }
 }
