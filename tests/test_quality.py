@@ -168,6 +168,28 @@ def test_geometry_and_picture_each_fail_on_their_own(job, monkeypatch):
     assert "Geometry merged from" in report and chr(96) + "later.json@" in report and chr(96) + "posture.json@" in report
 
 
+def test_a_stray_set_piece_in_frame_fails_clipping_and_names_the_piece(job, monkeypatch):
+    def piece(kind, detail, seen=True):
+        return {"kind": kind, "actor": "the set", "detail": detail, "code": "piece", "in_frame": seen}
+    (job / "posture.json").write_text(json.dumps({"version": 1, "shots": {
+        "s01": {"status": "fail", "characters": False, "reasons": ["piece_floating"],
+                "frames": [{"frame": 5, "issues": [piece("floating_piece", "clock touches no surface and no hand")]}]},
+        "s02": {"status": "fail", "reasons": ["piece_twice"],
+                "frames": [{"frame": 40, "issues": [piece("duplicate_piece", "Part of handle is built twice in the same place")]}]},
+        "s03": {"status": "fail", "reasons": ["piece_twice"], "frames": [{"frame": 70, "issues": [piece("duplicate_piece", "handle", seen=False)]}]},
+        "s04": {"status": "fail", "reasons": ["vision_natural"], "frames": []}}}))
+    monkeypatch.setattr(vision, "ask", fake_ask())
+    doc = quality.run_quality(job, judges=["posture", "clipping"])
+    shots = by_id(doc)
+    clock = shots["s01"]["judges"]["clipping"]
+    assert clock["status"] == "fail" and clock["picture_status"] == "pass" and "votes" not in clock
+    assert clock["reason"] == "clean; geometry: floating set piece: clock touches no surface and no hand (frame 5)"
+    assert shots["s02"]["judges"]["clipping"]["reason"].endswith("set piece built twice: Part of handle is built twice in the same place (frame 40)")
+    assert shots["s01"]["failed"] == shots["s02"]["failed"] == ["clipping"] and shots["s01"]["judges"]["posture"]["status"] == "pass"
+    assert shots["s03"]["status"] == "pass" and shots["s04"]["status"] == "pass"
+    assert doc["summary"]["judges"]["clipping"]["geometry_only"] == ["s01", "s02"]
+
+
 def test_geometry_is_merged_only_for_the_shots_judged(job, monkeypatch):
     monkeypatch.setattr(vision, "ask", fake_ask())
     quality.run_quality(job, judges=["posture", "clipping"])

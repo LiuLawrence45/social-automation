@@ -45,7 +45,9 @@ VIDEO_JUDGE = "video"
 GEOMETRY_JUDGES = {"joint_limit": "posture", "stiff_arms": "posture", "idle": "posture", "reach_miss": "posture",
                    "arm_out": "posture", "arms_out": "posture", "arms_splayed": "posture", "stance_wide": "posture",
                    "no_action": "posture", "hand_off_target": "posture",
-                   "intersect": "clipping", "floating": "clipping", "sunk": "clipping", "prop_missing": "clipping"}
+                   "intersect": "clipping", "floating": "clipping", "sunk": "clipping", "prop_missing": "clipping",
+                   "floating_piece": "clipping", "duplicate_piece": "clipping"}
+SET_PIECES = {"floating_piece": "floating set piece", "duplicate_piece": "set piece built twice"}
 MEASURE_SIZE = (36, 64)
 LIT_LEVEL = 40
 STILL_CHANGE = 0.05
@@ -558,8 +560,10 @@ def geometry_results(posture: Optional[Dict[str, Any]]) -> Tuple[Dict[str, Dict[
     """Geometric results per shot, and the shots whose results are marked stale, from either shape the posture stage writes.
 
     The current shape keys shots by id and lists issues per sampled frame (kind, actor, detail, in_frame). The earlier
-    one lists shots under posture.shots with a geometry list (code, who, detail, seen, depth) and mixes a model's
+    one lists shots under posture.shots with a geometry list (code, who, detail, seen, depth). Both mix a model's
     opinion into status and reasons; those reasons (vision_*) are another judge's view and are not geometry.
+    A stray piece of the set (floating or built twice) is named by its detail and counts only where it is in frame:
+    out of frame it is left out and counted under hidden, so it cannot fail a picture it is not in.
     """
     posture = posture or {}
     node = posture["posture"] if isinstance(posture.get("posture"), dict) else posture
@@ -583,14 +587,20 @@ def geometry_results(posture: Optional[Dict[str, Any]]) -> Tuple[Dict[str, Dict[
             found.append((issue.get("code"), issue.get("who"), detail,
                           "at %s of the shot" % ", ".join("%g" % u for u in issue.get("at") or []), issue.get("seen") is not False))
         issues: List[Dict[str, Any]] = []
+        hidden = 0
         for kind, who, detail, where, seen in found:
             text = "%s %s%s" % (who or "?", kind or "?", ": " + str(detail) if detail else "")
+            if str(kind) in SET_PIECES:
+                if not seen:
+                    hidden += 1
+                    continue
+                text = "%s: %s" % (SET_PIECES[str(kind)], detail or "not named")
             if all(text != item["text"] for item in issues):
                 issues.append({"judge": GEOMETRY_JUDGES.get(str(kind), "clipping"), "text": text, "where": where, "in_frame": seen})
         status = result.get("status")
-        if "geometry" in result:
+        if "geometry" in result or result.get("reasons"):
             status = "fail" if any(not str(r).startswith("vision_") for r in result.get("reasons") or []) else "pass"
-        results[str(shot_id)] = {"status": status, "issues": issues}
+        results[str(shot_id)] = {"status": status, "issues": issues, "hidden": hidden}
     return results, stale
 
 
@@ -611,7 +621,7 @@ def merge_geometry(entries: Dict[str, Dict[str, Any]], posture: Optional[Dict[st
         if result["status"] == "fail" or (result["status"] is None and result["issues"]):
             for issue in [i for i in result["issues"] if i["in_frame"]] or result["issues"]:
                 found.setdefault(issue["judge"], []).append("%s (%s)" % (issue["text"], issue["where"]))
-            if not found:
+            if not found and not result["hidden"]:
                 found["clipping"] = ["geometric check failed without listed issues"]
         for judge in ("posture", "clipping"):
             record = entry["judges"].setdefault(judge, {"status": "unjudged", "reason": "", "defects": []})
