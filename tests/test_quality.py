@@ -461,6 +461,23 @@ def test_prompt_carries_the_line_the_tiles_and_the_fail_keys(job):
     assert "- style_mismatch:" in prompt and '"defects"' in prompt
 
 
+def test_continuity_and_motion_read_the_script_and_are_told_about_the_set(job):
+    settings = quality.load_settings({"quality": {"sets": {"bedroom": "one white door with a lever handle"}}})
+    meta, shots = quality.load_shots(job)
+    spec = settings["judges"]["continuity"]
+    plan = quality.plan_sheet(spec, 2, shots, meta, {"clean": job / "video.mp4", "captioned": job / "final.mp4"})
+    story = {"title": "The Door", "lines": [{"speaker": "narrator", "text": "They started at the front door."}]}
+    prompt = quality.build_prompt("continuity", spec, settings, story, 2, shots, plan, None)
+    assert "Whole script, for context only:\nNARRATOR: They started at the front door." in prompt
+    assert 'About the set "bedroom": one white door with a lever handle' in prompt
+    assert "Last earlier shot in the same set (s01): NARRATOR: My mom texted" in prompt
+    assert "One set holds several doors" in prompt and "a turned or tilted head" in prompt and "another corner of one set does not count" in prompt
+    assert "About the set" not in quality.build_prompt("continuity", spec, quality.load_settings({}), story, 2, shots, plan, None)
+    motion = settings["judges"]["motion"]
+    assert motion["script"] and "text message" in motion["notes"] and "Words that imply an action still need the action." in motion["notes"]
+    assert "speaking or working while the arms never move is frozen" in motion["flags"]["frozen_character"]["text"]
+
+
 def test_the_lighting_judge_knows_a_light_patch_that_reads_as_a_sheet(job):
     settings = quality.load_settings(json.loads((job / "story.json").read_text()))
     assert "fake_light" in [d["key"] for d in settings["judges"]["lighting"]["fail_if"]]

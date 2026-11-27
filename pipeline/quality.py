@@ -8,7 +8,7 @@ Usage:
 One judge per concern (posture, expression, clipping, framing, lighting, story, continuity, motion) scores every shot on
 labelled sheets of frames cut from the rendered video, and one more judges the video as a whole. Rubrics,
 thresholds and frames per shot live in pipeline/quality_rubric.json; story.json "quality" and --set override
-them, and "accepted" there lists what this one video has ruled acceptable. Model calls go through pipeline.vision and run in a thread pool under one spend ceiling that also counts
+them, and "accepted" there lists what this one video has ruled acceptable and "sets" describes a set to the judges. Model calls go through pipeline.vision and run in a thread pool under one spend ceiling that also counts
 earlier runs against the same job (quality/ledger.json). Geometric results in <job>/posture.json (or --posture) are merged
 for the shots judged in the run:
 a geometric fail fails the shot even when the picture passes, and the reverse. A shot fails when any judge
@@ -384,11 +384,16 @@ def build_prompt(key: str, spec: Dict[str, Any], settings: Dict[str, Any], story
     if spec.get("script"):
         lines += ["Whole script, for context only:", script_text(story, shots), ""]
     lines.append("Shot %s (%d of %d), %.1f seconds, set \"%s\"." % (shot["id"], index + 1, len(shots), shot["end"] - shot["start"], shot["set"]))
+    if (settings.get("sets") or {}).get(shot["set"]):
+        lines.append("About the set \"%s\": %s" % (shot["set"], settings["sets"][shot["set"]]))
     lines.append("Words spoken during this shot: %s" % (shot["line"] or "none (a silent shot)"))
     if index > 0:
         lines.append("Shot before (%s, set \"%s\"): %s" % (shots[index - 1]["id"], shots[index - 1]["set"], shots[index - 1]["line"] or "silent"))
     if index + 1 < len(shots):
         lines.append("Shot after (%s, set \"%s\"): %s" % (shots[index + 1]["id"], shots[index + 1]["set"], shots[index + 1]["line"] or "silent"))
+    earlier = [tile["shot"] for tile in plan["tiles"] if tile["role"] == "EARLIER"]
+    if earlier:
+        lines.append("Last earlier shot in the same set (%s): %s" % (earlier[0], {s["id"]: s["line"] for s in shots}[earlier[0]] or "silent"))
     lines.append("The image is a sheet of %d frames from the rendered video, each labelled in its top-left corner with the shot id and "
                  "frame number, in reading order: %s. The label boxes are added for this review and are not part of the picture."
                  % (len(plan["tiles"]), describe_tiles(plan["tiles"])))
