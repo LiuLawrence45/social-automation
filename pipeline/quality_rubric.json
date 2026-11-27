@@ -6,6 +6,7 @@
   "reserve_usd": 0.05,
   "workers": 8,
   "max_output_tokens": 4000,
+  "accepted": [],
   "prices": {},
   "format": "The video is a vertical 9:16 narrated short staged in Roblox Studio: jointed humanoid avatars (R15 rigs with faces, hair and clothes) acting on built sets, about one shot per second, with one-word captions burned in at 69% of the frame height in the finished version.",
   "system": "You are a strict quality-control reviewer for the finished picture of a short narrated video. You see frames taken from the rendered video and judge only what is visible in them, never what the makers intended. A stylised avatar look is fine; the question is whether a viewer would notice something wrong. When a listed fail condition is visible, report it even if the rest of the frame is good. Never report a defect you cannot point to in a specific labelled frame. Reply with one JSON object and nothing else.",
@@ -216,7 +217,7 @@
       "threshold": 6,
       "neighbours": true,
       "question": "Compare this shot (the unprefixed tiles) with the shot before it (PREV) and, when present, the last earlier shot in the same set (EARLIER). Would a viewer feel a break?",
-      "notes": "A cut to another place or to an insert is normal. Judge whether the same character is the same avatar in the same outfit, whether positions and props follow from the previous shot when the place and action are continuous, whether time of day and lamp states agree within one place, and whether every character belongs to one visual style. Report a defect only when this shot's own tiles show it: a problem that exists only inside the PREV or EARLIER tile belongs to that shot, not this one. Characters drawn in different detailed art styles are not a defect here; only a blocky classic or default avatar is.",
+      "notes": "A cut to another place or to an insert is normal. Judge whether the same character is the same avatar in the same outfit, whether positions and props follow from the previous shot when the place and action are continuous, whether time of day and lamp states agree within one place, and whether every character belongs to one visual style. Report a defect only when this shot's own tiles show it: a problem that exists only inside the PREV or EARLIER tile belongs to that shot, not this one.",
       "fail_if": [
         {
           "key": "avatar_changed",

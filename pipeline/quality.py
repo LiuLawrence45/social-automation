@@ -8,7 +8,7 @@ Usage:
 One judge per concern (posture, expression, clipping, framing, lighting, story, continuity, motion) scores every shot on
 labelled sheets of frames cut from the rendered video, and one more judges the video as a whole. Rubrics,
 thresholds and frames per shot live in pipeline/quality_rubric.json; story.json "quality" and --set override
-them. Model calls go through pipeline.vision and run in a thread pool under one spend ceiling that also counts
+them, and "accepted" there lists what this one video has ruled acceptable. Model calls go through pipeline.vision and run in a thread pool under one spend ceiling that also counts
 earlier runs against the same job (quality/ledger.json). Geometric results in <job>/posture.json (or --posture) are merged
 for the shots judged in the run:
 a geometric fail fails the shot even when the picture passes, and the reverse. A shot fails when any judge
@@ -141,6 +141,12 @@ def load_settings(story: Dict[str, Any], overrides: Optional[Dict[str, Any]] = N
     settings = merge(settings, overrides or {})
     settings["prices"] = merge((story.get("judge") or {}).get("prices") or {}, settings.get("prices") or {})
     return settings
+
+
+def accepted_lines(settings: Dict[str, Any]) -> List[str]:
+    """What this job has ruled acceptable (story.json "quality" "accepted"), as lines every judge is told."""
+    notes = settings.get("accepted") or []
+    return ["Accepted for this video and not a defect: %s" % note for note in ([notes] if isinstance(notes, str) else notes)]
 
 
 def spoken(raw: Dict[str, Any], words: Sequence[Dict[str, Any]]) -> str:
@@ -394,6 +400,7 @@ def build_prompt(key: str, spec: Dict[str, Any], settings: Dict[str, Any], story
     lines += ["", "Judge: %s." % spec["title"], spec["question"]]
     if spec.get("notes"):
         lines.append(spec["notes"])
+    lines += accepted_lines(settings)
     lines.append("Fail conditions; report the key of every one you can see:")
     lines += ["- %s: %s" % (d["key"], d["text"]) for d in spec["fail_if"]]
     if spec.get("not_applicable"):
@@ -504,7 +511,7 @@ def judge_video(settings: Dict[str, Any], story: Dict[str, Any], shots: Sequence
         lines = [settings["format"], "Story: %s." % (story.get("title") or "untitled"), "",
                  "Shots in order (id, seconds, set, words spoken):"]
         lines += ["%s  %.1f-%.1f  %s  %s" % (s["id"], s["start"], s["end"], s["set"], s["line"] or "(silent)") for s in shots]
-        lines += ["", spec["question"], "Score each from 0 to 10:"]
+        lines += ["", spec["question"]] + accepted_lines(settings) + ["Score each from 0 to 10:"]
         lines += ["- %s: %s" % (c["key"], c["text"]) for c in spec["criteria"]]
         lines.append("Then name the %d weakest shots, worst first, by the shot id on their label, each with the one thing wrong with it."
                      % int(spec.get("weakest", 8)))

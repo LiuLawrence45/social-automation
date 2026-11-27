@@ -335,6 +335,21 @@ def test_motion_gets_a_larger_second_sheet_and_the_frozen_flag(job, monkeypatch)
     assert record["status"] == "fail" and record["defects"] == [{"key": "statue", "where": "frozen_character"}]
 
 
+def test_a_job_can_rule_something_acceptable_for_every_judge(job, monkeypatch):
+    prompts = []
+
+    def ask(provider, model, system, prompt, images, **kwargs):
+        prompts.append(prompt)
+        return fake_ask()(provider, model, system, prompt, images, **kwargs)
+
+    monkeypatch.setattr(vision, "ask", ask)
+    quality.run_quality(job, shots=["s02"], judges=["continuity", "video"], overrides={"accepted": ["a mix of detailed avatar styles"]})
+    assert len(prompts) == 5 and all("Accepted for this video and not a defect: a mix of detailed avatar styles" in p for p in prompts)
+    prompts.clear()
+    quality.run_quality(job, shots=["s02"], judges=["continuity"])
+    assert prompts and not any("Accepted for this video" in p for p in prompts)
+
+
 def test_prompt_carries_the_line_the_tiles_and_the_fail_keys(job):
     settings = quality.load_settings({})
     meta, shots = quality.load_shots(job)
