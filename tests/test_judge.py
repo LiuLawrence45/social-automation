@@ -73,6 +73,9 @@ class FakeStager:
         return paths
 
 
+RUBRIC_KEYS = tuple(c["key"] for c in judge.load_rubric()["criteria"])
+
+
 class FakeAsk:
     def __init__(self, totals=None, default=5.0, cost=0.01):
         self.totals = totals or {}
@@ -87,13 +90,13 @@ class FakeAsk:
             items = []
             for label, name in re.findall(r"(?m)^([A-Z]): (\S+) \(geometry notes", prompt):
                 value = self.totals.get(name, self.default)
-                items.append({"label": label, "scores": {k: value for k in ("readable", "composition", "mood", "variety", "captions", "defects")},
+                items.append({"label": label, "scores": {k: value for k in RUBRIC_KEYS},
                               "reason": "scored %s" % name})
             payload = {"candidates": items}
             assert names
         else:
             ids = re.search(r"reading order, row by row, left to right: ([^.]*)\.", prompt).group(1).split(", ")
-            keys = ("readable", "composition", "mood", "variety", "captions", "defects", "quality")
+            keys = RUBRIC_KEYS + ("quality",)
             payload = {"frames": [{"shot": sid, "scores": {k: (index % 10) for k in keys}, "reason": "frame %s" % sid}
                                   for index, sid in enumerate(ids)]}
         return {"text": json.dumps(payload), "json": payload, "usage": {"input_tokens": 100, "output_tokens": 20},
@@ -115,8 +118,10 @@ def test_rubric_weights_sum_to_one_and_totals_are_weighted():
     assert sum(c["weight"] for c in rubric["criteria"]) == pytest.approx(1.0)
     assert rubric["threshold"] == 6.5
     scores = {"readable": 10, "composition": 0, "mood": 0, "variety": 0, "captions": 0, "defects": 10}
-    assert judge.total_score(scores, rubric["criteria"]) == pytest.approx(4.0)
-    assert judge.total_score({"readable": 99, "mood": "bad"}, rubric["criteria"]) == pytest.approx(3.0)
+    assert judge.total_score(scores, rubric["criteria"]) == pytest.approx(3.1)
+    assert judge.total_score({"readable": 99, "mood": "bad"}, rubric["criteria"]) == pytest.approx(2.4)
+    weights = {c["key"]: c["weight"] for c in rubric["criteria"]}
+    assert weights["variety"] == weights["still"] == 0.18 and weights["variety"] > weights["composition"] > weights["mood"]
 
 
 def test_propose_one_actor_round_zero():
@@ -179,7 +184,7 @@ def test_config_merges_defaults_story_and_flags(tmp_path):
 
 @needs_ffmpeg
 def test_picks_the_best_total_and_writes_judge_json(job, monkeypatch, capsys):
-    ask = use(monkeypatch, FakeAsk({"low_angle": 9.0}))
+    ask = use(monkeypatch, FakeAsk({"low_angle": 9.0, "high_angle": 8.0}))
     stager = FakeStager()
     doc = judge.judge_shots(job, stager, CONFIG)
     first, second, third = doc["shots"]
@@ -304,7 +309,7 @@ def test_unknown_shot_id_is_an_error(job):
 
 @needs_ffmpeg
 def test_partial_rerun_merges_into_existing_results(job, monkeypatch):
-    use(monkeypatch, FakeAsk({"low_angle": 9.0}))
+    use(monkeypatch, FakeAsk({"low_angle": 9.0, "high_angle": 8.0}))
     judge.judge_shots(job, FakeStager(), CONFIG)
     before = json.loads((job / "judge.json").read_text())
     use(monkeypatch, FakeAsk({"high_angle": 9.5}))
@@ -321,19 +326,23 @@ def test_partial_rerun_merges_into_existing_results(job, monkeypatch):
 
 @needs_ffmpeg
 def test_prev_tile_uses_the_previous_shots_chosen_still(job, monkeypatch):
-    ask = use(monkeypatch, FakeAsk({"low_angle": 9.0}))
+    ask = use(monkeypatch, FakeAsk({"low_angle": 9.0, "high_angle": 8.0}))
     judge.judge_shots(job, FakeStager(), CONFIG)
     second_sheet = job / "judge" / "s02_r0.jpg"
     first_sheet = job / "judge" / "s01_r0.jpg"
     probe = lambda p: subprocess.run([FFMPEG, "-hide_banner", "-i", str(p)], stderr=subprocess.PIPE, universal_newlines=True).stderr
     assert re.search(r"Video: mjpeg.* (\d+)x96", probe(first_sheet)).group(1) == str(54 * 6)
-    assert re.search(r"Video: mjpeg.* (\d+)x96", probe(second_sheet)).group(1) == str(54 * 7)
+    assert re.search(r"Video: mjpeg.* (\d+)x96", probe(second_sheet)).group(1) == str(54 * 6)
+    second = json.loads((job / "judge.json").read_text())["shots"][1]
+    assert second["chosen"]["name"] == "high_angle"
+    dropped = second["rounds"][0]["dropped"]
+    assert [d["name"] for d in dropped] == ["low_angle"] and "same shot type and side" in dropped[0]["geometry"]["issues"][0]
 
 
 @needs_ffmpeg
 def test_box_labels_fallback_is_recorded(job, monkeypatch):
     monkeypatch.setattr(judge, "drawtext_available", lambda: False)
-    ask = use(monkeypatch, FakeAsk({"low_angle": 9.0}))
+    ask = use(monkeypatch, FakeAsk({"low_angle": 9.0, "high_angle": 8.0}))
     doc = judge.judge_shots(job, FakeStager(), CONFIG, ["s01"])
     assert doc["config"]["labels"] == "boxes" and (job / doc["shots"][0]["rounds"][0]["sheet"]).is_file()
     assert "coloured box" in ask.calls[0]["prompt"]
@@ -378,14 +387,14 @@ def test_video_pass_builds_sheets_and_lists_the_weakest(tmp_path, monkeypatch):
     criteria = judge.video_rubric(judge.load_rubric())["criteria"]
     assert criteria[-1] == {"key": "quality", "weight": 0.2, "question": criteria[-1]["question"]}
     assert sum(c["weight"] for c in criteria) == pytest.approx(1.0)
-    assert criteria[0]["weight"] == pytest.approx(0.24)
+    assert criteria[0]["weight"] == pytest.approx(0.192)
 
 
 @needs_ffmpeg
 def test_video_pass_adds_usage_to_an_existing_judge_json(tmp_path, monkeypatch):
     job = make_job(tmp_path)
     make_video(job, 7)
-    use(monkeypatch, FakeAsk({"low_angle": 9.0}))
+    use(monkeypatch, FakeAsk({"low_angle": 9.0, "high_angle": 8.0}))
     judge.judge_shots(job, FakeStager(), CONFIG)
     doc = judge.judge_video(job, CONFIG)
     assert doc["usage"]["calls"] == 3 and len(doc["shots"]) == 3 and doc["video_pass"]["references"] == []
@@ -400,7 +409,7 @@ def test_video_pass_needs_a_video(job, monkeypatch):
 
 @needs_ffmpeg
 def test_cli_show_and_shots_without_studio(job, monkeypatch, capsys):
-    use(monkeypatch, FakeAsk({"low_angle": 9.0}))
+    use(monkeypatch, FakeAsk({"low_angle": 9.0, "high_angle": 8.0}))
     judge.judge_shots(job, FakeStager(), CONFIG)
     capsys.readouterr()
     assert judge.main(["show", "--job", str(job)]) == 0
@@ -483,3 +492,96 @@ def test_an_unusable_reply_keeps_the_run_going(job, monkeypatch):
     entry = doc["shots"][0]
     assert entry["status"] == "geometry_only" and entry["chosen"]["name"] == "author"
     assert entry["rounds"][0]["error"].startswith("the model returned")
+
+
+def typed(shot_id, start, end, camera, **extra):
+    return dict({"id": shot_id, "start": start, "end": end, "cast": [{"who": "me"}], "camera": camera}, **extra)
+
+
+def test_camera_type_side_and_move_come_from_the_camera():
+    on = {"on": "me"}
+    assert judge.camera_type(dict(on, frame="close", yaw=20)) == "close" and judge.camera_side(dict(on, yaw=20)) == "front"
+    assert judge.camera_type(dict(on, frame="extreme")) == judge.camera_type(dict(on, frame="detail")) == "extreme_close"
+    assert judge.camera_type(dict(on, frame="full", pitch=-14)) == "low_angle" and judge.camera_type(dict(on, frame="full", pitch=30)) == "high_angle"
+    assert judge.camera_type(dict(on, frame="close", dutch=-9, pitch=-20)) == "tilted"
+    assert judge.camera_type(dict(on, ots="mom")) == "over_shoulder" and judge.camera_type(dict(on, pov="mom")) == "pov"
+    assert judge.camera_type({"from": "door_wide"}) == "insert" and judge.camera_type({"from": "door_wide", "type": "wide"}) == "wide"
+    assert [judge.camera_side(dict(on, yaw=y)) for y in (-60, 60, 170, -160, 200)] == ["left", "right", "back", "back", "back"]
+    assert judge.camera_side({"from": "door_wide"}) != judge.camera_side({"from": {"pos": [0, 1, 2], "look": [0, 0, 0]}})
+    assert [judge.camera_move({"move": m}) for m in ("static", "creep", "pull", "pan_left", "drift_right", "handheld", "orbit_left")] == [
+        "static", "push_in", "pull_out", "pan", "track", "handheld", "orbit"]
+    assert judge.camera_move({}) == "push_in"
+
+
+def test_variety_reports_shares_and_every_broken_rule():
+    shots = [
+        typed("a", 0, 5, {"on": "me", "frame": "close", "yaw": 20, "move": "static"}),
+        typed("b", 5, 8, {"on": "me", "frame": "close", "yaw": -10, "move": "static"}),
+        typed("c", 8, 9, {"on": "me", "frame": "wide", "yaw": 40, "type": "close"}),
+        typed("d", 9, 10, {"from": "door_wide", "type": "insert", "move": "static"}),
+    ]
+    report = judge.variety(shots)
+    assert report["types"]["close"] == {"shots": 3, "seconds": 9.0, "share": 0.9} and list(report["types"]) == ["close", "insert"]
+    assert report["moves"]["static"]["share"] == 0.9 and report["moving_share"] == pytest.approx(0.1)
+    assert [row["side"] for row in report["sequence"]][:3] == ["front", "front", "right"]
+    text = " | ".join(report["problems"])
+    assert "close takes 90% of the video (cap 20%)" in text and "a and b are both close from front" in text
+    assert "c is tagged close but its camera is wide" in text and "only 10% of the video is on a moving camera" in text
+    assert "close 90%" in judge.describe_variety(report)
+    chosen = {"b": {"on": "me", "frame": "close", "yaw": -60, "move": "push"}}
+    assert not any("a and b" in p for p in judge.variety(shots, chosen)["problems"])
+    assert not any("a and b" in p for p in judge.variety(shots, None, None, locked_neighbours_only=True)["problems"])
+    assert judge.variety(shots, None, {"cap": 0.95, "min_moving": 0.0})["rules"] == {"cap": 0.95, "slack": 0.02, "min_moving": 0.0}
+
+
+def test_a_tagged_camera_only_gets_candidates_of_its_type():
+    shot = {"id": "s01", "cast": [{"who": "me"}], "camera": {"on": "me", "type": "low_angle", "frame": "medium", "yaw": 30, "pitch": -16, "move": "creep", "intent": "x"}}
+    for round_index in (0, 1):
+        proposals = judge.propose(shot, round_index, 9)
+        assert len(proposals) >= 5 and all(judge.camera_type(p["camera"]) == judge.geometric_type(p["camera"]) == "low_angle" for p in proposals)
+        assert all(p["camera"]["intent"] == "x" and p["camera"]["move"] == "creep" for p in proposals)
+    sides = {judge.camera_side(p["camera"]) for p in judge.propose(shot, 0, 9)}
+    assert {"left", "right", "front"} <= sides
+    found = judge.scout(shot, SweepStager(-180, 180), None, 6)
+    assert len(found) == 6 and all(judge.geometric_type(c["camera"]) == "low_angle" for c in found)
+    tilted = dict(shot, camera={"on": "me", "type": "tilted", "frame": "close", "yaw": 10, "dutch": 9})
+    assert all(c["camera"]["dutch"] == 9 for c in judge.scout(tilted, SweepStager(-180, 180), None, 4))
+    over = dict(shot, cast=[{"who": "me"}, {"who": "mom"}], camera={"on": "me", "ots": "mom", "type": "over_shoulder"})
+    assert [p["name"] for p in judge.propose(over, 0, 9)] == ["author"] == [p["name"] for p in judge.propose(over, 1, 9)]
+
+
+def variety_job(tmp_path, cameras, story_extra=None):
+    job = tmp_path / "job"
+    job.mkdir()
+    shots = [typed("s%02d" % i, float(i), float(i + 1), camera) for i, camera in enumerate(cameras)]
+    (job / "timeline.json").write_text(json.dumps({"fps": 30, "shots": shots}))
+    (job / "story.json").write_text(json.dumps(dict({"title": "T", "genre": "horror"}, **(story_extra or {}))))
+    (job / "words.json").write_text(json.dumps({"words": []}))
+    return job
+
+
+def test_the_judge_never_picks_the_previous_type_and_side_and_records_the_distribution(tmp_path):
+    close = {"on": "me", "type": "close", "frame": "close", "yaw": 20, "move": "push"}
+    job = variety_job(tmp_path, [close, dict(close), dict(close)])
+    doc = judge.judge_shots(job, FakeStager(), {"provider": "none"})
+    cameras = [s["chosen"]["camera"] for s in doc["shots"]]
+    assert [judge.camera_type(c) for c in cameras] == ["close"] * 3
+    sides = [judge.camera_side(c) for c in cameras]
+    assert sides[0] == "front" and sides[1] != sides[0] and sides[2] != sides[1]
+    assert doc["shots"][1]["rounds"][0]["dropped"][0]["name"] == "author"
+    saved = json.loads((job / "judge.json").read_text())["variety"]
+    assert saved["types"] == {"close": {"shots": 3, "seconds": 3.0, "share": 1.0}} and saved["moves"]["push_in"]["shots"] == 3
+    assert [row["side"] for row in saved["sequence"]] == sides
+    assert saved["problems"] == ["close takes 100% of the video (cap 20%)"]
+
+
+def test_a_shot_list_that_breaks_the_rules_is_refused_before_any_camera_is_tried(tmp_path, capsys):
+    cameras = [{"on": "me", "type": "close", "frame": "close", "yaw": 20, "move": "push"}] * 4 + [{"from": "door_wide", "type": "wide", "locked": True}] * 2
+    job = variety_job(tmp_path, cameras, {"judge": {"variety": {"cap": 0.5}}})
+    stager = FakeStager()
+    with pytest.raises(judge.JudgeError, match=r"close takes 67% of the video \(cap 50%\); s04 and s05 are both wide from fixed"):
+        judge.judge_shots(job, stager, {"provider": "none"})
+    assert stager.geometry_calls == [] and not (job / "judge.json").exists()
+    assert judge.main(["variety", "--job", str(job), "--authored"]) == 1
+    out = capsys.readouterr().out
+    assert "types: close 67%, wide 33%" in out and "problem: s04 and s05 are both wide" in out

@@ -138,7 +138,7 @@ function B:camera(name, pos, look, fov)
 	self.info.cameras[name] = { pos = pos, look = look, fov = fov }
 end
 
-function B:piece(name, kind, pivot, axis, build, hide)
+function B:piece(name, kind, pivot, axis, build, hide, parent)
 	local sub = Instance.new("Model")
 	sub.Name = "Piece_" .. name
 	local previous = self.parent
@@ -147,7 +147,7 @@ function B:piece(name, kind, pivot, axis, build, hide)
 	self.parent = previous
 	sub.WorldPivot = self.origin * CFrame.new(pivot[1], pivot[2], pivot[3])
 	sub.Parent = self.model
-	self.info.pieces[name] = { name = name, kind = kind, pivot = pivot, axis = axis or { 0, 1, 0 }, hide = hide }
+	self.info.pieces[name] = { name = name, kind = kind, pivot = pivot, axis = axis or { 0, 1, 0 }, hide = hide, parent = parent }
 end
 
 function B:finish()
@@ -186,7 +186,8 @@ function M.pieceCFrame(set, piece, value)
 	return base
 end
 
-function M.movePiece(set, piece, value, cameraPos)
+-- carrier = { piece, value } is the piece this one rides on (a handle on a door that swings).
+function M.movePiece(set, piece, value, cameraPos, carrier)
 	local model = set.model:FindFirstChild("Piece_" .. piece.name)
 	if not model then
 		return
@@ -200,7 +201,11 @@ function M.movePiece(set, piece, value, cameraPos)
 			return
 		end
 	end
-	model:PivotTo(M.pieceCFrame(set, piece, value))
+	local cf = M.pieceCFrame(set, piece, value)
+	if carrier then
+		cf = M.pieceCFrame(set, carrier.piece, carrier.value) * M.pieceCFrame(set, carrier.piece, 0):ToObjectSpace(cf)
+	end
+	model:PivotTo(cf)
 end
 
 M.SPACING = SPACING

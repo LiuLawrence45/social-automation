@@ -126,15 +126,22 @@ class Stage:
         self.marker = {}  # type: Dict[str, int]
         self.retries = 0
         self.captures = 0
+        self.refocused = 0
         self.server = None  # type: Optional[HTTPServer]
         self.on_frame = None  # type: Optional[Callable[[int, bytes, Bitmap], None]]
         self.failure = None  # type: Optional[Exception]
 
     def grab(self) -> Bitmap:
-        proc = subprocess.run(["screencapture", "-x", "-o", "-t", "bmp", "-l", str(self.window["id"]), str(self.tmp)],
-                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        command = ["screencapture", "-x", "-o", "-t", "bmp", "-l", str(self.window["id"]), str(self.tmp)]
+        proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         if proc.returncode != 0 or not self.tmp.exists():
-            raise RenderError("screencapture failed (the terminal needs Screen Recording access): " + proc.stderr.strip())
+            # Another app coming to the front takes the full-screen Studio window off screen; bring it back once.
+            helper("activate")
+            time.sleep(3)
+            self.refocused += 1
+            proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if proc.returncode != 0 or not self.tmp.exists():
+            raise RenderError("screencapture failed (Studio's window is off screen, or the terminal lacks Screen Recording access): " + proc.stderr.strip())
         self.captures += 1
         return Bitmap(self.tmp.read_bytes())
 

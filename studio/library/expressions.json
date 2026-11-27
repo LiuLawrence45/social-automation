@@ -31,9 +31,13 @@
   "RightEyeUpperLidRaiser": 1,
   "LeftInnerBrowRaiser": 1,
   "RightInnerBrowRaiser": 1,
-  "JawDrop": 0.35,
-  "LeftLipStretcher": 0.6,
-  "RightLipStretcher": 0.6
+  "JawDrop": 0.25,
+  "LeftLipStretcher": 0,
+  "RightLipStretcher": 0,
+  "LeftLipCornerDown": 1,
+  "RightLipCornerDown": 1,
+  "LeftLowerLipDepressor": 0.4,
+  "RightLowerLipDepressor": 0.4
  },
  "terrified": {
   "LeftEyeUpperLidRaiser": 1,
@@ -42,9 +46,13 @@
   "RightInnerBrowRaiser": 1,
   "LeftOuterBrowRaiser": 0.6,
   "RightOuterBrowRaiser": 0.6,
-  "JawDrop": 0.8,
-  "LeftLipStretcher": 0.7,
-  "RightLipStretcher": 0.7
+  "JawDrop": 0.6,
+  "LeftLipStretcher": 0,
+  "RightLipStretcher": 0,
+  "LeftLipCornerDown": 1,
+  "RightLipCornerDown": 1,
+  "LeftLowerLipDepressor": 0.4,
+  "RightLowerLipDepressor": 0.4
  },
  "frozen": {
   "LeftEyeUpperLidRaiser": 1,

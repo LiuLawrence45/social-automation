@@ -56,6 +56,11 @@ def sentence_ids(tokens: List[str]) -> List[int]:
     return ids
 
 
+def story_lines(story: Dict[str, Any]) -> List[Dict[str, str]]:
+    """The script as (speaker, text) lines; a story without lines is one narrator line."""
+    return story.get("lines") or [{"speaker": "narrator", "text": story["script"]}]
+
+
 def display_words(story: Dict[str, Any]) -> List[str]:
     """Caption text for every token, honouring story.display_overrides."""
     tokens = tokenize(story["script"])
@@ -77,6 +82,15 @@ def display_words(story: Dict[str, Any]) -> List[str]:
 def validate_story(story: Any) -> Dict[str, Any]:
     _require(isinstance(story, dict), "story.json: top level must be an object")
     _require(story.get("version") == 1, "story.json: version must be 1")
+    lines = story.get("lines")
+    if lines is not None:
+        _require(isinstance(lines, list) and lines, "story.json: lines must be a non-empty list")
+        for index, line in enumerate(lines):
+            where = "story.json: lines[%d]" % index
+            _require(isinstance(line, dict), where + " must be an object")
+            _require(isinstance(line.get("speaker"), str) and line["speaker"].strip(), where + ".speaker must be a non-empty string")
+            _require(isinstance(line.get("text"), str) and line["text"].strip(), where + ".text must be a non-empty string")
+        story["script"] = " ".join(line["text"] for line in lines)
     for key in ("slug", "title", "script"):
         _require(isinstance(story.get(key), str) and story[key].strip(), "story.json: %s must be a non-empty string" % key)
     _require(re.match(r"^[a-z0-9][a-z0-9-]*$", story["slug"]) is not None, "story.json: slug must be lowercase letters, digits and dashes")
@@ -85,6 +99,7 @@ def validate_story(story: Any) -> Dict[str, Any]:
     _require(isinstance(story.get("names", []), list), "story.json: names must be a list")
     _require(isinstance(story.get("display_overrides", {}), dict), "story.json: display_overrides must be an object")
     _require(isinstance(story.get("voice", {}), dict), "story.json: voice must be an object")
+    _require(isinstance(story.get("voice", {}).get("speakers", {}), dict), "story.json: voice.speakers must be an object")
     _require(len(tokenize(story["script"])) > 0, "story.json: script has no words")
     display_words(story)
     return story
@@ -101,6 +116,10 @@ def map_shots(story: Dict[str, Any], shotlist: Dict[str, Any]) -> List[Dict[str,
     mapped = []
     for index, shot in enumerate(shotlist["shots"]):
         where = "shotlist.json: shots[%d] (%s)" % (index, shot.get("id"))
+        if "hold" in shot:
+            _require(cursor == len(tokens), where + " is a silent shot (hold) but the script still has words after it; silent shots go after the last word")
+            mapped.append(dict(shot))
+            continue
         words = tokenize(shot["text"])
         _require(len(words) > 0, where + ".text has no words")
         for offset, word in enumerate(words):
@@ -134,7 +153,13 @@ def validate_shotlist(shotlist: Any, story: Optional[Dict[str, Any]] = None) -> 
         _require(isinstance(shot.get("id"), str) and shot["id"], where + ".id must be a non-empty string")
         _require(shot["id"] not in seen, where + ".id %r is duplicated" % shot["id"])
         seen.add(shot["id"])
-        _require(isinstance(shot.get("text"), str) and shot["text"].strip(), where + ".text must be the words this shot covers")
+        if "hold" in shot:
+            hold = shot["hold"]
+            _require(isinstance(hold, (int, float)) and not isinstance(hold, bool) and hold > 0, where + ".hold must be a positive number of seconds")
+            _require(not str(shot.get("text", "")).strip(), where + " has both text and hold; a silent shot carries no words")
+            _require(index > 0, where + " is a silent shot; the first shot must carry words")
+        else:
+            _require(isinstance(shot.get("text"), str) and shot["text"].strip(), where + ".text must be the words this shot covers, or give the shot a hold in seconds")
         _require(isinstance(shot.get("set"), str) and shot["set"], where + ".set must name a set")
         _require(isinstance(shot.get("camera"), dict), where + ".camera must be an object")
         for actor_index, actor in enumerate(shot.get("cast", [])):
@@ -155,15 +180,20 @@ def build_timeline(story: Dict[str, Any], shotlist: Dict[str, Any], words: Dict[
     tokens = tokenize(story["script"])
     timed = words["words"]
     _require(len(timed) == len(tokens), "words.json has %d words but the script has %d" % (len(timed), len(tokens)))
-    total_frames = int(math.ceil((words["duration"] + tail) * fps - 1e-6))
+    narration_frames = int(math.ceil((words["duration"] + tail) * fps - 1e-6))
     mapped = map_shots(story, shotlist)
     starts = []
+    total_frames = narration_frames
     for index, shot in enumerate(mapped):
-        frame = 0 if index == 0 else int(round(timed[shot["word_start"]]["start"] * fps))
-        if starts:
-            frame = max(frame, starts[-1] + 1)
+        if "hold" in shot:
+            frame = total_frames
+            total_frames += max(1, int(round(shot["hold"] * fps)))
+        else:
+            frame = 0 if index == 0 else int(round(timed[shot["word_start"]]["start"] * fps))
+            if starts:
+                frame = max(frame, starts[-1] + 1)
+            _require(frame < narration_frames, "the last worded shot starts after the end of the narration")
         starts.append(frame)
-    _require(starts[-1] < total_frames, "the last shot starts after the end of the narration")
     shots = []
     warnings = []
     for index, shot in enumerate(mapped):
@@ -184,6 +214,7 @@ def build_timeline(story: Dict[str, Any], shotlist: Dict[str, Any], words: Dict[
         "frames": total_frames,
         "duration": round(total_frames / fps, 6),
         "narration_duration": words["duration"],
+        "tail": round((total_frames - narration_frames) / fps, 6),
         "cast": shotlist["cast"],
         "defaults": shotlist.get("defaults", {}),
         "shots": shots,
@@ -201,8 +232,9 @@ def shots_handoff(timeline: Dict[str, Any]) -> Dict[str, Any]:
         "content_start": 0.0,
         "content_end": timeline["duration"],
         "shots": [
-            {"id": shot["id"], "start": shot["start"], "end": shot["end"], "word_start": shot["word_start"],
-             "word_end": shot["word_end"], "set": shot["set"], "emphasis": bool(shot.get("emphasis", False))}
+            dict({"id": shot["id"], "start": shot["start"], "end": shot["end"]},
+                 **({"word_start": shot["word_start"], "word_end": shot["word_end"]} if "word_start" in shot else {}),
+                 set=shot["set"], emphasis=bool(shot.get("emphasis", False)))
             for shot in timeline["shots"]
         ],
     }

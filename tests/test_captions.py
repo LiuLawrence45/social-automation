@@ -64,3 +64,18 @@ def test_ass_times_never_late():
 
 def test_font_size_derivation():
     assert captions.ASS_FONT_SIZE == 156
+
+
+def test_short_tail_holds_the_last_word_to_the_end():
+    events = captions.caption_events(words((0.0, 0.3), (0.5, 1.0)), FPS, 33, narration_end=1.0)
+    assert events[-1][1] == 33
+
+
+def test_long_tail_ends_the_last_word_shortly_after_it_is_spoken():
+    events = captions.caption_events(words((0.0, 0.3), (0.5, 1.0)), FPS, 90, narration_end=1.0)
+    assert events[-1] == (15, 42, "w1")
+
+
+def test_long_tail_keeps_the_minimum_on_screen_time():
+    events = captions.caption_events(words((0.0, 0.3), (0.5, 0.52)), FPS, 90, narration_end=0.52)
+    assert events[-1][1] - events[-1][0] >= 4

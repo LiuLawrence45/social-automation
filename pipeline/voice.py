@@ -4,7 +4,9 @@ Usage: python -m pipeline.voice --job <folder> [--provider auto|elevenlabs|say] 
 
 ElevenLabs is the narrator (ELEVENLABS_API_KEY is read from the environment and never written
 anywhere); the macOS "say" voice is the free fallback behind the same synthesize() function.
-The raw take is tightened (long pauses cut), sped up to the target pace without changing pitch,
+story.json "lines" ({"speaker", "text"}) give each speaking character a voice from voice.speakers (voice_id,
+voice_name, settings, process); consecutive lines by one speaker are one segment, cached under voice_work/segments/,
+and the joined take goes through the stages below as one narration. The raw take is tightened (long pauses cut), sped up to the target pace without changing pitch,
 and levelled to leave true-peak headroom. story.json's voice.speed (default 1.0) scales the whole
 narration: 1.2 raises the target pace and shortens the allowed pauses by that factor. Word timings on the final file come from the provider's
 alignment carried through those edits (timing_source "carried", the default when the provider
@@ -18,9 +20,11 @@ from __future__ import annotations
 import argparse
 import array
 import base64
+import hashlib
 import json
 import math
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -49,7 +53,12 @@ DEFAULTS = {
     "pause_inner": 0.2,
     "peak_dbtp": -1.5,
     "timing_source": "auto",
+    "segment_gap": 0.12,
+    "speakers": {},
 }
+NARRATOR = "narrator"
+PROCESS_KEYS = ("pitch", "tempo", "filter", "gain_db")
+SPEAKER_KEYS = ("voice_id", "voice_name", "settings", "process")
 Span = Tuple[float, float]
 
 
@@ -122,6 +131,9 @@ def _elevenlabs(text: str, tokens: Sequence[str], voice: Dict[str, Any], workdir
             body["voice_settings"] = voice["settings"]
         if voice.get("seed") is not None:
             body["seed"] = voice["seed"]
+        for field in ("previous_text", "next_text"):
+            if voice.get(field):
+                body[field] = voice[field]
         url = "https://api.elevenlabs.io/v1/text-to-speech/%s/with-timestamps?output_format=%s" % (voice["voice_id"], output_format)
         request = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"), method="POST",
                                          headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "application/json"})
@@ -373,6 +385,167 @@ def pause_stats(spans: Sequence[Span], sentence_ids: Sequence[int]) -> Dict[str,
             "over_half_second": sum(1 for gap in gaps if gap > 0.5)}
 
 
+def _is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def check_process(process: Any, speaker: str) -> Dict[str, Any]:
+    """Validate one speaker's process object."""
+    where = "voice.speakers.%s.process" % speaker
+    if not isinstance(process, dict):
+        raise VoiceError(where + " must be an object")
+    unknown = sorted(set(process) - set(PROCESS_KEYS))
+    if unknown:
+        raise VoiceError("%s has unknown keys %s (allowed: %s)" % (where, ", ".join(unknown), ", ".join(PROCESS_KEYS)))
+    for key in ("pitch", "tempo"):
+        if key in process and not (_is_number(process[key]) and 0.5 <= process[key] <= 2.0):
+            raise VoiceError("%s.%s must be a number between 0.5 and 2.0" % (where, key))
+    if "filter" in process and not (isinstance(process["filter"], str) and process["filter"].strip()):
+        raise VoiceError(where + ".filter must be a non-empty FFmpeg audio filter chain")
+    if "gain_db" in process and not (_is_number(process["gain_db"]) and -40 <= process["gain_db"] <= 40):
+        raise VoiceError(where + ".gain_db must be a number between -40 and 40")
+    return process
+
+
+def speaker_voice(cfg: Dict[str, Any], speaker: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """The voice settings and the process for a speaker; a speaker not in voice.speakers is the narrator voice."""
+    speakers = cfg.get("speakers") or {}
+    entry = speakers.get(speaker, {})
+    where = "voice.speakers.%s" % speaker
+    if not isinstance(entry, dict):
+        raise VoiceError(where + " must be an object")
+    unknown = sorted(set(entry) - set(SPEAKER_KEYS))
+    if unknown:
+        raise VoiceError("%s has unknown keys %s (allowed: %s)" % (where, ", ".join(unknown), ", ".join(SPEAKER_KEYS)))
+    voice = dict(cfg)
+    if "voice_id" in entry:
+        if not (isinstance(entry["voice_id"], str) and entry["voice_id"].strip()):
+            raise VoiceError(where + ".voice_id must be a non-empty string")
+        voice["voice_id"] = entry["voice_id"]
+        voice["voice_name"] = entry.get("voice_name")
+    elif "voice_name" in entry:
+        voice["voice_name"] = entry["voice_name"]
+    if "settings" in entry:
+        if not isinstance(entry["settings"], dict):
+            raise VoiceError(where + ".settings must be an object")
+        voice["settings"] = entry["settings"]
+    return voice, check_process(entry.get("process", {}), speaker)
+
+
+def make_segments(lines: Sequence[Dict[str, str]]) -> List[Dict[str, Any]]:
+    """Group consecutive lines by the same speaker into one segment each."""
+    segments = []  # type: List[Dict[str, Any]]
+    for line in lines:
+        if segments and segments[-1]["speaker"] == line["speaker"]:
+            segments[-1]["text"] += " " + line["text"]
+        else:
+            segments.append({"speaker": line["speaker"], "text": line["text"]})
+    for segment in segments:
+        segment["tokens"] = story_mod.tokenize(segment["text"])
+    return segments
+
+
+def segment_key(voice: Dict[str, Any], text: str, before: str, after: str, process: Dict[str, Any]) -> str:
+    parts = {"provider": voice.get("provider"), "model": voice.get("model"), "voice_id": voice.get("voice_id"),
+             "settings": voice.get("settings"), "seed": voice.get("seed"), "say_voice": voice.get("say_voice"),
+             "text": text, "previous": before, "next": after}
+    return hashlib.sha256(json.dumps(parts, sort_keys=True).encode("utf-8")).hexdigest()[:20]
+
+
+def process_filter(process: Dict[str, Any]) -> str:
+    """The FFmpeg audio chain for a process: pitch keeps the duration, tempo changes it."""
+    chain = []
+    pitch = process.get("pitch", 1.0)
+    if pitch != 1.0:
+        chain += ["asetrate=%d" % round(RATE * pitch), "aresample=%d" % RATE, "atempo=%.6f" % (1.0 / pitch)]
+    if process.get("tempo", 1.0) != 1.0:
+        chain.append("atempo=%.6f" % process["tempo"])
+    if process.get("filter"):
+        chain.append(process["filter"])
+    if process.get("gain_db"):
+        chain.append("volume=%.3fdB" % process["gain_db"])
+    return ",".join(chain)
+
+
+def _billed(value: Any) -> Optional[int]:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def synthesize_segments(cfg: Dict[str, Any], segments: Sequence[Dict[str, Any]], workdir: Path) -> Dict[str, Any]:
+    """Generate (or load from cache) every segment, process it and join them into one raw take."""
+    gap = cfg["segment_gap"]
+    if not (_is_number(gap) and 0 <= gap <= 2):
+        raise VoiceError("voice.segment_gap must be a number of seconds between 0 and 2")
+    for speaker in cfg.get("speakers") or {}:
+        speaker_voice(cfg, speaker)
+    cache = workdir / "segments"
+    scratch = cache / "_work"
+    scratch.mkdir(parents=True, exist_ok=True)
+    samples = array.array("h")
+    spans = []  # type: Optional[List[Span]]
+    providers = []
+    stats = {}  # type: Dict[str, Dict[str, Any]]
+    first_meta = None
+    for index, segment in enumerate(segments):
+        voice, process = speaker_voice(cfg, segment["speaker"])
+        before = segments[index - 1]["text"] if index else ""
+        after = segments[index + 1]["text"] if index + 1 < len(segments) else ""
+        voice["previous_text"], voice["next_text"] = before or None, after or None
+        key = segment_key(voice, segment["text"], before, after, process)
+        wav_path, json_path = cache / (key + ".wav"), cache / (key + ".json")
+        cached = wav_path.exists() and json_path.exists()
+        if cached:
+            take = json.loads(json_path.read_text(encoding="utf-8"))
+        else:
+            take = synthesize(segment["text"], segment["tokens"], voice, scratch)
+            os.replace(str(take["wav"]), str(wav_path))
+            take = {"provider": take["provider"], "spans": take["spans"], "meta": take["meta"]}
+            if "fallback_reason" not in take["meta"]:
+                json_path.write_text(json.dumps(take), encoding="utf-8")
+        scale = 1.0 / process.get("tempo", 1.0)
+        chain = process_filter(process)
+        source = wav_path
+        if chain:
+            source = scratch / "processed.wav"
+            _run([ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y", "-i", str(wav_path), "-af", chain,
+                  "-ar", str(RATE), "-ac", "1", "-c:a", "pcm_s16le", str(source)])
+        if index:
+            samples.extend(array.array("h", bytes(2 * int(gap * RATE))))
+        offset = len(samples) / float(RATE)
+        samples.extend(read_wav(source))
+        if take["spans"] is None or spans is None:
+            spans = None
+        else:
+            spans.extend((offset + start * scale, offset + end * scale) for start, end in take["spans"])
+        providers.append(take["provider"])
+        first_meta = first_meta or take["meta"]
+        item = stats.setdefault(segment["speaker"], {
+            "voice_id": voice.get("voice_id"), "voice_name": voice.get("voice_name"), "segments": 0, "characters": 0,
+            "characters_sent": 0, "characters_billed": None, "cached_segments": 0, "process": process or None})
+        item["segments"] += 1
+        item["characters"] += len(segment["text"])
+        if cached:
+            item["cached_segments"] += 1
+        else:
+            item["characters_sent"] += len(segment["text"])
+            billed = _billed(take["meta"].get("characters_billed"))
+            if billed is not None:
+                item["characters_billed"] = (item["characters_billed"] or 0) + billed
+    shutil.rmtree(str(scratch), ignore_errors=True)
+    wav = workdir / "raw.wav"
+    write_wav(wav, samples)
+    meta = dict(first_meta)
+    meta["characters"] = sum(len(segment["text"]) for segment in segments)
+    if len(segments) > 1:
+        meta["segments"] = len(segments)
+        billed = [item["characters_billed"] for item in stats.values() if item["characters_billed"] is not None]
+        meta["characters_billed"] = sum(billed) if billed else None
+    return {"provider": providers[0] if len(set(providers)) == 1 else "mixed", "wav": wav, "spans": spans, "meta": meta, "speakers": stats}
+
+
 def make_narration(job: Path, provider: Optional[str] = None, reuse_raw: bool = False) -> Dict[str, Any]:
     """Run the whole voice stage for a job folder and return the report."""
     job = Path(job)
@@ -391,6 +564,8 @@ def make_narration(job: Path, provider: Optional[str] = None, reuse_raw: bool = 
     cfg["pause_inner"] /= speed
     tokens = story_mod.tokenize(story["script"])
     sentences = story_mod.sentence_ids(tokens)
+    segments = make_segments(story_mod.story_lines(story))
+    token_speakers = [segment["speaker"] for segment in segments for _ in segment["tokens"]]
     workdir = job / "voice_work"
     workdir.mkdir(exist_ok=True)
     raw_meta = workdir / "raw.json"
@@ -398,8 +573,9 @@ def make_narration(job: Path, provider: Optional[str] = None, reuse_raw: bool = 
         take = json.loads(raw_meta.read_text(encoding="utf-8"))
         take["wav"] = workdir / "raw.wav"
     else:
-        take = synthesize(story["script"], tokens, cfg, workdir)
-        raw_meta.write_text(json.dumps({"provider": take["provider"], "spans": take["spans"], "meta": take["meta"]}), encoding="utf-8")
+        take = synthesize_segments(cfg, segments, workdir)
+        raw_meta.write_text(json.dumps({"provider": take["provider"], "spans": take["spans"], "meta": take["meta"],
+                                        "speakers": take["speakers"]}), encoding="utf-8")
     raw_duration = wav_duration(take["wav"])
     raw_spans = take["spans"]
     if raw_spans is None:
@@ -447,7 +623,8 @@ def make_narration(job: Path, provider: Optional[str] = None, reuse_raw: bool = 
     for index, token in enumerate(tokens):
         start = max(round(spans[index][0], 3), previous)
         end = max(round(min(spans[index][1], duration), 3), round(start + 0.02, 3))
-        words.append({"i": index, "token": token, "display": shown[index], "start": start, "end": end, "sentence": sentences[index]})
+        words.append({"i": index, "token": token, "display": shown[index], "start": start, "end": end, "sentence": sentences[index],
+                      "speaker": token_speakers[index]})
         previous = start
     payload = {"version": 1, "audio": "narration.wav", "duration": round(duration, 3), "words": words, "timing": timing,
                "carried_starts": [round(span[0], 3) for span in carried]}
@@ -459,7 +636,7 @@ def make_narration(job: Path, provider: Optional[str] = None, reuse_raw: bool = 
         "raw_seconds": round(raw_duration, 3), "raw_wpm": round(len(tokens) / raw_duration * 60, 1),
         "removed_seconds": round(result["removed_seconds"], 3), "tempo": round(result["tempo"], 4),
         "final_seconds": round(duration, 3), "final_wpm": round(len(tokens) / duration * 60, 1),
-        "pauses": pause_stats(final_spans, sentences), "levels": levels, "timing": timing,
+        "speakers": take.get("speakers", {}), "pauses": pause_stats(final_spans, sentences), "levels": levels, "timing": timing,
         "wall_seconds": round(time.time() - started, 1),
     }
     with open(job / "voice_report.json", "w", encoding="utf-8") as handle:

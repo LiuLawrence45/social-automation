@@ -675,9 +675,11 @@ function M:frame(frameIndex)
 		end
 	end
 	for _, item in pairs(state.pieces) do
-		local value = Util.lerp(item.from, item.to, Util.ease(item.ease, u))
-		item.value = value
-		Sets.movePiece(state.set, item.piece, value, pos)
+		item.value = Util.lerp(item.from, item.to, Util.ease(item.ease, u))
+	end
+	for _, item in pairs(state.pieces) do
+		local carrier = item.piece.parent and state.pieces[item.piece.parent]
+		Sets.movePiece(state.set, item.piece, item.value, pos, carrier and { piece = carrier.piece, value = carrier.value })
 	end
 	self:animateLights(state, t, u)
 	self:moveSubjectLights(state, pos)
@@ -696,10 +698,14 @@ function M:frame(frameIndex)
 	if dof then
 		local distance = (look - pos).Magnitude
 		local focus = self.focus or {}
-		dof.Enabled = (state.cameraSpec.dof ~= false) and distance < (focus.within or 14)
+		-- Close framings get shallow focus so the background falls away; "focus": "shallow" or "deep" on a camera overrides the frame.
+		local frame, wish = state.cameraSpec.frame, state.cameraSpec.focus
+		local shallow = wish == "shallow" or (wish ~= "deep" and (frame == "close" or frame == "extreme" or frame == "detail"))
+		dof.Enabled = (state.cameraSpec.dof ~= false) and (shallow or distance < (focus.within or 14))
 		dof.FocusDistance = distance
-		dof.InFocusRadius = math.max(2.5, distance * (focus.radius or 0.45))
-		dof.FarIntensity = focus.far or 0.4
+		dof.InFocusRadius = shallow and math.max(1.2, distance * (focus.shallow_radius or 0.2)) or math.max(2.5, distance * (focus.radius or 0.45))
+		dof.FarIntensity = shallow and (focus.shallow_far or 0.9) or focus.far or 0.4
+		dof.NearIntensity = shallow and (focus.shallow_near or 0.3) or 0
 	end
 	return { shot = shot.id, index = index, t = t, u = u }
 end
