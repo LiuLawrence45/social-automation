@@ -112,12 +112,14 @@ class Bitmap:
 class Stage:
     """The Studio window, the viewport inside it and the director that poses frames."""
 
-    def __init__(self, director: Director, roll: float = ROLL, settle: int = 1, settle_cut: int = 4, settle_set: float = 2.0) -> None:
+    def __init__(self, director: Director, roll: float = ROLL, settle: int = 1, settle_cut: int = 4, settle_set: float = 2.0,
+                 settle_light: float = 1.0) -> None:
         self.director = director
         self.roll = roll
         self.settle = settle
         self.settle_cut = settle_cut
         self.settle_set = settle_set
+        self.settle_light = settle_light
         self.tmp = Path(tempfile.mkdtemp(prefix="sa-render-")) / "frame.bmp"
         self.window = None  # type: Optional[Dict[str, Any]]
         self.viewport = None  # type: Optional[Tuple[int, int, int, int]]
@@ -139,10 +141,15 @@ class Stage:
     def calibrate(self) -> Dict[str, Any]:
         """Find the viewport rectangle in window pixels by covering it with one flat colour."""
         helper("activate")
+        deadline = time.time() + 5
+        while True:
+            listing = helper("list")
+            if listing["windows"]:
+                break
+            if time.time() > deadline:
+                raise RenderError("Roblox Studio has no window on this desktop")
+            time.sleep(0.25)
         helper("park")
-        listing = helper("list")
-        if not listing["windows"]:
-            raise RenderError("Roblox Studio has no window on this desktop")
         self.window = listing["windows"][0]
         pattern = 0xA5C3
         info = self.director.run("calibrate", {"on": True, "pattern": pattern})
@@ -213,7 +220,7 @@ class Stage:
                 def do_GET(self) -> None:
                     try:
                         status, body = stage._arrived(int(self.path.rsplit("/", 1)[-1]))
-                    except Exception as exc:  # reported to Studio, which stops the shot
+                    except Exception as exc:
                         stage.failure = exc
                         status, body = 500, str(exc)
                     data = body.encode("utf-8")
@@ -250,7 +257,8 @@ class Stage:
         self.failure = None
         try:
             return self.director.run("capture", {"frames": frames, "roll": self.roll, "sink": self._sink(),
-                                                 "settle": self.settle, "settle_cut": self.settle_cut, "settle_set": self.settle_set},
+                                                 "settle": self.settle, "settle_cut": self.settle_cut, "settle_set": self.settle_set,
+                                                 "settle_light": self.settle_light},
                                      timeout=120 + 3.0 * len(frames))
         except DirectorError:
             if self.failure is not None:
@@ -280,7 +288,7 @@ class Stage:
 
 def open_stage(args: argparse.Namespace) -> Stage:
     client = connect(getattr(args, "studio", None))
-    return Stage(Director(client), roll=args.roll, settle=args.settle)
+    return Stage(Director(client), roll=args.roll, settle=args.settle, settle_light=args.settle_light)
 
 
 def load_timeline(job: Path) -> Dict[str, Any]:
@@ -352,6 +360,11 @@ def shot_key(shot: Dict[str, Any], timeline: Dict[str, Any], stage: Stage, reuse
 
 
 def command_video(stage: Stage, args: argparse.Namespace) -> Dict[str, Any]:
+    """Render changed shots, join every shot into video.mp4 and write shots.json and render_report.json.
+
+    Shots are raw H.264 streams without B-frames, so joining them is byte concatenation, and wrapping
+    the joined stream once gives the container exact constant-frame-rate timestamps.
+    """
     job = Path(args.job)
     timeline = load_timeline(job)
     started = time.time()
@@ -396,8 +409,6 @@ def command_video(stage: Stage, args: argparse.Namespace) -> Dict[str, Any]:
         rendered.append(shot["id"])
         capture_seconds += time.time() - began
         print("shot %s: %d frames in %.1f s" % (shot["id"], shot["frame_end"] - shot["frame_start"], time.time() - began), flush=True)
-    # Shots are raw H.264 streams without B-frames, so joining them is byte concatenation and the
-    # container gets exact constant-frame-rate timestamps when the joined stream is wrapped once.
     joined = folder / "all.h264"
     with open(joined, "wb") as handle:
         for shot in timeline["shots"]:
@@ -426,6 +437,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--studio", help="studio id when several Studio windows are open")
     parser.add_argument("--roll", type=float, default=ROLL, help="camera roll in degrees; 0 renders upright in a narrow crop")
     parser.add_argument("--settle", type=int, default=1, help="Studio frames to wait after posing a frame")
+    parser.add_argument("--settle-light", type=float, default=1.0, help="seconds to wait after a shot moves the key light, so its shadows are rebuilt")
     sub = parser.add_subparsers(dest="command", required=True)
     window = sub.add_parser("window")
     window.add_argument("--fit", action="store_true", help="resize the Studio window to fill the screen")

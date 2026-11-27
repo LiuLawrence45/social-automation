@@ -1,5 +1,5 @@
 return function(b)
-	b.info.lighting = "interior"
+	b.info.lighting = "interior_cool"
 	b:floor(-18, 18, -3, 7, "#8f979e")
 	b:wallX(-18, 18, -2.9, 24, "#dfe7ee")
 	b:wallX(-18, 18, -2.66, 24, "#c7d2dc", { thick = 0.06 })

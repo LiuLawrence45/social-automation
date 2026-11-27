@@ -3,8 +3,8 @@
 //   studio_window list                 JSON: Studio's on-screen windows, display scale, pointer position
 //   studio_window activate             bring Studio to the front (it renders slowly in the background)
 //   studio_window frame x y w h        move and resize the main Studio window (needs Accessibility access)
-//   studio_window park                 move the pointer onto the title bar when it is over the window,
-//                                      so Studio draws no hover outline into the picture
+//   studio_window park                 move the pointer to the window's bottom strip with a real mouse-move event
+//                                      (a cursor warp sends none, and Studio keeps drawing its hover gizmo)
 import Cocoa
 
 let bundleId = "com.Roblox.RobloxStudio"
@@ -85,13 +85,14 @@ case "frame":
     print("{\"width\": \(now.width), \"height\": \(now.height)}")
 case "park":
     guard let window = windows().first else { fail("Studio has no window on screen") }
-    let at = pointer()
     let x = window["x"] as! Double, y = window["y"] as! Double, w = window["width"] as! Double, h = window["height"] as! Double
-    let inside = Double(at.x) >= x && Double(at.x) <= x + w && Double(at.y) >= y + 28 && Double(at.y) <= y + h
-    if inside {
-        CGWarpMouseCursorPosition(CGPoint(x: x + w / 2, y: y + 12))
+    let target = CGPoint(x: x + w / 2, y: y + h - 14)
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: target, mouseButton: .left) else {
+        fail("could not create a mouse event")
     }
-    print("{\"moved\": \(inside)}")
+    event.post(tap: .cghidEventTap)
+    usleep(200_000)
+    print("{\"moved\": true, \"x\": \(Int(target.x)), \"y\": \(Int(target.y))}")
 default:
     fail("unknown command \(command)")
 }

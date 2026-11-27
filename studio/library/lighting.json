@@ -10,7 +10,8 @@
    "ColorShift_Top": "#fff1d9",
    "ExposureCompensation": 0.15,
    "EnvironmentDiffuseScale": 1,
-   "EnvironmentSpecularScale": 0.5
+   "EnvironmentSpecularScale": 0.5,
+   "ShadowSoftness": 0.2
   },
   "grade": {
    "Saturation": 0.3,
@@ -30,6 +31,15 @@
    "Decay": "#7f93ad",
    "Glare": 0.15,
    "Haze": 0.6
+  },
+  "sunrays": {
+   "Intensity": 0.1,
+   "Spread": 0.7
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.5,
+   "far": 0.35
   }
  },
  "evening": {
@@ -43,7 +53,8 @@
    "ColorShift_Top": "#ffc58a",
    "ExposureCompensation": 0.1,
    "EnvironmentDiffuseScale": 1,
-   "EnvironmentSpecularScale": 0.5
+   "EnvironmentSpecularScale": 0.5,
+   "ShadowSoftness": 0.3
   },
   "grade": {
    "Saturation": 0.3,
@@ -63,129 +74,44 @@
    "Decay": "#b87b5a",
    "Glare": 0.4,
    "Haze": 1.2
+  },
+  "sunrays": {
+   "Intensity": 0.22,
+   "Spread": 0.9
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.5,
+   "far": 0.4
   }
  },
  "interior": {
   "lighting": {
    "ClockTime": 13,
    "GeographicLatitude": 20,
-   "Brightness": 0.4,
-   "GlobalShadows": false,
-   "Ambient": "#b9b3aa",
-   "OutdoorAmbient": "#b9b3aa",
-   "ColorShift_Top": "#ffffff",
-   "ExposureCompensation": -0.25,
-   "EnvironmentDiffuseScale": 0.6,
-   "EnvironmentSpecularScale": 0.3
+   "Brightness": 1.9,
+   "GlobalShadows": true,
+   "Ambient": "#888690",
+   "OutdoorAmbient": "#888690",
+   "ColorShift_Top": "#fff3e0",
+   "ExposureCompensation": -0.05,
+   "EnvironmentDiffuseScale": 0.12,
+   "EnvironmentSpecularScale": 0.15,
+   "ShadowSoftness": 0.15
+  },
+  "key": {
+   "azimuth": -60,
+   "elevation": 45
   },
   "grade": {
    "Saturation": 0.25,
-   "Contrast": 0.1,
-   "Brightness": 0.02,
+   "Contrast": 0.12,
+   "Brightness": 0,
    "TintColor": "#ffffff"
   },
   "bloom": {
-   "Intensity": 0.2,
+   "Intensity": 0.3,
    "Size": 24,
-   "Threshold": 2
-  },
-  "atmosphere": {
-   "Density": 0,
-   "Offset": 0,
-   "Color": "#ffffff",
-   "Decay": "#ffffff",
-   "Glare": 0,
-   "Haze": 0
-  }
- },
- "interior_warm": {
-  "lighting": {
-   "ClockTime": 13,
-   "GeographicLatitude": 20,
-   "Brightness": 0.4,
-   "GlobalShadows": false,
-   "Ambient": "#bfae96",
-   "OutdoorAmbient": "#bfae96",
-   "ColorShift_Top": "#ffe9c8",
-   "ExposureCompensation": -0.3,
-   "EnvironmentDiffuseScale": 0.6,
-   "EnvironmentSpecularScale": 0.3
-  },
-  "grade": {
-   "Saturation": 0.28,
-   "Contrast": 0.1,
-   "Brightness": 0.02,
-   "TintColor": "#fff3e2"
-  },
-  "bloom": {
-   "Intensity": 0.25,
-   "Size": 26,
-   "Threshold": 2
-  },
-  "atmosphere": {
-   "Density": 0,
-   "Offset": 0,
-   "Color": "#ffffff",
-   "Decay": "#ffffff",
-   "Glare": 0,
-   "Haze": 0
-  }
- },
- "interior_dim": {
-  "lighting": {
-   "ClockTime": 13,
-   "GeographicLatitude": 20,
-   "Brightness": 0.2,
-   "GlobalShadows": false,
-   "Ambient": "#7f8296",
-   "OutdoorAmbient": "#7f8296",
-   "ColorShift_Top": "#c9d3ff",
-   "ExposureCompensation": -0.5,
-   "EnvironmentDiffuseScale": 0.5,
-   "EnvironmentSpecularScale": 0.2
-  },
-  "grade": {
-   "Saturation": -0.15,
-   "Contrast": 0.08,
-   "Brightness": -0.02,
-   "TintColor": "#dfe6ff"
-  },
-  "bloom": {
-   "Intensity": 0.15,
-   "Size": 24,
-   "Threshold": 2.2
-  },
-  "atmosphere": {
-   "Density": 0,
-   "Offset": 0,
-   "Color": "#ffffff",
-   "Decay": "#ffffff",
-   "Glare": 0,
-   "Haze": 0
-  }
- },
- "interior_night": {
-  "lighting": {
-   "ClockTime": 0,
-   "GeographicLatitude": 20,
-   "Brightness": 0.4,
-   "GlobalShadows": false,
-   "Ambient": "#565f8c",
-   "OutdoorAmbient": "#565f8c",
-   "ColorShift_Top": "#aebcff",
-   "ExposureCompensation": 0.6,
-   "EnvironmentDiffuseScale": 0.3,
-   "EnvironmentSpecularScale": 0.2
-  },
-  "grade": {
-   "Saturation": 0.1,
-   "Contrast": 0.12,
-   "Brightness": 0,
-   "TintColor": "#d6ddff"
-  },
-  "bloom": {
-   "Intensity": 0.5,
-   "Size": 30,
    "Threshold": 1.6
   },
   "atmosphere": {
@@ -195,6 +121,226 @@
    "Decay": "#ffffff",
    "Glare": 0,
    "Haze": 0
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.45,
+   "far": 0.4
+  }
+ },
+ "interior_warm": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "Brightness": 2,
+   "GlobalShadows": true,
+   "Ambient": "#8c7a66",
+   "OutdoorAmbient": "#8c7a66",
+   "ColorShift_Top": "#ffd6a0",
+   "ExposureCompensation": -0.05,
+   "EnvironmentDiffuseScale": 0.12,
+   "EnvironmentSpecularScale": 0.15,
+   "ShadowSoftness": 0.15
+  },
+  "key": {
+   "azimuth": -62,
+   "elevation": 40
+  },
+  "grade": {
+   "Saturation": 0.28,
+   "Contrast": 0.12,
+   "Brightness": 0,
+   "TintColor": "#fff1de"
+  },
+  "bloom": {
+   "Intensity": 0.4,
+   "Size": 28,
+   "Threshold": 1.4
+  },
+  "atmosphere": {
+   "Density": 0,
+   "Offset": 0,
+   "Color": "#ffffff",
+   "Decay": "#ffffff",
+   "Glare": 0,
+   "Haze": 0
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.45,
+   "far": 0.4
+  }
+ },
+ "interior_dim": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "Brightness": 1,
+   "GlobalShadows": true,
+   "Ambient": "#585e76",
+   "OutdoorAmbient": "#585e76",
+   "ColorShift_Top": "#c4d0ff",
+   "ExposureCompensation": -0.25,
+   "EnvironmentDiffuseScale": 0.12,
+   "EnvironmentSpecularScale": 0.15,
+   "ShadowSoftness": 0.2
+  },
+  "key": {
+   "azimuth": 70,
+   "elevation": 55
+  },
+  "grade": {
+   "Saturation": -0.18,
+   "Contrast": 0.14,
+   "Brightness": 0,
+   "TintColor": "#dde5ff"
+  },
+  "bloom": {
+   "Intensity": 0.15,
+   "Size": 24,
+   "Threshold": 2
+  },
+  "atmosphere": {
+   "Density": 0,
+   "Offset": 0,
+   "Color": "#ffffff",
+   "Decay": "#ffffff",
+   "Glare": 0,
+   "Haze": 0
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.45,
+   "far": 0.4
+  }
+ },
+ "interior_night": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "Brightness": 0.7,
+   "GlobalShadows": true,
+   "Ambient": "#3c4674",
+   "OutdoorAmbient": "#3c4674",
+   "ColorShift_Top": "#aebcff",
+   "ExposureCompensation": 0.1,
+   "EnvironmentDiffuseScale": 0.12,
+   "EnvironmentSpecularScale": 0.15,
+   "ShadowSoftness": 0.2
+  },
+  "key": {
+   "azimuth": 65,
+   "elevation": 50
+  },
+  "grade": {
+   "Saturation": 0.05,
+   "Contrast": 0.15,
+   "Brightness": 0,
+   "TintColor": "#dfe4ff"
+  },
+  "bloom": {
+   "Intensity": 0.5,
+   "Size": 30,
+   "Threshold": 1.1
+  },
+  "atmosphere": {
+   "Density": 0,
+   "Offset": 0,
+   "Color": "#ffffff",
+   "Decay": "#ffffff",
+   "Glare": 0,
+   "Haze": 0
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.45,
+   "far": 0.4
+  }
+ },
+ "interior_cool": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "Brightness": 1.9,
+   "GlobalShadows": true,
+   "Ambient": "#8a889e",
+   "OutdoorAmbient": "#8a889e",
+   "ColorShift_Top": "#fcfaff",
+   "ExposureCompensation": -0.05,
+   "EnvironmentDiffuseScale": 0.12,
+   "EnvironmentSpecularScale": 0.15,
+   "ShadowSoftness": 0.15
+  },
+  "key": {
+   "azimuth": 62,
+   "elevation": 48
+  },
+  "grade": {
+   "Saturation": 0.24,
+   "Contrast": 0.12,
+   "Brightness": 0,
+   "TintColor": "#fbfaff"
+  },
+  "bloom": {
+   "Intensity": 0.3,
+   "Size": 24,
+   "Threshold": 1.6
+  },
+  "atmosphere": {
+   "Density": 0,
+   "Offset": 0,
+   "Color": "#ffffff",
+   "Decay": "#ffffff",
+   "Glare": 0,
+   "Haze": 0
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.45,
+   "far": 0.4
+  }
+ },
+ "interior_golden": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "Brightness": 2,
+   "GlobalShadows": true,
+   "Ambient": "#96785a",
+   "OutdoorAmbient": "#96785a",
+   "ColorShift_Top": "#ffb45e",
+   "ExposureCompensation": -0.25,
+   "EnvironmentDiffuseScale": 0.12,
+   "EnvironmentSpecularScale": 0.15,
+   "ShadowSoftness": 0.18
+  },
+  "key": {
+   "azimuth": -68,
+   "elevation": 24
+  },
+  "grade": {
+   "Saturation": 0.34,
+   "Contrast": 0.14,
+   "Brightness": 0,
+   "TintColor": "#ffe9cf"
+  },
+  "bloom": {
+   "Intensity": 0.35,
+   "Size": 28,
+   "Threshold": 1.7
+  },
+  "atmosphere": {
+   "Density": 0,
+   "Offset": 0,
+   "Color": "#ffffff",
+   "Decay": "#ffffff",
+   "Glare": 0,
+   "Haze": 0
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.45,
+   "far": 0.5
   }
  }
 }

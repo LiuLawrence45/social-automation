@@ -5,7 +5,8 @@ Usage: python -m pipeline.voice --job <folder> [--provider auto|elevenlabs|say] 
 ElevenLabs is the narrator (ELEVENLABS_API_KEY is read from the environment and never written
 anywhere); the macOS "say" voice is the free fallback behind the same synthesize() function.
 The raw take is tightened (long pauses cut), sped up to the target pace without changing pitch,
-and levelled to leave true-peak headroom. Word timings on the final file come from the provider's
+and levelled to leave true-peak headroom. story.json's voice.speed (default 1.0) scales the whole
+narration: 1.2 raises the target pace and shortens the allowed pauses by that factor. Word timings on the final file come from the provider's
 alignment carried through those edits (timing_source "carried", the default when the provider
 returns an alignment) or from the local aligner (pipeline.align) snapped to sound onsets
 ("aligner", the default for the fallback voice). Both are checked against the sound onsets in
@@ -41,6 +42,7 @@ DEFAULTS = {
     "settings": {"speed": 1.1},
     "say_voice": "Samantha",
     "target_wpm": 215,
+    "speed": 1.0,
     "max_tempo": 1.3,
     "pause_sentence": 0.3,
     "pause_inner": 0.2,
@@ -379,6 +381,13 @@ def make_narration(job: Path, provider: Optional[str] = None, reuse_raw: bool = 
     cfg.update(story.get("voice", {}))
     if provider:
         cfg["provider"] = provider
+    speed = float(cfg["speed"])
+    if not 0.5 <= speed <= 2.0:
+        raise VoiceError("voice.speed must be between 0.5 and 2.0")
+    cfg["target_wpm"] *= speed
+    cfg["max_tempo"] *= speed
+    cfg["pause_sentence"] /= speed
+    cfg["pause_inner"] /= speed
     tokens = story_mod.tokenize(story["script"])
     sentences = story_mod.sentence_ids(tokens)
     workdir = job / "voice_work"
@@ -440,7 +449,7 @@ def make_narration(job: Path, provider: Optional[str] = None, reuse_raw: bool = 
         json.dump(payload, handle, indent=1)
     final_spans = [(word["start"], word["end"]) for word in words]
     report = {
-        "provider": take["provider"], "voice": take["meta"], "words": len(tokens),
+        "provider": take["provider"], "voice": take["meta"], "words": len(tokens), "speed": speed,
         "raw_seconds": round(raw_duration, 3), "raw_wpm": round(len(tokens) / raw_duration * 60, 1),
         "removed_seconds": round(result["removed_seconds"], 3), "tempo": round(result["tempo"], 4),
         "final_seconds": round(duration, 3), "final_wpm": round(len(tokens) / duration * 60, 1),

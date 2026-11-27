@@ -1,0 +1,19 @@
+{
+ "version": 1,
+ "slug": "found-box",
+ "title": "The Box by the Door",
+ "source": {
+  "kind": "original",
+  "note": "Invented for this repository as a sample; free to reuse."
+ },
+ "names": [
+  "Monday",
+  "Tuesday"
+ ],
+ "display_overrides": {},
+ "voice": {
+  "provider": "say",
+  "target_wpm": 200
+ },
+ "script": "On Monday, I found a box by my door. It was not mine. I asked the manager. He shrugged. So I taped a note above it. Is this yours? On Tuesday, the box was gone. The note said, thank you."
+}

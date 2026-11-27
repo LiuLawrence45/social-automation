@@ -1,5 +1,5 @@
 return function(b)
-	b.info.lighting = "interior"
+	b.info.lighting = "interior_warm"
 	local wall = "#f3e9d2"
 	b:floor(-14, 14, -8, 7, "#c99a66", { material = Enum.Material.WoodPlanks })
 	b:ceiling(-14, 14, -8, 7, 9, "#faf6ec")

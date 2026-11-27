@@ -23,16 +23,36 @@ function commands.prepare()
 		end
 	end
 	local lighting = game:GetService("Lighting")
+	for _, child in ipairs(lighting:GetChildren()) do
+		if (child:IsA("PostEffect") or child:IsA("Atmosphere")) and child.Name:sub(1, 9) ~= "Director_" then
+			child:Destroy()
+		end
+	end
 	if not lighting:FindFirstChild("Director_dof") then
 		local dof = Instance.new("DepthOfFieldEffect")
 		dof.Name = "Director_dof"
-		dof.FarIntensity = 0.28
+		dof.FarIntensity = 0.4
 		dof.NearIntensity = 0
 		dof.Enabled = false
 		dof.Parent = lighting
 	end
+	local applied = {}
+	local function try(name, change)
+		local ok, problem = pcall(change)
+		applied[name] = ok and true or tostring(problem)
+	end
+	try("lighting_style", function()
+		lighting.LightingStyle = Enum.LightingStyle.Realistic
+	end)
+	try("prioritize_lighting_quality", function()
+		lighting.PrioritizeLightingQuality = true
+	end)
+	try("edit_quality_level", function()
+		settings().Rendering.EditQualityLevel = Enum.QualityLevel.Level21
+	end)
+	lighting.ShadowSoftness = 0.25
 	root()
-	return { prepared = true }
+	return { prepared = true, quality = applied }
 end
 
 function commands.build_sets(args)
@@ -111,12 +131,18 @@ function commands.frame(args, lib)
 	if before ~= info.index then
 		settle = math.max(settle, args.settle_cut or settle)
 	end
+	if stage.relit then
+		stage.relit = false
+		task.wait(args.settle_light or 1)
+	end
 	Capture.settle(settle)
 	return info
 end
 
 -- Poses each frame, waits for it to be drawn and asks the capture side (args.sink) to take it.
 -- The sink answers 409 while the frame marker on screen is not this frame's yet.
+-- Studio computes a region's local lights about a second after the camera arrives there (settle_set)
+-- and rebuilds sun shadows over several frames after the sun moves (settle_light).
 function commands.capture(args, lib)
 	local stage = stageFor(args, lib)
 	local sent, waits = 0, 0
@@ -126,9 +152,12 @@ function commands.capture(args, lib)
 		Capture.marker(frameIndex)
 		local setName = stage.current.set.name
 		if setName ~= cached.lit then
-			-- Studio computes the local lights of a region about a second after the camera arrives there.
 			cached.lit = setName
+			stage.relit = false
 			task.wait(args.settle_set or 2)
+		elseif stage.relit then
+			stage.relit = false
+			task.wait(args.settle_light or 1)
 		end
 		Capture.settle(before ~= info.index and (args.settle_cut or 8) or (args.settle or 1))
 		local tries = 0

@@ -1,5 +1,5 @@
 return function(b)
-	b.info.lighting = "interior_warm"
+	b.info.lighting = "interior_cool"
 	local wall, trim, lower = "#f1e4c6", "#fffaf0", "#c8ad7f"
 	b:floor(-16, 16, -3, 3, "#7b2d3a", { material = Enum.Material.Fabric })
 	b:box({ 32, 0.02, 2.4 }, { 0, 0.01, 0 }, "#a54a57", { material = Enum.Material.Fabric, shadow = false })

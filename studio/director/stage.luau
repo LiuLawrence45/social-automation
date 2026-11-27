@@ -61,7 +61,37 @@ local function yawToward(from, to)
 	return math.deg(math.atan2(-delta.X, -delta.Z))
 end
 
-function M:applyLighting(name)
+local sunTable
+
+local function solveSun(want)
+	if not sunTable then
+		sunTable = {}
+		local clock, latitude = LightingService.ClockTime, LightingService.GeographicLatitude
+		for lat = -90, 90, 3 do
+			LightingService.GeographicLatitude = lat
+			for step = 0, 239 do
+				LightingService.ClockTime = step / 10
+				local direction = LightingService:GetSunDirection()
+				if direction.Y > 0.15 then
+					table.insert(sunTable, { direction, step / 10, lat })
+				end
+			end
+		end
+		LightingService.ClockTime, LightingService.GeographicLatitude = clock, latitude
+	end
+	local best, bestDot = nil, -2
+	for _, entry in ipairs(sunTable) do
+		local dot = entry[1]:Dot(want)
+		if dot > bestDot then
+			best, bestDot = entry, dot
+		end
+	end
+	return best[2], best[3]
+end
+
+local EFFECTS = { grade = "ColorCorrectionEffect", bloom = "BloomEffect", atmosphere = "Atmosphere", sunrays = "SunRaysEffect" }
+
+function M:applyLighting(name, view)
 	local preset = self.lib.lighting[name]
 	if not preset then
 		error("unknown lighting preset '" .. tostring(name) .. "'")
@@ -72,21 +102,38 @@ function M:applyLighting(name)
 		end
 		LightingService[key] = value
 	end
-	local kinds = { grade = "ColorCorrectionEffect", bloom = "BloomEffect", atmosphere = "Atmosphere" }
-	for effectName, className in pairs(kinds) do
+	local key = preset.key
+	if key and view then
+		local back = Vector3.new(view.pos.X - view.look.X, 0, view.pos.Z - view.look.Z)
+		back = back.Magnitude > 0.01 and back.Unit or Vector3.zAxis
+		local turned = CFrame.Angles(0, math.rad(-(key.azimuth or 0)), 0):VectorToWorldSpace(back)
+		local elevation = math.rad(key.elevation or 40)
+		local want = turned * math.cos(elevation) + Vector3.yAxis * math.sin(elevation)
+		local clock, latitude = solveSun(want)
+		if math.abs(clock - LightingService.ClockTime) > 0.01 or latitude ~= LightingService.GeographicLatitude then
+			self.relit = true
+		end
+		LightingService.ClockTime, LightingService.GeographicLatitude = clock, latitude
+	end
+	for effectName, className in pairs(EFFECTS) do
 		local effect = LightingService:FindFirstChild("Director_" .. effectName)
 		if not effect then
 			effect = Instance.new(className)
 			effect.Name = "Director_" .. effectName
 			effect.Parent = LightingService
 		end
-		for key, value in pairs(preset[effectName] or {}) do
+		local values = preset[effectName]
+		if effectName == "sunrays" then
+			effect.Enabled = values ~= nil
+		end
+		for property, value in pairs(values or {}) do
 			if type(value) == "string" then
 				value = Color3.fromHex(value)
 			end
-			effect[key] = value
+			effect[property] = value
 		end
 	end
+	self.focus = preset.focus or {}
 end
 
 function M:prepare(index)
@@ -159,7 +206,6 @@ function M:prepare(index)
 		end
 		state.pieces[name] = { piece = piece, from = wanted and (wanted.from or wanted[1]) or 0, to = wanted and (wanted.to or wanted[2]) or 0, ease = wanted and wanted.ease or "inout" }
 	end
-	self:applyLighting(shot.time or set.lighting or "day")
 	self:pose(0, 0)
 	for _, entry in ipairs(state.order) do
 		entry.origin = entry.position
@@ -171,6 +217,7 @@ function M:prepare(index)
 			return self:place(spec)
 		end,
 	})
+	self:applyLighting(shot.time or set.lighting or "day", state.camera.from)
 	return state
 end
 
@@ -318,9 +365,11 @@ function M:frame(frameIndex)
 	local dof = LightingService:FindFirstChild("Director_dof")
 	if dof then
 		local distance = (look - pos).Magnitude
-		dof.Enabled = (shot.camera.dof ~= false) and distance < 14
+		local focus = self.focus or {}
+		dof.Enabled = (shot.camera.dof ~= false) and distance < (focus.within or 14)
 		dof.FocusDistance = distance
-		dof.InFocusRadius = math.max(3, distance * 0.6)
+		dof.InFocusRadius = math.max(2.5, distance * (focus.radius or 0.45))
+		dof.FarIntensity = focus.far or 0.4
 	end
 	return { shot = shot.id, index = index, t = t, u = u }
 end

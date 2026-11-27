@@ -1,0 +1,318 @@
+{
+ "version": 1,
+ "cast": {
+  "me": "young_man",
+  "manager": "manager"
+ },
+ "shots": [
+  {
+   "id": "s01",
+   "text": "On Monday,",
+   "set": "hallway",
+   "props": [
+    {
+     "prop": "calendar",
+     "at": {
+      "anchor": "my_door_note",
+      "offset": [
+       3.5,
+       0.9,
+       0.03
+      ]
+     },
+     "head": "MONDAY",
+     "text": "4"
+    }
+   ],
+   "camera": {
+    "from": "my_door_wide",
+    "move": "push"
+   }
+  },
+  {
+   "id": "s02",
+   "text": "I found a box by my door.",
+   "set": "hallway",
+   "set_state": {
+    "my_door": -80
+   },
+   "cast": [
+    {
+     "who": "me",
+     "at": "my_doorway",
+     "facing": "front",
+     "action": "look_around",
+     "face": [
+      [
+       0,
+       "neutral"
+      ],
+      [
+       0.4,
+       "surprised"
+      ]
+     ]
+    }
+   ],
+   "props": [
+    {
+     "prop": "box",
+     "at": {
+      "anchor": "my_door_out",
+      "offset": [
+       1.6,
+       0,
+       0.4
+      ]
+     }
+    }
+   ],
+   "camera": {
+    "on": "me",
+    "frame": "full",
+    "yaw": 14,
+    "move": "push"
+   }
+  },
+  {
+   "id": "s03",
+   "text": "It was not mine.",
+   "set": "hallway",
+   "set_state": {
+    "my_door": -80
+   },
+   "cast": [
+    {
+     "who": "me",
+     "at": "my_doorway",
+     "facing": "front",
+     "action": "shrug",
+     "face": "thinking"
+    }
+   ],
+   "camera": {
+    "on": "me",
+    "frame": "close",
+    "yaw": 10,
+    "move": "push"
+   }
+  },
+  {
+   "id": "s04",
+   "text": "I asked the manager.",
+   "set": "lobby",
+   "cast": [
+    {
+     "who": "me",
+     "at": "desk_front",
+     "action": "talk",
+     "face": "talk"
+    },
+    {
+     "who": "manager",
+     "at": "manager_spot",
+     "face": "calm",
+     "look_at": "me"
+    }
+   ],
+   "camera": {
+    "from": {
+     "pos": [
+      1.8,
+      4.8,
+      3.6
+     ],
+     "look": [
+      -2.8,
+      3.8,
+      -4
+     ]
+    },
+    "move": "push"
+   }
+  },
+  {
+   "id": "s05",
+   "text": "He shrugged.",
+   "set": "lobby",
+   "cast": [
+    {
+     "who": "manager",
+     "at": "manager_spot",
+     "facing": "front",
+     "action": "shrug",
+     "face": "thinking"
+    }
+   ],
+   "camera": {
+    "on": "manager",
+    "frame": "close",
+    "move": "push"
+   },
+   "emphasis": true
+  },
+  {
+   "id": "s06",
+   "text": "So I taped a note above it.",
+   "set": "hallway",
+   "cast": [
+    {
+     "who": "me",
+     "at": "my_door_out",
+     "facing": "back",
+     "action": "tape",
+     "face": "calm"
+    }
+   ],
+   "props": [
+    {
+     "prop": "box",
+     "at": {
+      "anchor": "my_door_out",
+      "offset": [
+       1.6,
+       0,
+       0.4
+      ]
+     }
+    },
+    {
+     "prop": "note",
+     "at": "my_door_note",
+     "text": "Is this yours?",
+     "show": [
+      0.45,
+      1
+     ],
+     "pop": true
+    }
+   ],
+   "camera": {
+    "on": "me",
+    "frame": "medium",
+    "yaw": 158,
+    "pitch": 6,
+    "move": "orbit_left"
+   }
+  },
+  {
+   "id": "s07",
+   "text": "Is this yours?",
+   "set": "hallway",
+   "props": [
+    {
+     "prop": "note",
+     "at": "my_door_note",
+     "text": "Is this yours?"
+    }
+   ],
+   "camera": {
+    "on": "my_door_note",
+    "frame": "detail",
+    "move": "push"
+   },
+   "emphasis": true
+  },
+  {
+   "id": "s08",
+   "text": "On Tuesday,",
+   "set": "hallway",
+   "props": [
+    {
+     "prop": "calendar",
+     "at": {
+      "anchor": "my_door_note",
+      "offset": [
+       3.5,
+       0.9,
+       0.03
+      ]
+     },
+     "head": "TUESDAY",
+     "text": "5"
+    },
+    {
+     "prop": "note",
+     "at": "my_door_note",
+     "text": "Thank you!",
+     "color": "#ffe0f0"
+    }
+   ],
+   "camera": {
+    "from": "my_door_wide",
+    "move": "push"
+   }
+  },
+  {
+   "id": "s09",
+   "text": "the box was gone.",
+   "set": "hallway",
+   "set_state": {
+    "my_door": -80
+   },
+   "cast": [
+    {
+     "who": "me",
+     "at": "my_doorway",
+     "facing": "front",
+     "action": "startle",
+     "face": "shock"
+    }
+   ],
+   "camera": {
+    "on": "me",
+    "frame": "medium",
+    "yaw": 14,
+    "move": "pull"
+   }
+  },
+  {
+   "id": "s10",
+   "text": "The note said, thank you.",
+   "set": "hallway",
+   "set_state": {
+    "my_door": -80
+   },
+   "cast": [
+    {
+     "who": "me",
+     "at": "my_doorway",
+     "facing": "front",
+     "action": "lift_note",
+     "face": [
+      [
+       0,
+       "surprised"
+      ],
+      [
+       0.4,
+       "happy"
+      ]
+     ],
+     "holds": {
+      "prop": "note",
+      "text": "Thank you!",
+      "color": "#ffe0f0",
+      "hand": "R",
+      "offset": [
+       0,
+       0.35,
+       -0.25
+      ]
+     }
+    }
+   ],
+   "camera": {
+    "on": "me",
+    "frame": "medium",
+    "yaw": 14,
+    "offset": [
+     0.45,
+     -0.25,
+     0
+    ],
+    "move": "push"
+   }
+  }
+ ]
+}
