@@ -310,6 +310,10 @@ def load_timeline(job: Path, judged: bool = True) -> Dict[str, Any]:
         raise RenderError("%s not found; run python -m pipeline.story timeline --job %s" % (path, job))
     with open(path, "r", encoding="utf-8") as handle:
         timeline = json.load(handle)
+    built, source = (timeline.get("built_from") or {}).get("shotlist_sha1"), job / "shotlist.json"
+    if built and source.is_file() and hashlib.sha1(source.read_bytes()).hexdigest() != built:
+        raise RenderError("shotlist.json changed after timeline.json was built, so Studio would stage the old shots; "
+                          "run python -m pipeline.story timeline --job %s" % job)
     chosen = judge.chosen_cameras(job) if judged else {}
     for shot in timeline["shots"]:
         if shot["id"] in chosen:

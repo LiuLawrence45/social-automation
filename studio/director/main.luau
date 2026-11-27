@@ -76,6 +76,18 @@ end
 function commands.ensure_sets(args)
 	local folder = Util.folder(root(), "Sets")
 	local built = {}
+	-- Another job may have left a set of its own standing where this job's row puts a different one:
+	-- anything this job does not know, or that stands in another slot than this job gives it, goes.
+	local slots = {}
+	for index, name in ipairs(__SET_NAMES) do
+		slots[name] = index
+	end
+	for _, model in ipairs(folder:GetChildren()) do
+		local origin, index = model:GetAttribute("Origin"), slots[model.Name]
+		if not index or typeof(origin) ~= "CFrame" or math.abs(origin.Position.X - index * Sets.SPACING) > 1 then
+			model:Destroy()
+		end
+	end
 	for index, name in ipairs(__SET_NAMES) do
 		local wanted = args.sets[name]
 		local existing = folder:FindFirstChild(name)

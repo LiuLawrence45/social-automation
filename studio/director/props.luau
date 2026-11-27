@@ -135,7 +135,10 @@ function BUILD.pen(m, spec)
 end
 
 function BUILD.phone(m, spec)
-	local body = part(m, { 0.55, 1.0, 0.08 }, CFrame.new(), "#1e1e1e")
+	part(m, { 0.55, 1.0, 0.08 }, CFrame.new(), spec.case or "#1e1e1e")
+	if spec.edge then
+		part(m, { 0.6, 1.05, 0.03 }, CFrame.new(0, 0, -0.02), type(spec.edge) == "string" and spec.edge or "#bcd4ff", { shadow = false, material = Enum.Material.Neon })
+	end
 	local screen = part(m, { 0.48, 0.9, 0.02 }, CFrame.new(0, 0, -0.04), spec.screen or "#dfefff", { shadow = false, material = Enum.Material.Neon })
 	if spec.text then
 		text(screen, Enum.NormalId.Front, spec.text, { color = "#111111", font = Enum.Font.GothamBold, pad = 0.06 })
@@ -143,7 +146,11 @@ function BUILD.phone(m, spec)
 end
 
 function BUILD.phone_chat(m, spec)
-	part(m, { 0.74, 1.42, 0.08 }, CFrame.new(), "#15171c")
+	part(m, { 0.74, 1.42, 0.08 }, CFrame.new(), spec.case or "#15171c")
+	if spec.edge then
+		-- The screen's light spilling round the case, so a phone held to a head in the dark still reads as a phone.
+		part(m, { 0.79, 1.47, 0.03 }, CFrame.new(0, 0, -0.02), type(spec.edge) == "string" and spec.edge or "#bcd4ff", { shadow = false, material = Enum.Material.Neon })
+	end
 	local dark = spec.dark ~= false
 	local screen = part(m, { 0.66, 1.32, 0.02 }, CFrame.new(0, 0, -0.04), dark and "#11151d" or "#eef2f7", { shadow = false, material = Enum.Material.Neon })
 	local gui = Util.surface(screen, Enum.NormalId.Front, 400)
@@ -174,6 +181,29 @@ function BUILD.phone_chat(m, spec)
 		light.Range = 7
 		light.Shadows = true
 		light.Parent = screen
+	end
+end
+
+-- Daylight through a window as it lands on a floor, a wall or a door: bright panes with the shadow of the
+-- glazing bars between them. Lies flat where it is placed; pitch 90 stands it against a wall or a door.
+function BUILD.sun_patch(m, spec)
+	local cols, rows = spec.cols or 2, spec.rows or 2
+	local width, length, bar = spec.pane_width or 1.1, spec.pane_length or 1.7, spec.bar or 0.16
+	for row = 1, rows do
+		for col = 1, cols do
+			local x = (col - (cols + 1) / 2) * (width + bar) + (row - (rows + 1) / 2) * (spec.skew or 0.5)
+			local z = (row - (rows + 1) / 2) * (length + bar)
+			-- An unlit wash over whatever lies under it, so the floor or door still shows through the light.
+			local pane = part(m, { width, 0.02, length }, CFrame.new(x, 0.012, z), "#ffffff", { shadow = false, transparency = 1 })
+			local gui = Util.surface(pane, Enum.NormalId.Top, 20)
+			gui.LightInfluence = 0
+			local wash = Instance.new("Frame")
+			wash.Size = UDim2.fromScale(1, 1)
+			wash.BorderSizePixel = 0
+			wash.BackgroundColor3 = Util.color(spec.color or "#fff2d2")
+			wash.BackgroundTransparency = spec.fade or 0.5
+			wash.Parent = gui
+		end
 	end
 end
 
