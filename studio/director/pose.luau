@@ -24,26 +24,32 @@ local GROUND = {
 	body = ORDER,
 }
 -- Places on the body a hand can go: part, position as a share of the part's size, and the way the surface faces.
--- An "s" entry is mirrored for the left hand. The hand stops its own half thickness short of the surface.
+-- An "s" entry is mirrored for the left hand. "press" is how far the middle of the hand stops from the part's box,
+-- in studs on a standard body: a hand is a curled shape about 0.4 thick, so half of that leaves the palm hovering;
+-- a hand over a mouth or on a chest sits closer, with the fingers against the surface.
 local POINTS = {
-	mouth = { "Head", { 0, -0.36, -0.5 }, { 0, 0, -1 } },
-	chin = { "Head", { 0, -0.46, -0.36 }, { 0, -0.4, -1 } },
-	eye = { "Head", { 0.3, 0.04, -0.5 }, { 0, 0, -1 }, s = true },
-	brow = { "Head", { 0.1, 0.3, -0.5 }, { 0, 0, -1 }, s = true },
+	mouth = { "Head", { 0, -0.45, -0.5 }, { 0, 0, -1 }, press = 0.08 },
+	chin = { "Head", { 0, -0.46, -0.36 }, { 0, -0.4, -1 }, press = 0.1 },
+	eye = { "Head", { 0.3, 0.04, -0.5 }, { 0, 0, -1 }, s = true, press = 0.08 },
+	brow = { "Head", { 0.1, 0.3, -0.5 }, { 0, 0, -1 }, s = true, press = 0.08 },
 	ear = { "Head", { 0.5, -0.05, 0.02 }, { 1, 0, 0 }, s = true },
 	neck = { "Head", { 0.25, -0.5, 0.42 }, { 0.3, 0, 1 }, s = true },
-	chest = { "UpperTorso", { 0.24, 0.16, -0.5 }, { 0, 0, -1 }, s = true },
-	heart = { "UpperTorso", { -0.16, 0.16, -0.5 }, { 0, 0, -1 } },
-	ribs = { "UpperTorso", { -0.4, -0.12, -0.5 }, { 0, 0, -1 }, s = true },
-	belly = { "UpperTorso", { -0.12, -0.44, -0.5 }, { 0, 0, -1 }, s = true },
-	collar = { "UpperTorso", { -0.36, 0.24, -0.5 }, { 0, 0, -1 }, s = true },
-	waist = { "UpperTorso", { -0.3, -0.42, -0.5 }, { 0, 0, -1 }, s = true },
-	front = { "UpperTorso", { 0.14, 0.1, -0.5 }, { 0, 0, -1 }, s = true },
+	chest = { "UpperTorso", { 0.24, 0.16, -0.5 }, { 0, 0, -1 }, s = true, press = -0.06 },
+	heart = { "UpperTorso", { -0.16, 0.16, -0.5 }, { 0, 0, -1 }, press = -0.06 },
+	ribs = { "UpperTorso", { -0.4, -0.12, -0.5 }, { 0, 0, -1 }, s = true, press = -0.06 },
+	belly = { "UpperTorso", { -0.12, -0.44, -0.5 }, { 0, 0, -1 }, s = true, press = -0.06 },
+	collar = { "UpperTorso", { -0.24, 0.24, -0.5 }, { 0, 0, -1 }, s = true, press = -0.06 },
+	waist = { "UpperTorso", { -0.3, -0.42, -0.5 }, { 0, 0, -1 }, s = true, press = -0.06 },
+	front = { "UpperTorso", { 0.14, 0.1, -0.5 }, { 0, 0, -1 }, s = true, press = 0.24 },
 	belt = { "LowerTorso", { 0.44, 0.2, -0.5 }, { 0.3, 0, -1 }, s = true },
 	hip = { "LowerTorso", { 0.5, 0.1, 0 }, { 1, 0, 0 }, s = true },
 	knee = { "LowerLeg", { 0, 0.5, -0.5 }, { 0, 0.6, -1 }, own = true },
 	thigh = { "UpperLeg", { 0, 0.0, -0.5 }, { 0, 0, -1 }, own = true },
 }
+-- A chest is rounder than its box: front to back, the body fills a little over half of the torso part's box, so
+-- an arm lying across the chest is not inside it. Used wherever the body is tested against itself.
+local TRIM = { UpperTorso = Vector3.new(1, 1, 0.55) }
+M.TRIM = TRIM
 M.ORDER = ORDER
 M.PARENT = PARENT
 
@@ -276,7 +282,7 @@ local function bodyPoint(model, cfs, name, side, offset, scale)
 	local normal = Vector3.new(point[3][1] * mirror, point[3][2], point[3][3]).Unit
 	local hand = M.skeleton(model)[WORD[side] .. "Hand"].size
 	local cf = cfs[partName]
-	local out = cf * (at + normal * (hand.X * 0.5 + 0.04 * scale))
+	local out = cf * (at + normal * ((point.press or 0.14) * hand.X / 0.4))
 	if offset then
 		out += cf:VectorToWorldSpace(Vector3.new(offset[1] * mirror, offset[2], offset[3]) * scale)
 	end
@@ -401,12 +407,13 @@ local function reachArm(model, joints, side, target, facing, pole)
 end
 
 -- Ways the elbow may point (in the chest's frame, mirrored for the left arm), most natural first, and how far a
--- hand may stand off the body. The choice that keeps the arm out of the body with the elbow low wins.
+-- hand may stand off the body: a hand sent to the mouth has to end up on the mouth, so hardly at all. The choice
+-- that keeps the arm out of the rest of the body with the elbow low wins.
 local POLES = {
 	{ 0.55, -1, 0.5 }, { 0.8, -1, 0.2 }, { 0.7, -1, -0.2 }, { 0.9, -1, -0.4 }, { 0.5, -1, -0.5 }, { 0.2, -1, -0.3 },
 	{ 0.3, -1, -0.8 }, { 1, -0.6, -0.6 }, { 1, -0.5, 0.3 }, { 1, 0.1, 0.2 }, { 1, 0.3, -0.5 }, { 0.4, -0.6, 1 },
 }
-local STAND_OFF = { 0, 0.12, 0.25, 0.4 }
+local STAND_OFF = { 0, 0.1, 0.25 }
 local ARM_KEEPS_OUT_OF = { "Head", "UpperTorso", "LowerTorso", "LeftUpperLeg", "RightUpperLeg", "LeftLowerLeg", "RightLowerLeg" }
 
 local function armCost(model, joints, side, target, touches)
@@ -415,10 +422,10 @@ local function armCost(model, joints, side, target, touches)
 	local word, other = WORD[side], WORD[side == "R" and "L" or "R"]
 	local clip = 0
 	local function against(limb, name)
-		if name == touches and limb == word .. "Hand" then
+		if name == touches then
 			return
 		end
-		clip += M.overlap(cfs[limb], skeleton[limb].size * 0.82, cfs[name], skeleton[name].size * 0.82)
+		clip += M.overlap(cfs[limb], skeleton[limb].size * 0.82, cfs[name], skeleton[name].size * 0.82 * (TRIM[name] or Vector3.one))
 	end
 	for _, limb in ipairs({ word .. "LowerArm", word .. "Hand" }) do
 		for _, name in ipairs(ARM_KEEPS_OUT_OF) do
@@ -446,7 +453,7 @@ local function chooseArm(model, joints, side, target, facing, normal, scale, tou
 		for index, pole in ipairs(POLES) do
 			local trial = table.clone(joints)
 			local short = reachArm(model, trial, side, point, facing, pole)
-			local cost = armCost(model, trial, side, point, touches) + short * 2 + 0.012 * (index - 1) + 0.5 * off + 0.001 * step
+			local cost = armCost(model, trial, side, point, touches) + short * 2 + 0.012 * (index - 1) + 1.5 * off + 0.001 * step
 			if cost < bestCost then
 				best, bestCost = { pole = pole, off = off }, cost
 			end

@@ -207,6 +207,7 @@ function M.check(stage, index, camera, samples)
 				end
 				if reach.part then
 					resting[SIDES[side] .. "Hand->" .. reach.part] = true
+					resting[SIDES[side] .. "LowerArm->" .. reach.part] = true
 				end
 				if reach.touch then
 					touching[SIDES[side] .. "Hand"] = true
@@ -245,7 +246,7 @@ function M.check(stage, index, camera, samples)
 			for _, pair in ipairs(SELF_PAIRS) do
 				local a, b = parts[pair[1]], parts[pair[2]]
 				if a and b then
-					local depth = overlap(a.cf, a.size * SHRINK, b.cf, b.size * SHRINK)
+					local depth = overlap(a.cf, a.size * SHRINK * (Pose.TRIM[pair[1]] or Vector3.one), b.cf, b.size * SHRINK * (Pose.TRIM[pair[2]] or Vector3.one))
 					local limit = resting[pair[1] .. "->" .. pair[2]] and REST_DEPTH or DEPTH
 					if depth > limit * scale then
 						issue("clip_self", pair[1] .. "->" .. pair[2], a.seen or b.seen, depth)
