@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "provider": "gemini",
+  "model": "",
+  "ceiling_usd": 2,
+  "reserve_usd": 0.05,
+  "workers": 8,
+  "max_output_tokens": 1500,
+  "prices": {},
+  "format": "The video is a vertical 9:16 narrated short staged in Roblox Studio: jointed humanoid avatars (R15 rigs with faces, hair and clothes) acting on built sets, about one shot per second, with one-word captions burned in at 69% of the frame height in the finished version.",
+  "system": "You are a strict quality-control reviewer for the finished picture of a short narrated video. You see frames taken from the rendered video and judge only what is visible in them, never what the makers intended. A stylised avatar look is fine; the question is whether a viewer would notice something wrong. When a listed fail condition is visible, report it even if the rest of the frame is good. Never report a defect you cannot point to in a specific labelled frame. Reply with one JSON object and nothing else.",
+  "scale": "Score 0 to 10 for this concern only: 9 to 10 nothing a viewer would notice, 7 to 8 small imperfections only, 5 to 6 a viewer would notice something off, 0 to 4 plainly wrong.",
+  "judges": {
+    "posture": {
+      "title": "Posture and action",
+      "video": "clean",
+      "frames": 3,
+      "tile_height": 720,
+      "threshold": 6,
+      "script": true,
+      "question": "Look at every visible character in every frame. Is each one doing something specific that fits the words being spoken, in a natural human posture a film director would accept?",
+      "notes": "Acceptable examples: lying asleep in bed, sitting up startled, a hand that actually reaches a handle, hunching over a phone held in both hands, cowering in a corner with arms drawn in, a nurse writing at a desk or tending a patient, an officer sweeping a torch around a room. A dark silhouette figure still has a posture: judge it too.",
+      "fail_if": [
+        {
+          "key": "idle",
+          "text": "a character just stands or sits in a neutral stance (upright, arms hanging or held loosely, legs straight) with no action, gesture or reaction that fits the words"
+        },
+        {
+          "key": "default_pose",
+          "text": "A-pose or T-pose leftovers: arms held away from the body or out to the sides as in an avatar's default stance"
+        },
+        {
+          "key": "arms_out",
+          "text": "one or both arms held stiffly straight out in front or to the side for no reason the words explain (zombie arms), including while standing, walking or facing a door"
+        },
+        {
+          "key": "splayed",
+          "text": "limbs splayed, legs planted unnaturally wide, or a limb frozen in the middle of a gesture"
+        },
+        {
+          "key": "bad_joint",
+          "text": "a joint hyperextended, bent the wrong way or twisted; a head, hand or foot at an impossible angle"
+        },
+        {
+          "key": "wrong_action",
+          "text": "the body does the opposite of the words (standing upright when the words say asleep, cowering or crying; calm when the words say terrified)"
+        }
+      ],
+      "not_applicable": "no character and no part of a character (such as a hand) is visible in any frame"
+    },
+    "clipping": {
+      "title": "Clipping and floating",
+      "video": "clean",
+      "frames": 3,
+      "tile_height": 720,
+      "threshold": 6,
+      "question": "Check every character and every prop for geometry that passes through other geometry or hangs in the air.",
+      "notes": "Look closely at hands on phones and door handles, arms against the torso, bodies against walls, doors, desks and beds, and feet against the floor. Darkness is not clipping; judge only what you can see.",
+      "fail_if": [
+        {
+          "key": "limb_through_body",
+          "text": "an arm, hand or leg passes through the character's own torso, head or other limb"
+        },
+        {
+          "key": "hand_through_prop",
+          "text": "a hand or arm passes through a phone, handle, door, desk, wall or other object instead of touching it"
+        },
+        {
+          "key": "body_through_set",
+          "text": "a character's body, head or limb passes through a wall, door, floor, furniture or bedding (for example lying half inside a mattress or standing inside a desk)"
+        },
+        {
+          "key": "floating",
+          "text": "feet clearly above the floor, or a character or prop hanging in the air with nothing holding it"
+        },
+        {
+          "key": "sunk",
+          "text": "feet or legs sunk into the floor"
+        },
+        {
+          "key": "prop_not_in_hand",
+          "text": "a prop that should be held (phone, keys, torch) floats beside the hand or sits at an angle no grip could hold"
+        },
+        {
+          "key": "characters_intersect",
+          "text": "two characters pass through each other"
+        }
+      ],
+      "not_applicable": "no character and no held prop is visible in any frame"
+    },
+    "framing": {
+      "title": "Framing and composition",
+      "video": "captioned",
+      "frames": 2,
+      "tile_height": 720,
+      "threshold": 6,
+      "question": "These frames come from the finished video with its captions. Is the subject of the shot framed on purpose, with the caption clear of what matters?",
+      "fail_if": [
+        {
+          "key": "subject_cut_off",
+          "text": "the subject's head or the thing the shot is about is cut by the frame edge in a way that looks accidental"
+        },
+        {
+          "key": "dead_space",
+          "text": "most of the frame is empty wall, floor, ceiling or darkness while the subject is small or pushed to an edge"
+        },
+        {
+          "key": "caption_covers",
+          "text": "the burned-in caption word sits on a face or on the thing the shot is about (the message on a phone screen, a door handle, a footprint)"
+        },
+        {
+          "key": "no_subject",
+          "text": "it is not clear what the subject of the shot is"
+        },
+        {
+          "key": "blocked",
+          "text": "something in the foreground blocks the subject by accident"
+        }
+      ]
+    },
+    "lighting": {
+      "title": "Lighting and readability",
+      "video": "clean",
+      "frames": 2,
+      "tile_height": 480,
+      "threshold": 6,
+      "measures": true,
+      "min_lit_fraction": 0.01,
+      "question": "Imagine this shot on a phone for one second. Can a viewer tell what it shows? A dark horror look is wanted; an unreadable frame is not.",
+      "fail_if": [
+        {
+          "key": "unreadable",
+          "text": "so dark or murky that a viewer could not say in one second what or who the shot shows"
+        },
+        {
+          "key": "subject_lost",
+          "text": "the subject (face, figure, hand, prop, text) merges into the background; an intentional silhouette is fine only when its outline stands clearly against a lighter background"
+        },
+        {
+          "key": "blown_out",
+          "text": "blown-out or flat full-bright lighting that breaks the mood of the neighbouring shots"
+        }
+      ]
+    },
+    "story": {
+      "title": "Story match",
+      "video": "clean",
+      "frames": 3,
+      "tile_height": 720,
+      "threshold": 6,
+      "script": true,
+      "question": "Does this clip show what the words spoken during it say? Judge the picture against the words of this shot, using the script only for context.",
+      "fail_if": [
+        {
+          "key": "wrong_subject",
+          "text": "the frames show someone or something other than what the words are about"
+        },
+        {
+          "key": "action_missing",
+          "text": "the words describe an action or event (a text arriving, a knob turning, walking to the door, reaching, crying, calling, searching, footprints) and the frames show neither it nor a clear reaction to it"
+        },
+        {
+          "key": "contradicts",
+          "text": "the picture contradicts the words (says asleep but the character stands; says nobody is here but someone is plainly there; says outside the door but shown inside)"
+        },
+        {
+          "key": "wrong_place",
+          "text": "the place shown contradicts the words"
+        },
+        {
+          "key": "text_wrong",
+          "text": "on-screen text the words depend on (a phone message, a sign) is missing, unreadable or says something else"
+        }
+      ]
+    },
+    "continuity": {
+      "title": "Continuity",
+      "video": "clean",
+      "frames": 2,
+      "tile_height": 640,
+      "threshold": 6,
+      "neighbours": true,
+      "question": "Compare this shot (the unprefixed tiles) with the shot before it (PREV) and, when present, the last earlier shot in the same set (EARLIER). Would a viewer feel a break?",
+      "notes": "A cut to another place or to an insert is normal. Judge whether the same character is the same avatar in the same outfit, whether positions and props follow from the previous shot when the place and action are continuous, whether time of day and lamp states agree within one place, and whether every character belongs to one visual style.",
+      "fail_if": [
+        {
+          "key": "avatar_changed",
+          "text": "the same character has a different avatar, face, hair, skin or outfit than in another tile"
+        },
+        {
+          "key": "style_mismatch",
+          "text": "a character is a blocky classic or default low-detail avatar while the others are detailed avatars, or the rendering style differs between tiles"
+        },
+        {
+          "key": "position_jump",
+          "text": "in one place and one continuous action, a character or prop is somewhere that cannot follow from the previous shot (teleports, a door open then shut, a phone in hand then gone)"
+        },
+        {
+          "key": "time_jump",
+          "text": "time of day or lamp state changes between tiles of the same place without the words saying so"
+        },
+        {
+          "key": "set_changed",
+          "text": "the same room looks like a different room"
+        }
+      ]
+    },
+    "motion": {
+      "title": "Motion",
+      "video": "clean",
+      "frames": 8,
+      "columns": 4,
+      "tile_height": 480,
+      "threshold": 6,
+      "measures": true,
+      "question": "The tiles are evenly spaced frames across the whole shot, in time order. Read them as a flip-book and judge the movement, not the pose in any one frame.",
+      "notes": "The measured change figures tell you how much the picture differs from one video frame to the next; a single spike inside the shot is a jump, and a figure near zero throughout means nothing moves.",
+      "fail_if": [
+        {
+          "key": "sliding",
+          "text": "a character changes position across the frames while the legs do not step (slides or glides over the floor)"
+        },
+        {
+          "key": "pop",
+          "text": "a character, limb, prop, light or the camera jumps between two neighbouring frames in a way smooth motion cannot explain"
+        },
+        {
+          "key": "limb_snap",
+          "text": "a limb is in unrelated poses in neighbouring frames"
+        },
+        {
+          "key": "statue",
+          "text": "a character who should be acting (speaking, walking, reaching, crying, working) holds exactly the same pose in every frame like a statue"
+        },
+        {
+          "key": "camera_nowhere",
+          "text": "the camera move starts or ends on nothing (an empty wall, floor or blur) or drifts off the subject"
+        }
+      ]
+    }
+  },
+  "video": {
+    "title": "Whole video",
+    "tile_height": 400,
+    "columns": 6,
+    "tiles_per_sheet": 18,
+    "threshold": 6,
+    "weakest": 8,
+    "max_output_tokens": 3000,
+    "question": "The sheets show one middle frame per shot in story order, labelled with the shot id. Judge the video as a whole.",
+    "criteria": [
+      {
+        "key": "pacing",
+        "text": "do shot lengths and changes of place keep pace with the words, with no stretch that drags or rushes"
+      },
+      {
+        "key": "repetition",
+        "text": "10 means no repetition; low when the same framing, pose or picture keeps coming back"
+      },
+      {
+        "key": "ending",
+        "text": "does the last line land: do the final shots build to and hold on a picture that pays off the story"
+      },
+      {
+        "key": "consistency",
+        "text": "one visual style, one look per character and per place across the whole video"
+      }
+    ]
+  }
+}
