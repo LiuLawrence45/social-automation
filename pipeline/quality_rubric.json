@@ -6,6 +6,10 @@
   "reserve_usd": 0.05,
   "workers": 8,
   "max_output_tokens": 4000,
+  "confirm": {
+    "votes": 3,
+    "margin": 1
+  },
   "accepted": [],
   "prices": {},
   "format": "The video is a vertical 9:16 narrated short staged in Roblox Studio: jointed humanoid avatars (R15 rigs with faces, hair and clothes) acting on built sets, about one shot per second, with one-word captions burned in at 69% of the frame height in the finished version.",

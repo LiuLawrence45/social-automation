@@ -3,7 +3,7 @@
 Usage:
   python -m pipeline.quality --job <folder> [--video FILE] [--final FILE] [--shots a,b,c] [--judges x,y]
       [--provider P] [--model M] [--ceiling USD] [--workers N] [--set judge.key=value] [--out FILE]
-      [--posture FILE] [--human FILE] [--baseline FILE] [--compare FILE] [--report-only] [--changed]
+      [--posture FILE] [--human FILE] [--baseline FILE] [--compare FILE] [--report-only] [--changed] [--confirm]
 
 One judge per concern (posture, expression, clipping, framing, lighting, story, continuity, motion) scores every shot on
 labelled sheets of frames cut from the rendered video, and one more judges the video as a whole. Rubrics,
@@ -14,7 +14,8 @@ for the shots judged in the run:
 a geometric fail fails the shot even when the picture passes, and the reverse. A shot fails when any judge
 fails it; a judge that could not answer leaves the shot incomplete, never passed. Every verdict keeps a
 fingerprint of the frames it was given on: when a shot is rendered again its verdicts are set aside as stale,
-and --changed judges exactly those again. The stage writes
+and --changed judges exactly those again. A fail that is close to the threshold, or the only fail on its shot, is asked
+again and settled by the majority of three votes; a fail backed by geometry or by measurement is not. The stage writes
 <job>/quality.json, <job>/QUALITY.md and the sheets every judge saw under <job>/quality/sheets/.
 """
 from __future__ import annotations
@@ -462,7 +463,8 @@ def ask(settings: Dict[str, Any], budget: SharedBudget, prompt: str, images: Seq
 
 
 def judge_shot(key: str, settings: Dict[str, Any], story: Dict[str, Any], index: int, shots: Sequence[Dict[str, Any]], plan: Dict[str, Any],
-               sheet: Path, sheet_rel: str, measured: Optional[Dict[str, Any]], budget: SharedBudget, manual_dir: Path) -> Dict[str, Any]:
+               sheet: Path, sheet_rel: str, measured: Optional[Dict[str, Any]], budget: SharedBudget, manual_dir: Path,
+               vote: int = 0) -> Dict[str, Any]:
     """One judge's verdict on one shot; a judge that cannot answer returns status error, never a pass."""
     spec = settings["judges"][key]
     base = {"sheet": sheet_rel, "frames": [t["frame"] for t in plan["tiles"] if not t["role"]], "source": plan["source"]}
@@ -475,7 +477,7 @@ def judge_shot(key: str, settings: Dict[str, Any], story: Dict[str, Any], index:
             raise QualityError(plan.get("error") or "no frame sheet")
         reply = ask(settings, budget, build_prompt(key, spec, settings, story, index, shots, plan, measured), images,
                     int(spec.get("max_output_tokens", settings.get("max_output_tokens", 1500))), manual_dir,
-                    "%s_%s" % (shots[index]["id"], key), ("score", "applicable"))
+                    "%s_%s" % (shots[index]["id"], key) + ("_v%d" % vote if vote else ""), ("score", "applicable"))
     except (vision.BudgetExceeded, vision.Pending, vision.VisionError, QualityError, EditError) as exc:
         return dict(base, status="error", reason="not judged: %s" % str(exc)[:200])
     entry = dict(base, **verdict(spec, reply))
@@ -624,6 +626,42 @@ def merge_geometry(entries: Dict[str, Dict[str, Any]], posture: Optional[Dict[st
     return stale
 
 
+def borderline(entry: Dict[str, Any], key: str, spec: Dict[str, Any], margin: float) -> bool:
+    """Whether one judge's fail on a shot is to be put to more votes before it stands.
+
+    It is when the score is within margin of the threshold or no other judge fails the shot. A fail that already
+    has votes, one backed by geometry and one backed by measurement are never asked again.
+    """
+    record = entry["judges"].get(key) or {}
+    if record.get("status") != "fail" or record.get("votes") or (record.get("geometry") or {}).get("status") == "fail":
+        return False
+    if any(defect.get("key") == "measured_dark" for defect in record.get("defects") or []):
+        return False
+    alone = [k for k in SHOT_JUDGES if (entry["judges"].get(k) or {}).get("status") == "fail"] == [key]
+    score = record.get("score")
+    return alone or (score is not None and abs(score - float(spec.get("threshold", 6))) <= margin)
+
+
+def settle_votes(record: Dict[str, Any], more: Sequence[Dict[str, Any]]) -> None:
+    """Replace a borderline fail by the majority of its votes: the verdict already given and the ones asked again.
+
+    The record takes the answer of the middle-scoring vote on the winning side and keeps every vote under votes.
+    A vote that could not answer leaves the fail as it stands, to be asked again in a later run.
+    """
+    ballots = [dict(record)] + [dict(item) for item in more]
+    if any(ballot.get("status") not in ("pass", "fail") for ballot in ballots):
+        return
+    fails = [ballot for ballot in ballots if ballot["status"] == "fail"]
+    side = fails if len(fails) * 2 > len(ballots) else [ballot for ballot in ballots if ballot["status"] == "pass"]
+    side = sorted(side, key=lambda ballot: -1.0 if ballot.get("score") is None else ballot["score"])
+    chosen = side[(len(side) - 1) // 2]
+    record.update({name: chosen.get(name) for name in ("status", "score", "applicable", "defects", "reason", "visible")})
+    record["votes"] = [{"status": ballot["status"], "score": ballot.get("score"), "reason": ballot.get("reason", ""),
+                        "defects": [defect["key"] for defect in ballot.get("defects") or []]} for ballot in ballots]
+    if "picture_status" in record:
+        record["picture_status"] = record["status"]
+
+
 def shot_status(entry: Dict[str, Any], judges: Sequence[str]) -> None:
     failed = [k for k in SHOT_JUDGES if (entry["judges"].get(k) or {}).get("status") == "fail"]
     missing = [k for k in judges if k in SHOT_JUDGES and (entry["judges"].get(k) or {}).get("status") not in ("pass", "fail")]
@@ -664,11 +702,13 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
         return -len(shot.get("failed") or []), sum(scores) / len(scores) if scores else 10.0
 
     weakest = [{"shot": s["id"], "failed": s["failed"]} for s in sorted(shots, key=weakness)[:8] if s.get("failed")]
+    voted = [("%s/%s" % (s["id"], key), s["judges"][key]["status"]) for s in shots for key in SHOT_JUDGES if (s["judges"].get(key) or {}).get("votes")]
     return {"shots": len(shots), "pass": sum(1 for s in shots if s["status"] == "pass"), "weakest": weakest,
             "fail": sum(1 for s in shots if s["status"] == "fail"),
             "incomplete": sum(1 for s in shots if s["status"] == "incomplete"),
             "judges": per_judge, "failing_by_set": by_set, "frames_sampled": len(frames), "geometry_sources": sources,
             "stale": {shot_id: keys for shot_id, keys in stale.items() if keys},
+            "voted": {"kept": [name for name, status in voted if status == "fail"], "cleared": [name for name, status in voted if status != "fail"]},
             "provider": doc["config"]["provider"], "model": doc["config"]["model"], "spend": doc.get("usage") or {}}
 
 
@@ -750,6 +790,11 @@ def markdown(doc: Dict[str, Any]) -> str:
     if summary.get("stale"):
         out += ["", "Set aside, because the shot was rendered again after these verdicts were given (@@--changed@@ judges them again): %s."
                 % "; ".join("%s (%s)" % (shot_id, ", ".join(keys)) for shot_id, keys in summary["stale"].items())]
+    voted = summary.get("voted") or {}
+    if voted.get("kept") or voted.get("cleared"):
+        out += ["", "Fails close to the threshold, or alone on their shot, were asked again and settled by the majority of the votes: "
+                "%d stayed fails (%s); %d became passes (%s)." % (len(voted["kept"]), " ".join(voted["kept"]) or "none",
+                                                                len(voted["cleared"]), " ".join(voted["cleared"]) or "none")]
     video = doc.get("video_judge")
     if video:
         out += ["", "## Whole video", ""]
@@ -772,6 +817,8 @@ def markdown(doc: Dict[str, Any]) -> str:
                 record = shot["judges"][key]
                 score = "" if record.get("score") is None else " %.0f/10" % record["score"]
                 keys = ", ".join(d["key"] for d in record.get("defects") or [])
+                if record.get("votes"):
+                    score += ", %d of %d votes" % (sum(1 for v in record["votes"] if v["status"] == "fail"), len(record["votes"]))
                 out.append("  - %s%s%s: %s%s" % (key, score, " [%s]" % keys if keys else "", record.get("reason", ""),
                                                 " (@@%s@@)" % record["sheet"] if record.get("sheet") else ""))
         out.append("")
@@ -825,11 +872,15 @@ def finish(job: Path, doc: Dict[str, Any], out: Path, human: Optional[Path], bas
 def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] = None, shots: Optional[Sequence[str]] = None,
                 judges: Optional[Sequence[str]] = None, overrides: Optional[Dict[str, Any]] = None, out: Optional[Path] = None,
                 human: Optional[Path] = None, baseline: Optional[Path] = None, against: Optional[Path] = None,
-                report_only: bool = False, posture: Optional[Path] = None, changed: bool = False) -> Dict[str, Any]:
+                report_only: bool = False, posture: Optional[Path] = None, changed: bool = False,
+                confirm: bool = False) -> Dict[str, Any]:
     """Judge the rendered video of a job (or the listed shots and judges) and write the reports.
 
     With changed, only the verdicts that are missing, failed to answer or were set aside as stale are judged again.
+    Borderline fails among the verdicts judged in the run are put to more votes; confirm does what changed does
+    and also puts every borderline fail already in the report to the vote.
     """
+    changed = changed or confirm
     job = Path(job)
     out = Path(out) if out else job / "quality.json"
     existing = read_json(out, required=False) or {}
@@ -894,21 +945,30 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
     budget = SharedBudget(float(settings["ceiling_usd"]), float(settings["reserve_usd"]), prior)
     workers = max(1, int(settings.get("workers", 8)))
     measures: Dict[str, Optional[Dict[str, Any]]] = {}
-    if any(settings["judges"][key].get("measures") for _, key in work):
+    if any(settings["judges"][key].get("measures") for key in wanted_judges if key in SHOT_JUDGES) and (work or confirm):
         frames = decoded["clean"]
         for shot in all_shots:
             measures[shot["id"]] = shot_measures(frames, *frame_range(shot, float(meta["fps"])))
     plans: Dict[Tuple[int, str], Dict[str, Any]] = {}
     unique: Dict[str, Dict[str, Any]] = {}
-    for index, key in work:
-        plan = plan_sheet(settings["judges"][key], index, all_shots, meta, videos)
-        plan["source"] = stamps[str(settings["judges"][key].get("video", "clean"))]
-        plans[(index, key)] = plan
-        unique.setdefault(plan["name"], plan)
-        if settings["judges"][key].get("detail"):
-            plan["detail"] = plan_sheet(dict(settings["judges"][key], neighbours=False, columns=None, **settings["judges"][key]["detail"]),
-                                        index, all_shots, meta, videos)
-            unique.setdefault(plan["detail"]["name"], plan["detail"])
+
+    def prepare(items: Sequence[Tuple[int, str]]) -> List[Dict[str, Any]]:
+        """Plan the sheets of the given verdicts; returns the sheets that still have to be cut."""
+        fresh = []
+        for index, key in items:
+            if (index, key) in plans:
+                continue
+            plan = plan_sheet(settings["judges"][key], index, all_shots, meta, videos)
+            plan["source"] = stamps[str(settings["judges"][key].get("video", "clean"))]
+            plans[(index, key)] = plan
+            if settings["judges"][key].get("detail"):
+                plan["detail"] = plan_sheet(dict(settings["judges"][key], neighbours=False, columns=None, **settings["judges"][key]["detail"]),
+                                            index, all_shots, meta, videos)
+            for sheet in [plan] + ([plan["detail"]] if plan.get("detail") else []):
+                if sheet["name"] not in unique:
+                    unique[sheet["name"]] = sheet
+                    fresh.append(sheet)
+        return fresh
 
     def cut(plan: Dict[str, Any]) -> None:
         target = sheets_dir / plan["name"]
@@ -921,18 +981,18 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
             if target.is_file():
                 target.unlink()
 
-    def judge(item: Tuple[int, str]) -> Tuple[int, str, Dict[str, Any]]:
+    def judge(item: Tuple[int, str], vote: int = 0) -> Tuple[int, str, Dict[str, Any]]:
         index, key = item
         plan = plans[item]
         plan.setdefault("error", unique[plan["name"]].get("error") or unique[plan.get("detail", plan)["name"]].get("error"))
         sheet = sheets_dir / plan["name"]
         entry = judge_shot(key, settings, story, index, all_shots, plan, sheet, _rel(job, sheet), measures.get(all_shots[index]["id"]),
-                           budget, job / "quality" / "manual")
+                           budget, job / "quality" / "manual", vote)
         return index, key, entry
 
     started = time.time()
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        list(pool.map(cut, unique.values()))
+        list(pool.map(cut, prepare(work)))
         results = list(pool.map(judge, work))
     entries: Dict[str, Dict[str, Any]] = {}
     for old in existing.get("shots") or []:
@@ -960,6 +1020,28 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
     stale = [shot_id for shot_id in existing.get("geometry_stale", []) if geometry and shot_id not in merged]
     if geometry:
         stale += merge_geometry({shot_id: entry for shot_id, entry in entries.items() if shot_id in merged}, geometry, geometry_source)
+    voting = settings.get("confirm") or {}
+    ballots = int(voting.get("votes", 3))
+    asked: List[Tuple[int, str]] = []
+
+    def again(item: Tuple[int, str]) -> List[Dict[str, Any]]:
+        extra: List[Dict[str, Any]] = []
+        while len(extra) < ballots - 1 and (not extra or extra[-1].get("status") in ("pass", "fail")):
+            extra.append(judge(item, len(extra) + 1)[2])
+        return extra
+
+    while ballots > 1:
+        pending = [(index, key) for index, shot in enumerate(all_shots) for key in wanted_judges
+                   if key in SHOT_JUDGES and (index, key) not in asked and (confirm or (index, key) in work)
+                   and borderline(entries[shot["id"]], key, settings["judges"][key], float(voting.get("margin", 1)))]
+        if not pending:
+            break
+        asked += pending
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            list(pool.map(cut, prepare(pending)))
+            more = list(pool.map(again, pending))
+        for (index, key), extra in zip(pending, more):
+            settle_votes(entries[all_shots[index]["id"]]["judges"][key], extra)
     doc = dict(existing)
     if VIDEO_JUDGE in wanted_judges and not (changed and (existing.get("video_judge") or {}).get("status") in ("pass", "fail")):
         doc["video_judge"] = judge_video(settings, story, all_shots, meta, videos["clean"], sheets_dir, job, budget)
@@ -969,7 +1051,7 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
     usage = budget.summary()
     usage["seconds"] = round(time.time() - started, 1)
     record = dict(usage, at=time.strftime("%Y-%m-%dT%H:%M:%S"), out=out.name, provider=settings["provider"], model=settings["model"],
-                  shots=len(selected), judges=wanted_judges, video=stamps["clean"])
+                  shots=len(selected), judges=wanted_judges, video=stamps["clean"], voted=len(asked))
     ledger["runs"].append(record)
     write_json(ledger_path, ledger)
     runs = list(existing.get("runs") or []) + [record]
@@ -1007,6 +1089,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--report-only", action="store_true", help="rewrite the reports from the existing results without judging")
     parser.add_argument("--changed", action="store_true",
                         help="judge only what is missing or was set aside because its shot was rendered again")
+    parser.add_argument("--confirm", action="store_true",
+                        help="as --changed, and also put every borderline fail already in the report to three votes")
     args = parser.parse_args(argv)
     try:
         overrides = parse_sets(args.sets)
@@ -1015,7 +1099,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 overrides[name] = value
         doc = run_quality(args.job, args.video, args.final, args.shots.split(",") if args.shots else None,
                           args.judges.split(",") if args.judges else None, overrides, args.out, args.human, args.baseline,
-                          args.compare, args.report_only, args.posture, args.changed)
+                          args.compare, args.report_only, args.posture, args.changed, args.confirm)
     except (QualityError, EditError, vision.VisionError) as exc:
         print("quality: %s" % exc, file=sys.stderr)
         return 1
@@ -1024,6 +1108,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     for key in SHOT_JUDGES:
         row = summary["judges"][key]
         print("%-11s fail %2d  pass %2d  unjudged %2d  %s" % (key, row["fail"], row["pass"], row["unjudged"], " ".join(row["failing"])))
+    voted = summary["voted"]
+    if voted["kept"] or voted["cleared"]:
+        print("put to the vote: %d stayed fails (%s), %d became passes (%s)" % (len(voted["kept"]), " ".join(voted["kept"]), len(voted["cleared"]),
+                                                                           " ".join(voted["cleared"])))
     spend = summary["spend"]
     print("spend $%.4f over %d calls (job total $%.4f of $%.2f)" % (spend.get("cost_usd", 0.0), spend.get("calls", 0),
                                                                   spend.get("job_total_usd", 0.0), spend.get("ceiling_usd", 0.0)))

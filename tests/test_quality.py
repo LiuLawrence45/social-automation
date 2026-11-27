@@ -119,7 +119,8 @@ def test_full_run_writes_one_report(job, monkeypatch):
     assert [shots[i]["status"] for i in ("s01", "s02", "s03", "s04")] == ["pass", "fail", "fail", "pass"]
     assert shots["s02"]["failed"] == ["posture"] and shots["s03"]["failed"] == ["motion"]
     assert shots["s01"]["judges"]["continuity"]["reason"].startswith("first shot")
-    assert ("s01", "continuity") not in log and len(log) == 4 * 8 - 1 + 3
+    assert ("s01", "continuity") not in log and len(log) == 4 * 8 - 1 + 3 + 2 * 2
+    assert len(shots["s02"]["judges"]["posture"]["votes"]) == 3 and doc["summary"]["voted"]["kept"] == ["s02/posture", "s03/motion"]
     summary = doc["summary"]
     assert summary["judges"]["posture"]["failing"] == ["s02"] and summary["judges"]["motion"]["fail"] == 1
     assert summary["failing_by_set"] == {"hall": ["s02"], "bedroom": ["s03"]}
@@ -247,6 +248,65 @@ def test_listed_shots_merge_and_the_next_shot_gets_continuity(job, monkeypatch):
     assert doc["usage"]["calls"] == doc["runs"][0]["calls"] + len(log)
     table = quality.compare({"shots": [{"id": "s02", "status": "fail", "judges": {"posture": {"status": "fail"}}}]}, doc)
     assert table["posture"] == {"before": 1, "after": 0, "fixed": ["s02"], "new": [], "still": []}
+
+
+def in_turn(answers, log):
+    """A fake model that gives each (shot, judge) its listed replies in order, then a clean pass."""
+    lock = threading.Lock()
+    clean = fake_ask()
+
+    def ask(provider, model, system, prompt, images, **kwargs):
+        pair = (shot_of(prompt), judge_of(prompt))
+        with lock:
+            log.append(pair)
+            reply = answers[pair].pop(0) if answers.get(pair) else None
+        return fake_ask({pair: reply})(provider, model, system, prompt, images, **kwargs) if reply else clean(provider, model, system, prompt, images, **kwargs)
+    return ask
+
+
+def test_a_borderline_fail_needs_the_majority_of_three_votes(job, monkeypatch):
+    (job / "posture.json").write_text(json.dumps({"version": 1, "shots": {
+        "s01": {"status": "fail", "frames": [{"frame": 12, "issues": [{"kind": "intersect", "actor": "me", "detail": "hand in door"}]}]},
+        "s02": {"status": "pass", "frames": []}}}))
+    near = {"defects": [{"key": "idle"}], "score": 5, "reason": "a little stiff"}
+    plain = {"defects": [{"key": "statue"}], "score": 2, "reason": "frozen"}
+    log = []
+    answers = {("s01", "clipping"): [{"defects": [{"key": "floating"}], "score": 5, "reason": "floats"}],
+               ("s02", "posture"): [near], ("s03", "motion"): [plain, dict(plain, score=3)],
+               ("s04", "story"): [{"defects": [], "score": 2, "reason": "wrong place"}],
+               ("s04", "lighting"): [{"defects": [], "score": 2, "reason": "lost"}],
+               ("s04", "framing"): [{"defects": [], "score": 5, "reason": "tight"}, {"defects": [], "score": 9, "reason": "fine"},
+                                    {"defects": [], "score": 4, "reason": "cut off"}]}
+    monkeypatch.setattr(vision, "ask", in_turn(answers, log))
+    doc = quality.run_quality(job, judges=list(quality.SHOT_JUDGES))
+    shots = by_id(doc)
+    posture = shots["s02"]["judges"]["posture"]
+    assert posture["status"] == posture["picture_status"] == "pass" and shots["s02"]["status"] == "pass"
+    assert [v["status"] for v in posture["votes"]] == ["fail", "pass", "pass"] and posture["votes"][0]["defects"] == ["idle"]
+    motion = shots["s03"]["judges"]["motion"]
+    assert motion["status"] == "fail" and motion["score"] == 2 and [v["status"] for v in motion["votes"]] == ["fail", "fail", "pass"]
+    framing = shots["s04"]["judges"]["framing"]
+    assert framing["status"] == "fail" and framing["score"] == 4 and len(framing["votes"]) == 3
+    assert "votes" not in shots["s04"]["judges"]["story"] and "votes" not in shots["s04"]["judges"]["lighting"]
+    assert shots["s01"]["judges"]["clipping"]["status"] == "fail" and "votes" not in shots["s01"]["judges"]["clipping"]
+    assert log.count(("s01", "clipping")) == 1 and log.count(("s04", "story")) == 1 and log.count(("s02", "posture")) == 3
+    assert doc["summary"]["voted"] == {"kept": ["s03/motion", "s04/framing"], "cleared": ["s02/posture"]}
+    report = (job / "QUALITY.md").read_text()
+    assert "2 stayed fails (s03/motion s04/framing); 1 became passes (s02/posture)" in report and "2 of 3 votes" in report
+    assert doc["runs"][-1]["voted"] == 3
+
+
+def test_confirm_votes_on_the_fails_already_in_the_report_and_an_unanswered_vote_keeps_the_fail(job, monkeypatch):
+    near = {"defects": [{"key": "idle"}], "score": 5, "reason": "a little stiff"}
+    monkeypatch.setattr(vision, "ask", fake_ask({("s02", "posture"): near, ("s03", "posture"): near}))
+    doc = quality.run_quality(job, judges=["posture", "story"], overrides={"confirm": {"votes": 1}})
+    assert doc["summary"]["fail"] == 2 and doc["summary"]["voted"] == {"kept": [], "cleared": []}
+    log = []
+    monkeypatch.setattr(vision, "ask", fake_ask({("s03", "posture"): vision.VisionError("gemini request failed with HTTP 500")}, log=log))
+    shots = by_id(quality.run_quality(job, judges=["posture", "story"], confirm=True))
+    assert sorted(log) == [("s02", "posture"), ("s02", "posture"), ("s03", "posture")]
+    assert shots["s02"]["status"] == "pass" and len(shots["s02"]["judges"]["posture"]["votes"]) == 3
+    assert shots["s03"]["judges"]["posture"]["status"] == "fail" and "votes" not in shots["s03"]["judges"]["posture"]
 
 
 def test_a_shot_rendered_again_sets_its_verdicts_aside(job, monkeypatch):
