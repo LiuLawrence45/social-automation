@@ -5,27 +5,27 @@
   "wpm": 250,
   "seconds": 55,
   "length_tolerance": 0.08,
-  "hook_max_words": 14,
+  "hook_max_words": 16,
   "premise_by_words": 30,
   "sentence_mean_words": [
-   5.5,
+   6,
    10
   ],
   "sentence_max_words": 22,
   "short_sentence_share_min": 0.2,
   "dialogue_share": [
-   0.1,
-   0.4
+   0.04,
+   0.2
   ],
   "dialogue_lines_min": 3,
-  "dialogue_line_max_words": 16,
-  "first_dialogue_by_share": 0.35,
-  "speakers_max": 6,
+  "dialogue_line_max_words": 12,
+  "first_dialogue_by_share": 0.5,
+  "speakers_max": 5,
   "turn_position": [
-   0.6,
-   0.9
+   0.45,
+   0.75
   ],
-  "last_line_max_words": 12,
+  "last_line_max_words": 15,
   "grade_max": 5.5,
   "rubric_pass": 4,
   "rubric_floor": 3
@@ -42,20 +42,20 @@
  "genres": {
   "scary": {
    "dialogue_share": [
-    0.12,
-    0.4
+    0.04,
+    0.16
    ],
    "rules": [
     "Keep it frightening through what is heard, half seen or wrong: a voice that should not be there, a detail that does not fit, a thing that moved. Never describe blood, wounds, bodies or pain.",
     "The threat speaks. Give the thing, the voice or the stranger at least two short lines, and mark its voice as slightly wrong.",
     "Use a false relief before the turn: one beat where it seems over.",
-    "End on the worst moment or one line after it. Do not explain the monster and do not rescue anyone in the last line."
+    "End on the worst moment or one line after it, with a last fact that re-reads the whole story. Do not explain the monster and do not rescue anyone in the last line."
    ]
   },
   "rule_world": {
    "dialogue_share": [
-    0.05,
-    0.3
+    0.03,
+    0.2
    ],
    "rules": [
     "Open with the rule of the world and its cost in one sentence.",
@@ -68,18 +68,18 @@
   }
  },
  "rules": [
-  "First sentence is the hook and the premise at once: the rule, claim or strange fact the whole story hangs on, said plainly as a statement about a place, a person or a thing, in 14 words or fewer ('In this town, nobody looks up.' 'Our lunch lady has one rule.'). No greeting, no scene setting, no question, no 'this is a story about'.",
+  "First sentence is the hook and the premise at once: the rule, claim or strange fact the whole story hangs on, said plainly as a statement about a place, a person or a thing, in 16 words or fewer ('In this town, nobody looks up.' 'Our lunch lady has one rule.'). No greeting, no scene setting, no question, no 'this is a story about'.",
   "The second or third sentence says what it costs or why it is strange, so that by 30 words a new viewer can say what the story is about. Then go straight to the person it happens to.",
   "Narrate in first person, past tense, as the person it happened to. Rules of a world are present tense.",
   "One new filmable fact per sentence: something a camera can see or a microphone can hear. Thoughts, realisations and feelings become actions: not 'I was terrified' but 'I backed into the corner'; not 'Then I understood' but the thing that was seen.",
-  "Short sentences. Most are 4 to 10 words; a fragment is a sentence. No sentence over 22 words.",
+  "Short sentences. Most are 4 to 10 words; a fragment is a sentence, but do not chop every thought into fragments: the mean stays between 6 and 10 words. No sentence over 22 words.",
   "Words a ten-year-old says. Concrete nouns, plain verbs, contractions.",
   "Wherever a character says, texts, writes or whispers something, make it a line of its own with that character as the speaker. The narrator never quotes.",
-  "Dialogue is spoken, short and incomplete the way speech is: 2 to 12 words, contractions, a name or a pet name, no explaining. The first spoken line arrives in the first third.",
+  "Dialogue is spoken, short and incomplete the way speech is: usually 2 to 6 words and never more than 12, contractions, no explaining. Three to eight spoken lines carry a one-minute script; the narrator carries the rest. The first spoken line arrives in the first half.",
   "Lead into a spoken line with a short narrator beat that ends on a comma or a colon ('Then I heard my mother's voice.'), or let it stand alone. Never follow it with 'she said'.",
   "The narrator never introduces themselves ('I'm Sam, the night clerk'). A name is said only where a person would naturally say it, and one name at a time; a script in which no name is ever said aloud is fine.",
-  "One thread only. Escalate it in steps: normal, one wrong detail, a worse one, a moment of relief, the turn. Three steps before the turn is enough for a minute; a second plot line or a second mystery is cut. The turn falls between 60% and 90% of the way through.",
-  "The last line is 12 words or fewer and lands the turn: a twist, a cliffhanger, or a return to the first line. No moral, no summary, no 'subscribe'.",
+  "One thread only. Escalate it in steps: normal, one wrong detail, a worse one, a moment of relief, the turn. Three steps before the turn is enough for a minute; a second plot line or a second mystery is cut. The turn falls between 45% and 75% of the way through, so there is room after it for the worst moment and the ending.",
+  "The last line is 15 words or fewer and changes what the story meant: a twist first, a return to the first line second, a cliffhanger only when the source ends on one. No moral, no summary, no 'subscribe'.",
   "Cut every word that does not move the picture: no 'suddenly', 'very', 'really', 'literally', 'little did I know', 'I couldn't believe my eyes'.",
   "Keep the source's premise, its best image and its ending. Merge or drop side characters, travel, backstory and explanation. At most three characters besides the narrator speak. Never add a person, a mention or a prop to fit a name in.",
   "Family-safe: no gore, no slurs, no sexual content, no self-harm, no real brands or real people."

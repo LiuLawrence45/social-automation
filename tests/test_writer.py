@@ -21,15 +21,15 @@ def good_lines():
     return [
         {"speaker": "narrator", "text": "The last bus home is always empty. Last Friday, it was not."},
         {"speaker": "narrator", "text": "A new driver took my coins and never looked up."},
-        {"speaker": "driver", "text": "Sit anywhere you like, miss."},
+        {"speaker": "narrator", "text": "He waved me to a seat."},
         {"speaker": "narrator", "text": "At the second stop, a woman in a wet coat got on. Every seat was free. She sat right behind me and leaned close."},
         {"speaker": "woman", "text": "Mara. You came back."},
         {"speaker": "narrator", "text": "I had never seen her before. I turned around and the seat was empty. The bus had not stopped once."},
         {"speaker": "narrator", "text": "I walked to the front and held the rail."},
-        {"speaker": "mara", "text": "Did you see where she went?"},
+        {"speaker": "mara", "text": "Who?"},
         {"speaker": "driver", "text": "Nobody got on tonight, miss."},
         {"speaker": "narrator", "text": "He pointed at the wet seat behind mine. The doors stayed shut. The lights went out, one row at a time."},
-        {"speaker": "driver", "text": "So why are you sitting in her seat?"},
+        {"speaker": "driver", "text": "So why are you in her seat?"},
     ]
 
 
@@ -222,7 +222,7 @@ def test_checks_pass_on_a_script_in_the_style():
 
 def test_checks_name_each_problem_and_its_fix():
     lines = good_lines()
-    lines[1] = {"speaker": "narrator", "text": "A new driver took my coins and he never looked up at me, not even once, while the engine made a very low sound that I could feel in my teeth."}
+    lines[6] = {"speaker": "narrator", "text": "A new driver took my coins and he never looked up at me, not even once, while the engine made a very low sound that I could feel in my teeth."}
     lines[5] = {"speaker": "narrator", "text": "Suddenly I saw blood. \"Who are you?\" I asked."}
     script = write.normalise(good_reply(lines=lines))
     quoted = [line for line in script["lines"] if line["text"].startswith("Suddenly")][0]

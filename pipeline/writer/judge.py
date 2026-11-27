@@ -100,7 +100,7 @@ def check_script(story: Dict[str, Any], targets: Dict[str, Any], pool: Sequence[
     first = stats["first_dialogue_word"]
     first_share = round(first / float(words), 3) if first is not None and words else None
     checks.append(_check("first_dialogue", first_share is not None and first_share <= targets["first_dialogue_by_share"], first_share, targets["first_dialogue_by_share"],
-                         "The first spoken line comes too late; put one in the first third."))
+                         "The first spoken line comes too late; put one in the first half."))
     speakers = stats["speakers"]
     checks.append(_check("speakers", 2 <= len(speakers) <= targets["speakers_max"] and NARRATOR in speakers and all(SPEAKER.match(name) for name in speakers),
                          speakers, [2, targets["speakers_max"]],
