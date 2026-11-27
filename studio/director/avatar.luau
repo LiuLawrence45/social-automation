@@ -371,7 +371,7 @@ end
 -- what a shot starts from never depends on the shot staged before it.
 function M.rest(model)
 	for _, item in ipairs(model:GetDescendants()) do
-		if item:IsA("Motor6D") then
+		if item:IsA("Motor6D") or item:IsA("AnimationConstraint") then
 			item.Transform = CFrame.identity
 		end
 	end
