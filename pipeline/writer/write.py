@@ -192,7 +192,7 @@ def source_block(record: Dict[str, Any], today: Optional[str] = None) -> Dict[st
     for key in ("id", "created", "file", "license", "license_url", "attribution", "rights", "retrieved_via"):
         if record.get(key):
             source[key] = record[key]
-    source["retrieved"] = record.get("retrieved") or today or datetime.date.today().isoformat()
+    source["retrieved"] = record.get("retrieved") or today or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     source["use"] = record.get("use") or "private, not for distribution"
     return source
 

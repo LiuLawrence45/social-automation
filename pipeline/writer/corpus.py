@@ -104,7 +104,7 @@ def channel_listing(collector: collectors.Collector, channel: str) -> Dict[str, 
     data = collector.list_channel(channel)
     views = [int(entry.get("view_count") or 0) for entry in data["videos"]]
     return {
-        "channel": data["channel"], "channel_id": data["channel_id"], "listed": len(views), "listed_on": datetime.date.today().isoformat(),
+        "channel": data["channel"], "channel_id": data["channel_id"], "listed": len(views), "listed_on": utc_today(),
         "median_views": median([float(value) for value in views]),
         "videos": [{"id": entry["id"], "title": entry.get("title") or "", "view_count": views[index], "channel_pct": percentile_rank(views, views[index])}
                    for index, entry in enumerate(data["videos"])],
@@ -159,6 +159,11 @@ def discover(corpus: Path, sources: Dict[str, Any], per_channel: int, per_tag: i
         counts[key] = added
     write_jsonl(corpus / "candidates.jsonl", existing.values())
     return counts
+
+
+def utc_today() -> str:
+    """Today's date in UTC, so machines in different time zones stamp the same collection day."""
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
 
 
 def _snapshot(info: Dict[str, Any], today: str) -> Dict[str, Any]:
@@ -226,7 +231,7 @@ def fetch(corpus: Path, workers: int, collector: collectors.Collector, limit: Op
     candidates = read_jsonl(corpus / "candidates.jsonl")
     if limit:
         candidates = candidates[:limit]
-    today = datetime.date.today().isoformat()
+    today = utc_today()
     tally = {}
     failures = []
     state = {"blocked": 0}
@@ -242,7 +247,7 @@ def fetch(corpus: Path, workers: int, collector: collectors.Collector, limit: Op
 
 def refresh(corpus: Path, workers: int, collector: collectors.Collector, pause: float = 0.0) -> Dict[str, int]:
     """Re-read every short's counts and add them to its history, at most one snapshot a day."""
-    today = datetime.date.today().isoformat()
+    today = utc_today()
     paths = sorted((corpus / "meta").glob("*.json"))
     state = {"blocked": 0}
 
