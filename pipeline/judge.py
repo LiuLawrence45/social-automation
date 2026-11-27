@@ -697,9 +697,14 @@ def judge_shots(job: Path, stager: Any, config: Optional[Dict[str, Any]] = None,
 
 
 def chosen_cameras(job: Path) -> Dict[str, Dict[str, Any]]:
-    """Shot id to chosen camera from judge.json; empty when the file is missing."""
+    """Shot id to chosen camera from judge.json; empty when the file is missing.
+
+    A shot whose camera is fixed or locked in the timeline keeps its own camera, whatever an earlier run chose.
+    """
     doc = _load_judge(Path(job))
-    return {e["id"]: e["chosen"]["camera"] for e in doc.get("shots", []) if e.get("chosen")}
+    timeline = read_json(Path(job) / "timeline.json", required=False) or {}
+    locked = {shot["id"] for shot in timeline.get("shots", []) if is_locked(shot)}
+    return {e["id"]: e["chosen"]["camera"] for e in doc.get("shots", []) if e.get("chosen") and e["id"] not in locked}
 
 
 def video_rubric(rubric: Dict[str, Any]) -> Dict[str, Any]:
