@@ -8,11 +8,13 @@ Usage:
 One judge per concern (posture, expression, clipping, framing, lighting, story, continuity, motion) scores every shot on
 labelled sheets of frames cut from the rendered video, and one more judges the video as a whole. Rubrics,
 thresholds and frames per shot live in pipeline/quality_rubric.json; story.json "quality" and --set override
-them, and "accepted" there lists what this one video has ruled acceptable. Model calls go through pipeline.vision and run in a thread pool under one spend ceiling that also counts
+them, and "accepted" there lists what this one video has ruled acceptable and "sets" describes a set to the judges. Model calls go through pipeline.vision and run in a thread pool under one spend ceiling that also counts
 earlier runs against the same job (quality/ledger.json). Geometric results in <job>/posture.json (or --posture) are merged
 for the shots judged in the run:
 a geometric fail fails the shot even when the picture passes, and the reverse. A shot fails when any judge
-fails it; a judge that could not answer leaves the shot incomplete, never passed. Every verdict keeps a
+fails it; a judge that could not answer leaves the shot incomplete, never passed. A fail that a reader has read from
+the frames and overruled in writing (<job>/quality/overrules.json, with frame numbers) no longer fails the shot, and
+the report prints every overrule beside the judge's reason. Every verdict keeps a
 fingerprint of the frames it was given on: when a shot is rendered again its verdicts are set aside as stale,
 and --changed judges exactly those again. A fail that is close to the threshold, or the only fail on its shot, is asked
 again and settled by the majority of three votes; a fail backed by geometry or by measurement is not. The stage writes
@@ -384,11 +386,16 @@ def build_prompt(key: str, spec: Dict[str, Any], settings: Dict[str, Any], story
     if spec.get("script"):
         lines += ["Whole script, for context only:", script_text(story, shots), ""]
     lines.append("Shot %s (%d of %d), %.1f seconds, set \"%s\"." % (shot["id"], index + 1, len(shots), shot["end"] - shot["start"], shot["set"]))
+    if (settings.get("sets") or {}).get(shot["set"]):
+        lines.append("About the set \"%s\": %s" % (shot["set"], settings["sets"][shot["set"]]))
     lines.append("Words spoken during this shot: %s" % (shot["line"] or "none (a silent shot)"))
     if index > 0:
         lines.append("Shot before (%s, set \"%s\"): %s" % (shots[index - 1]["id"], shots[index - 1]["set"], shots[index - 1]["line"] or "silent"))
     if index + 1 < len(shots):
         lines.append("Shot after (%s, set \"%s\"): %s" % (shots[index + 1]["id"], shots[index + 1]["set"], shots[index + 1]["line"] or "silent"))
+    earlier = [tile["shot"] for tile in plan["tiles"] if tile["role"] == "EARLIER"]
+    if earlier:
+        lines.append("Last earlier shot in the same set (%s): %s" % (earlier[0], {s["id"]: s["line"] for s in shots}[earlier[0]] or "silent"))
     lines.append("The image is a sheet of %d frames from the rendered video, each labelled in its top-left corner with the shot id and "
                  "frame number, in reading order: %s. The label boxes are added for this review and are not part of the picture."
                  % (len(plan["tiles"]), describe_tiles(plan["tiles"])))
@@ -672,8 +679,65 @@ def settle_votes(record: Dict[str, Any], more: Sequence[Dict[str, Any]]) -> None
         record["picture_status"] = record["status"]
 
 
+def standing(record: Optional[Dict[str, Any]]) -> bool:
+    """A judge's fail that no written overrule has set aside."""
+    return bool(record) and record.get("status") == "fail" and not record.get("overruled")
+
+
+def apply_overrules(job: Path, doc: Dict[str, Any], reading: Optional[Dict[str, Any]]) -> None:
+    """Set aside the judge fails a reader overruled in <job>/quality/overrules.json, and say why any other entry does not apply.
+
+    An entry is {"shot", "judge", "render", "answers", "frames", "reason"}: the frames the reader looked at and what they
+    show, the judge's reason it answers word for word, and the mark of the render it was read from. A shot rendered
+    again, or a judge that has spoken again, is read again. A fail from geometry or measurement and a fail the
+    reader's own verdicts hold are never overruled.
+    """
+    for shot in doc["shots"]:
+        for record in shot["judges"].values():
+            record.pop("overruled", None)
+    doc.pop("overrules", None)
+    listed = read_json(job / "quality" / "overrules.json", required=False)
+    if not listed:
+        return
+    fps = float((read_json(job / "shots.json", required=False) or {}).get("fps") or 0)
+    shots = {shot["id"]: shot for shot in doc["shots"]}
+    held = (reading or {}).get("verdicts") or {}
+    reader = listed.get("reader") or "a reader"
+    applied: List[Dict[str, Any]] = []
+    void: List[Dict[str, Any]] = []
+    for item in listed.get("overrules") or []:
+        shot, key, frames = shots.get(str(item.get("shot"))), str(item.get("judge")), item.get("frames")
+        numbered = isinstance(frames, list) and all(isinstance(frame, int) for frame in frames)
+        written = all(str(item.get(name) or "").strip() for name in ("render", "answers", "reason"))
+        if shot is None or key not in SHOT_JUDGES or not written or not numbered or not frames:
+            raise QualityError("an overrule needs a shot, a judge, a render mark, the judge's reason, frame numbers and a reason: %r" % (item,))
+        record = shot["judges"].get(key) or {}
+        why = ""
+        if record.get("status") != "fail":
+            why = "the judge does not fail it now"
+        elif (record.get("geometry") or {}).get("status") == "fail" or any(d.get("key") == "measured_dark" for d in record.get("defects") or []):
+            why = "a fail from geometry or measurement is not overruled"
+        elif (record.get("render") or {}).get(shot["id"]) != item["render"]:
+            why = "the shot was rendered again after it was read"
+        elif record.get("reason") != item["answers"]:
+            why = "the judge has given a new verdict since it was read"
+        elif (held.get(shot["id"]) or {}).get(key) == "fail":
+            why = "the reader holds this fail"
+        if why:
+            void.append({"shot": shot["id"], "judge": key, "why": why})
+            continue
+        first, last = frame_range(shot, fps) if fps else (min(frames), max(frames))
+        if min(frames) < first or max(frames) > last:
+            raise QualityError("overrule of %s/%s names frames outside the shot (%d to %d): %s" % (shot["id"], key, first, last, frames))
+        record["overruled"] = {"by": reader, "frames": frames, "reason": item["reason"]}
+        applied.append({"shot": shot["id"], "judge": key, "score": record.get("score"), "defects": [d["key"] for d in record.get("defects") or []],
+                        "judge_reason": record.get("reason", ""), "frames": frames, "reason": item["reason"]})
+    doc["overrules"] = {"reader": reader, "applied": applied, "void": void}
+
+
 def shot_status(entry: Dict[str, Any], judges: Sequence[str]) -> None:
-    failed = [k for k in SHOT_JUDGES if (entry["judges"].get(k) or {}).get("status") == "fail"]
+    failed = [k for k in SHOT_JUDGES if standing(entry["judges"].get(k))]
+    entry["overruled"] = [k for k in SHOT_JUDGES if (entry["judges"].get(k) or {}).get("overruled")]
     missing = [k for k in judges if k in SHOT_JUDGES and (entry["judges"].get(k) or {}).get("status") not in ("pass", "fail")]
     entry["failed"] = failed
     entry["unjudged"] = missing
@@ -686,11 +750,12 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
     for key in SHOT_JUDGES:
         records = [(s["id"], s["judges"].get(key) or {}) for s in shots]
         scores = [r["score"] for _, r in records if isinstance(r.get("score"), (int, float))]
-        per_judge[key] = {"fail": sum(1 for _, r in records if r.get("status") == "fail"),
+        per_judge[key] = {"fail": sum(1 for _, r in records if standing(r)),
+                          "overruled": [shot_id for shot_id, r in records if r.get("overruled")],
                           "pass": sum(1 for _, r in records if r.get("status") == "pass"),
                           "unjudged": sum(1 for _, r in records if r.get("status") not in ("pass", "fail")),
                           "mean_score": round(sum(scores) / len(scores), 2) if scores else None,
-                          "failing": [shot_id for shot_id, r in records if r.get("status") == "fail"],
+                          "failing": [shot_id for shot_id, r in records if standing(r)],
                           "geometry_only": [shot_id for shot_id, r in records
                                             if r.get("status") == "fail" and r.get("picture_status", "fail") != "fail"]}
     stale = {shot["id"]: [key for key in SHOT_JUDGES if (shot["judges"].get(key) or {}).get("status") == "stale"] for shot in shots}
@@ -716,6 +781,7 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
     return {"shots": len(shots), "pass": sum(1 for s in shots if s["status"] == "pass"), "weakest": weakest,
             "fail": sum(1 for s in shots if s["status"] == "fail"),
             "incomplete": sum(1 for s in shots if s["status"] == "incomplete"),
+            "pass_by_overrule": sum(1 for s in shots if s["status"] == "pass" and s.get("overruled")),
             "judges": per_judge, "failing_by_set": by_set, "frames_sampled": len(frames), "geometry_sources": sources,
             "stale": {shot_id: keys for shot_id, keys in stale.items() if keys},
             "voted": {"kept": [name for name, status in voted if status == "fail"], "cleared": [name for name, status in voted if status == "pass"]},
@@ -768,7 +834,7 @@ def compare(before: Dict[str, Any], after: Dict[str, Any]) -> Dict[str, Any]:
             if key == "any":
                 sides.append({s["id"] for s in doc.get("shots", []) if s.get("status") == "fail"})
             else:
-                sides.append({s["id"] for s in doc.get("shots", []) if (s["judges"].get(key) or {}).get("status") == "fail"})
+                sides.append({s["id"] for s in doc.get("shots", []) if standing(s["judges"].get(key))})
         open_now = {s["id"] for s in after.get("shots", []) if (s.get("status") == "incomplete" if key == "any" else
                                                                 (s["judges"].get(key) or {}).get("status") not in ("pass", "fail"))}
         table[key] = {"before": len(sides[0]), "after": len(sides[1]), "fixed": sorted(sides[0] - sides[1] - open_now, key=order.index),
@@ -785,11 +851,12 @@ def markdown(doc: Dict[str, Any]) -> str:
            % (doc.get("video", ""), doc.get("final", ""), summary["shots"], summary["pass"], summary["fail"], summary["incomplete"],
               summary["model"], summary["provider"], summary["frames_sampled"], spend.get("cost_usd", 0.0), spend.get("calls", 0),
               spend.get("input_tokens", 0), spend.get("output_tokens", 0), spend.get("ceiling_usd", 0.0)), "",
-           "A shot fails when any judge fails it. Sheets the judges saw are under @@quality/sheets/@@.", "",
-           "## Fails per judge", "", "| judge | fail | pass | unjudged | mean score | failing shots |", "|---|---|---|---|---|---|"]
+           "A shot fails when any judge fails it, unless a reader has read that fail from the frames and overruled it in writing "
+           "(see Overruled fails). Sheets the judges saw are under @@quality/sheets/@@.", "",
+           "## Fails per judge", "", "| judge | fail | overruled | pass | unjudged | mean score | failing shots |", "|---|---|---|---|---|---|---|"]
     for key in SHOT_JUDGES:
         row = summary["judges"][key]
-        out.append("| %s | %d | %d | %d | %s | %s |" % (key, row["fail"], row["pass"], row["unjudged"],
+        out.append("| %s | %d | %d | %d | %d | %s | %s |" % (key, row["fail"], len(row["overruled"]), row["pass"], row["unjudged"],
                                                       "-" if row["mean_score"] is None else "%.1f" % row["mean_score"], " ".join(row["failing"])))
     alone = ["%s: %s" % (key, " ".join(summary["judges"][key]["geometry_only"])) for key in SHOT_JUDGES
              if summary["judges"][key].get("geometry_only")]
@@ -832,6 +899,22 @@ def markdown(doc: Dict[str, Any]) -> str:
                 out.append("  - %s%s%s: %s%s" % (key, score, " [%s]" % keys if keys else "", record.get("reason", ""),
                                                 " (@@%s@@)" % record["sheet"] if record.get("sheet") else ""))
         out.append("")
+    overrules = doc.get("overrules") or {}
+    if overrules.get("applied") or overrules.get("void"):
+        out += ["## Overruled fails", "",
+                "Read from the frames by %s. Each row is a judge's fail that no longer fails its shot, with the judge's reason and the "
+                "reader's beside it. Shots that pass because of them: %d. Disagree with a row and that fail stands again."
+                % (overrules.get("reader") or "a reader", summary["pass_by_overrule"]), ""]
+        if overrules.get("applied"):
+            out += ["| shot | judge | the judge's reason | the reader's reason | frames read |", "|---|---|---|---|---|"]
+            for row in overrules["applied"]:
+                cells = [row["shot"], "%s%s%s" % (row["judge"], "" if row.get("score") is None else " %.0f/10" % row["score"],
+                                                  " [%s]" % ", ".join(row["defects"]) if row.get("defects") else ""),
+                         row["judge_reason"], row["reason"], " ".join(str(frame) for frame in row["frames"])]
+                out.append("| %s |" % " | ".join(" ".join(str(cell).replace("|", "/").split()) for cell in cells))
+        if overrules.get("void"):
+            out += ["", "Not applied: %s." % "; ".join("%s/%s (%s)" % (row["shot"], row["judge"], row["why"]) for row in overrules["void"])]
+        out.append("")
     incomplete = [s for s in doc["shots"] if s["status"] == "incomplete"]
     if incomplete:
         out += ["## Not fully judged", ""] + ["- %s: %s" % (s["id"], ", ".join(s["unjudged"])) for s in incomplete] + [""]
@@ -862,11 +945,12 @@ def markdown(doc: Dict[str, Any]) -> str:
 
 def finish(job: Path, doc: Dict[str, Any], out: Path, human: Optional[Path], baseline: Optional[Path], against: Optional[Path]) -> None:
     """Recompute statuses and the summary, attach calibration and comparison, and write the JSON and Markdown reports."""
+    reading = read_json(human) if human is not None else None
+    apply_overrules(job, doc, reading)
     for entry in doc["shots"]:
         shot_status(entry, doc["config"]["judges"])
     doc["summary"] = summarise(doc)
-    if human is not None:
-        reading = read_json(human)
+    if reading is not None:
         calibration = {"after": agreement(doc, reading), "notes": reading.get("notes") or []}
         if baseline is not None:
             calibration["before"] = agreement(read_json(baseline), reading)

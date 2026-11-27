@@ -193,14 +193,14 @@ def test_a_stray_set_piece_in_frame_fails_clipping_and_names_the_piece(job, monk
 def test_a_face_set_on_a_head_that_cannot_show_it_fails_expression(job, monkeypatch):
     (job / "posture.json").write_text(json.dumps({"version": 1, "shots": {
         "s02": {"status": "fail", "reasons": ["face_fixed"], "frames": [{"frame": 40, "issues": [
-            {"kind": "frozen_face", "actor": "jesslyn", "detail": "the head has no face controls", "code": "face_fixed", "in_frame": True}]}]},
+            {"kind": "frozen_face", "actor": "dispatcher", "detail": "the head has no face controls", "code": "face_fixed", "in_frame": True}]}]},
         "s03": {"status": "pass", "frames": []}}}))
     monkeypatch.setattr(vision, "ask", fake_ask())
     doc = quality.run_quality(job, judges=["posture", "expression", "clipping"])
     shots = by_id(doc)
     face = shots["s02"]["judges"]["expression"]
     assert shots["s02"]["failed"] == ["expression"] and face["picture_status"] == "pass" and "votes" not in face
-    assert face["reason"] == "clean; geometry: jesslyn frozen_face: the head has no face controls (frame 40)"
+    assert face["reason"] == "clean; geometry: dispatcher frozen_face: the head has no face controls (frame 40)"
     assert shots["s03"]["judges"]["expression"]["geometry"]["status"] == "pass" and shots["s03"]["status"] == "pass"
     assert doc["summary"]["judges"]["expression"]["geometry_only"] == ["s02"]
 
@@ -459,6 +459,74 @@ def test_prompt_carries_the_line_the_tiles_and_the_fail_keys(job):
     prompt = quality.build_prompt("continuity", settings["judges"]["continuity"], settings, {"title": "The Door"}, 2, shots, plan, None)
     assert "Words spoken during this shot: NARRATOR: I ran." in prompt and "PREV s02 F45 (the shot before)" in prompt
     assert "- style_mismatch:" in prompt and '"defects"' in prompt
+
+
+def test_continuity_and_motion_read_the_script_and_are_told_about_the_set(job):
+    settings = quality.load_settings({"quality": {"sets": {"bedroom": "one white door with a lever handle"}}})
+    meta, shots = quality.load_shots(job)
+    spec = settings["judges"]["continuity"]
+    plan = quality.plan_sheet(spec, 2, shots, meta, {"clean": job / "video.mp4", "captioned": job / "final.mp4"})
+    story = {"title": "The Door", "lines": [{"speaker": "narrator", "text": "They started at the front door."}]}
+    prompt = quality.build_prompt("continuity", spec, settings, story, 2, shots, plan, None)
+    assert "Whole script, for context only:\nNARRATOR: They started at the front door." in prompt
+    assert 'About the set "bedroom": one white door with a lever handle' in prompt
+    assert "Last earlier shot in the same set (s01): NARRATOR: My mom texted" in prompt
+    assert "One set holds several doors" in prompt and "a turned or tilted head" in prompt and "another corner of one set does not count" in prompt
+    assert "About the set" not in quality.build_prompt("continuity", spec, quality.load_settings({}), story, 2, shots, plan, None)
+    motion = settings["judges"]["motion"]
+    assert motion["script"] and "text message" in motion["notes"] and "Words that imply an action still need the action." in motion["notes"]
+    assert "speaking or working while the arms never move is frozen" in motion["flags"]["frozen_character"]["text"]
+
+
+def test_a_fail_read_from_the_frames_and_overruled_in_writing_passes_the_shot(job, monkeypatch, tmp_path):
+    monkeypatch.setattr(vision, "ask", fake_ask({("s02", "posture"): {"defects": [{"key": "idle"}], "score": 3, "reason": "stands | idle"},
+                                                 ("s03", "motion"): {"defects": [{"key": "statue"}], "score": 2, "reason": "frozen"}}))
+    record = by_id(quality.run_quality(job, judges=["posture", "motion"]))["s02"]["judges"]["posture"]
+    entry = {"shot": "s02", "judge": "posture", "render": record["render"]["s02"], "answers": "stands | idle", "frames": [34, 52],
+             "reason": "the hand comes down onto the handle between the two frames"}
+    path = job / "quality" / "overrules.json"
+    path.write_text(json.dumps({"reader": "a person", "overrules": [entry, dict(entry, shot="s03", judge="motion", frames=[65])]}))
+    doc = quality.run_quality(job, report_only=True)
+    shots = by_id(doc)
+    assert shots["s02"]["status"] == "pass" and shots["s02"]["overruled"] == ["posture"] and shots["s02"]["failed"] == []
+    assert shots["s02"]["judges"]["posture"]["status"] == "fail" and shots["s02"]["judges"]["posture"]["overruled"]["frames"] == [34, 52]
+    assert shots["s03"]["status"] == "fail" and doc["overrules"]["void"] == [
+        {"shot": "s03", "judge": "motion", "why": "the judge has given a new verdict since it was read"}]
+    summary = doc["summary"]
+    assert summary["pass_by_overrule"] == 1 and summary["judges"]["posture"]["fail"] == 0 and summary["judges"]["posture"]["overruled"] == ["s02"]
+    report = (job / "QUALITY.md").read_text()
+    assert "| s02 | posture 3/10 [idle] | stands / idle | the hand comes down onto the handle between the two frames | 34 52 |" in report
+    assert "Not applied: s03/motion (the judge has given a new verdict since it was read)." in report
+    old = tmp_path / "old.json"
+    old.write_text(json.dumps({"shots": [{"id": "s02", "status": "fail", "judges": {"posture": {"status": "fail"}}}]}))
+    assert quality.run_quality(job, report_only=True, against=old)["comparison"]["posture"]["fixed"] == ["s02"]
+    human = tmp_path / "human.json"
+    human.write_text(json.dumps({"verdicts": {"s02": {"posture": "fail"}}}))
+    doc = quality.run_quality(job, report_only=True, human=human)
+    assert by_id(doc)["s02"]["status"] == "fail" and doc["overrules"]["void"][0]["why"] == "the reader holds this fail"
+    path.write_text(json.dumps({"overrules": [dict(entry, render="000000000000")]}))
+    doc = quality.run_quality(job, report_only=True)
+    assert by_id(doc)["s02"]["failed"] == ["posture"] and doc["overrules"]["void"][0]["why"] == "the shot was rendered again after it was read"
+    path.write_text(json.dumps({"overrules": [dict(entry, frames=[95])]}))
+    with pytest.raises(quality.QualityError, match="outside the shot"):
+        quality.run_quality(job, report_only=True)
+    path.write_text(json.dumps({"overrules": [dict(entry, frames=[])]}))
+    with pytest.raises(quality.QualityError, match="frame numbers"):
+        quality.run_quality(job, report_only=True)
+    path.unlink()
+    doc = quality.run_quality(job, report_only=True)
+    assert by_id(doc)["s02"]["status"] == "fail" and "overrules" not in doc and "## Overruled fails" not in (job / "QUALITY.md").read_text()
+
+
+def test_a_fail_from_geometry_is_never_overruled(job, monkeypatch):
+    (job / "posture.json").write_text(json.dumps({"version": 1, "shots": {
+        "s03": {"status": "fail", "frames": [{"frame": 70, "issues": [{"kind": "stiff_arms", "actor": "mom", "detail": ""}]}]}}}))
+    monkeypatch.setattr(vision, "ask", fake_ask({("s03", "posture"): {"defects": [{"key": "arms_out"}], "score": 2, "reason": "arms out"}}))
+    record = by_id(quality.run_quality(job, shots=["s03"], judges=["posture"]))["s03"]["judges"]["posture"]
+    (job / "quality" / "overrules.json").write_text(json.dumps({"overrules": [
+        {"shot": "s03", "judge": "posture", "render": record["render"]["s03"], "answers": record["reason"], "frames": [70], "reason": "looks fine"}]}))
+    doc = quality.run_quality(job, report_only=True)
+    assert by_id(doc)["s03"]["status"] == "fail" and doc["overrules"]["void"][0]["why"] == "a fail from geometry or measurement is not overruled"
 
 
 def test_the_lighting_judge_knows_a_light_patch_that_reads_as_a_sheet(job):
