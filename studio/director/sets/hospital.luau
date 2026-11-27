@@ -1,0 +1,27 @@
+return function(b)
+	b.info.lighting = "hospital"
+	local wall = "#e6edf0"
+	b:floor(-9, 9, -6, 10, "#d9e2e6", { material = Enum.Material.Marble })
+	b:ceiling(-9, 9, -6, 4, 10, "#f4f7f8")
+	b:wallX(-9, 9, -6.2, 10, wall)
+	b:wallZ(-6, 4, -9.2, 10, wall)
+	b:wallZ(-6, 4, 9.2, 10, wall)
+	b:box({ 18, 1.2, 0.1 }, { 0, 3.6, -5.95 }, "#5fb3a6", { shadow = false })
+	b:sign(b:word("hospital_name", "CITY HOSPITAL"), { 10.5, 1.7, 0.2 }, { 0, 7.3, -5.9 }, "#ffffff", "#1d8a7a", { font = Enum.Font.GothamBold, ppi = 60, unlit = true })
+	b:box({ 9, 3.3, 1.8 }, { 0, 1.65, -3.2 }, "#f7f9fa")
+	b:box({ 9.2, 0.2, 2.1 }, { 0, 3.4, -3.2 }, "#5fb3a6")
+	b:box({ 1.6, 1.1, 0.12 }, { -2.6, 4.3, -3.4 }, "#10141c", { rot = { 0, 20, 0 } })
+	b:box({ 0.2, 0.5, 0.2 }, { -2.6, 3.7, -3.4 }, "#2b2b2b")
+	b:box({ 1.0, 1.3, 0.1 }, { 3.2, 4.2, -3.6 }, "#ffffff", { rot = { -15, 0, 0 } })
+	for _, x in ipairs({ -5, 0, 5 }) do
+		local light = b:light({ x, 9.2, -1 }, "#eaf6ff", 2.6, 22)
+		b:box({ 3, 0.2, 1.2 }, { x, 9.9, -1 }, "#ffffff", { material = Enum.Material.Neon, shadow = false })
+	end
+	b:box({ 0.2, 7.6, 3.4 }, { -9.0, 3.8, 0.5 }, "#b9c7cc")
+	b:box({ 2.2, 2.6, 1.0 }, { 6.5, 1.3, -5.4 }, "#9fb1b8")
+	b:anchor("station", 0.6, 0, -0.6, 180)
+	b:anchor("station_left", -2.2, 0, 0.4, 180)
+	b:anchor("behind_desk", 0, 0, -4.8, 180)
+	b:anchor("sign", 0, 7.3, -5.8, 0)
+	b:camera("station_wide", { 0.6, 4.6, 9 }, { 0.4, 4.4, -5 })
+end

@@ -1,0 +1,48 @@
+{
+ "idle": {
+  "id": 507766666,
+  "loop": true
+ },
+ "idle_look": {
+  "id": 507766951,
+  "loop": true
+ },
+ "walk": {
+  "id": 507777826,
+  "loop": true,
+  "stride": 8
+ },
+ "run": {
+  "id": 507767714,
+  "loop": true,
+  "stride": 16
+ },
+ "sit": {
+  "id": 2506281703,
+  "loop": true
+ },
+ "wave": {
+  "id": 507770239,
+  "loop": false
+ },
+ "point": {
+  "id": 507770453,
+  "loop": false
+ },
+ "cheer": {
+  "id": 507770677,
+  "loop": false
+ },
+ "laugh": {
+  "id": 507770818,
+  "loop": false
+ },
+ "fall": {
+  "id": 507767968,
+  "loop": true
+ },
+ "climb": {
+  "id": 507765644,
+  "loop": true
+ }
+}

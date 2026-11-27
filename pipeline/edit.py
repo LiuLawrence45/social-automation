@@ -151,6 +151,25 @@ def build_premaster(job: Path, narration: Path, music: Optional[Path], total: fl
     return info
 
 
+def bed_source(job: Path, music: Path) -> str:
+    """Where the bed came from: the sound stage's own description when it made this file, else the file name."""
+    report = job / "sound_report.json"
+    if music.name == "bed.wav" and music.resolve().parent == job.resolve() and report.is_file():
+        with open(report, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        score = (data.get("music") or {}).get("source")
+        parts = [score] if score else []
+        kinds = [item.get("kind") for item in data.get("items", [])]
+        if "ambience" in kinds:
+            parts.append("%d generated ambience loop(s)" % kinds.count("ambience"))
+        if "cue" in kinds:
+            parts.append("%d generated cue(s)" % kinds.count("cue"))
+        if data.get("pad"):
+            parts.append("synthetic pad")
+        return "sound stage: " + ", ".join(parts)
+    return music.name
+
+
 def render(job: Path, out: Path, music: Optional[Path], tail: float) -> Dict[str, Any]:
     started = time.time()
     check_libass()
@@ -217,7 +236,7 @@ def render(job: Path, out: Path, music: Optional[Path], tail: float) -> Dict[str
             },
             "music": None if music is None else {
                 "file": str(music), "bed_integrated_lufs": audio["music"]["input_i"], "gain_db": audio["music_gain_db"],
-                "offset_below_voice_lu": MUSIC_OFFSET_LU},
+                "offset_below_voice_lu": MUSIC_OFFSET_LU, "source": bed_source(job, music)},
             "caption_events": len(events),
             "shots": summarize_shots(shots),
             "video_codec": {"codec": out_video["codec_name"], "profile": out_video.get("profile"), "pix_fmt": out_video["pix_fmt"]},

@@ -90,3 +90,14 @@ def test_shots_render_grouped_by_set_and_can_be_picked():
     assert render.pick_shots(timeline, None) == timeline["shots"]
     with pytest.raises(render.RenderError, match="unknown shot"):
         render.pick_shots(timeline, "zz")
+
+
+
+def test_load_timeline_applies_the_judge_choice(tmp_path):
+    import json
+
+    (tmp_path / "timeline.json").write_text(json.dumps({"fps": 30, "shots": [{"id": "a", "camera": {"on": "me"}}, {"id": "b", "camera": {"from": "wide"}}]}))
+    assert render.load_timeline(tmp_path)["shots"][0]["camera"] == {"on": "me"}
+    (tmp_path / "judge.json").write_text(json.dumps({"shots": [{"id": "a", "chosen": {"camera": {"on": "me", "yaw": 40}}}]}))
+    assert [s["camera"] for s in render.load_timeline(tmp_path)["shots"]] == [{"on": "me", "yaw": 40}, {"from": "wide"}]
+    assert render.load_timeline(tmp_path, judged=False)["shots"][0]["camera"] == {"on": "me"}

@@ -35,7 +35,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from . import story
+from . import judge, story
 from .edit import ffmpeg_bin
 from .studio import Director, DirectorError, connect, director_hash
 from .studio_mcp import MCPError
@@ -246,8 +246,12 @@ class Stage:
         self.on_frame(index, image.crop(left + (vw - width) // 2, top + (vh - height) // 2, width, height), image)
         return 200, "ok"
 
-    def capture(self, frames: List[int], on_frame: Callable[[int, bytes, Bitmap], None]) -> Dict[str, Any]:
+    def capture(self, frames: List[int], on_frame: Callable[[int, bytes, Bitmap], None],
+                variants: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
         """Pose the frames in order inside one Studio call and hand each captured picture to on_frame.
+
+        variants are extra pictures of one frame under another camera: {"shot", "camera", "frame", "marker"},
+        reported to on_frame under their marker number.
 
         Studio holds every frame until the capture has been taken and checked against the frame marker.
         The whole run stays inside one execute_luau call because Studio takes the edit camera back
@@ -256,10 +260,11 @@ class Stage:
         self.on_frame = on_frame
         self.failure = None
         try:
-            return self.director.run("capture", {"frames": frames, "roll": self.roll, "sink": self._sink(),
-                                                 "settle": self.settle, "settle_cut": self.settle_cut, "settle_set": self.settle_set,
-                                                 "settle_light": self.settle_light},
-                                     timeout=120 + 3.0 * len(frames))
+            args = {"frames": frames, "roll": self.roll, "sink": self._sink(), "settle": self.settle, "settle_cut": self.settle_cut,
+                    "settle_set": self.settle_set, "settle_light": self.settle_light}
+            if variants:
+                args["variants"] = variants
+            return self.director.run("capture", args, timeout=120 + 3.0 * (len(frames) + len(variants or [])))
         except DirectorError:
             if self.failure is not None:
                 raise RenderError(str(self.failure))
@@ -291,12 +296,71 @@ def open_stage(args: argparse.Namespace) -> Stage:
     return Stage(Director(client), roll=args.roll, settle=args.settle, settle_light=args.settle_light)
 
 
-def load_timeline(job: Path) -> Dict[str, Any]:
+def load_timeline(job: Path, judged: bool = True) -> Dict[str, Any]:
+    """timeline.json, with each shot's camera replaced by the judge's choice when judge.json has one."""
     path = job / "timeline.json"
     if not path.exists():
         raise RenderError("%s not found; run python -m pipeline.story timeline --job %s" % (path, job))
     with open(path, "r", encoding="utf-8") as handle:
-        return json.load(handle)
+        timeline = json.load(handle)
+    chosen = judge.chosen_cameras(job) if judged else {}
+    for shot in timeline["shots"]:
+        if shot["id"] in chosen:
+            shot["camera"] = chosen[shot["id"]]
+    return timeline
+
+
+class JudgeStager:
+    """The Studio side of the judge stage: geometric checks and candidate stills for one job."""
+
+    def __init__(self, job: Path, studio: Optional[str] = None, roll: float = ROLL, height: int = 480, at: float = 0.6) -> None:
+        self.job = Path(job)
+        self.timeline = load_timeline(self.job, judged=False)
+        self.shots = {shot["id"]: shot for shot in self.timeline["shots"]}
+        self.stage = Stage(Director(connect(studio)), roll=roll)
+        self.stage.director.load(self.timeline)
+        self.stage.calibrate()
+        self.height = height
+        self.at = at
+        self.marker = 0
+
+    def geometry(self, shot_id: str, cameras: List[Dict[str, Any]], previous: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        metrics = (previous or {}).get("metrics")
+        args = {"shot": shot_id, "cameras": cameras, "roll": self.stage.roll}
+        if isinstance(metrics, dict) and metrics:
+            args["previous"] = metrics
+        results = self.stage.director.run("judge", args)
+        for result in results:
+            if not isinstance(result.get("metrics"), dict):
+                result["metrics"] = {}
+            if not isinstance(result.get("issues"), list):
+                result["issues"] = []
+        return results
+
+    def stills(self, shot_id: str, cameras: List[Dict[str, Any]], out_dir: Path) -> List[Path]:
+        shot = self.shots[shot_id]
+        frame = shot["frame_start"] + int((shot["frame_end"] - shot["frame_start"] - 1) * self.at)
+        variants = []
+        for camera in cameras:
+            self.marker += 1
+            variants.append({"shot": shot_id, "camera": camera, "frame": frame, "marker": self.marker})
+        got = {}  # type: Dict[int, Tuple[bytes, Bitmap]]
+        self.stage.capture([], lambda index, pixels, image: got.__setitem__(index, (pixels, image)), variants)
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        paths = []
+        for position, variant in enumerate(variants):
+            pixels, image = got[variant["marker"]]
+            target = out_dir / ("%s.jpg" % "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[position])
+            cmd = self.stage.ffmpeg_input(image, 1) + ["-vf", self.stage.video_filter(self.height * WIDTH // HEIGHT, self.height),
+                                                       "-frames:v", "1", "-q:v", "3", str(target)]
+            subprocess.run(cmd, input=pixels, check=True)
+            paths.append(target)
+        return paths
+
+    def close(self) -> None:
+        self.stage.release()
+        self.stage.director.client.close()
 
 
 def pick_shots(timeline: Dict[str, Any], wanted: Optional[str]) -> List[Dict[str, Any]]:

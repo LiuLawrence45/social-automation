@@ -342,5 +342,312 @@
    "radius": 0.45,
    "far": 0.5
   }
+ },
+ "night_room": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "GlobalShadows": true,
+   "Brightness": 0.7,
+   "Ambient": "#0d1224",
+   "OutdoorAmbient": "#0d1224",
+   "ColorShift_Top": "#7f9dff",
+   "ExposureCompensation": -0.2,
+   "EnvironmentDiffuseScale": 0.05,
+   "EnvironmentSpecularScale": 0.1,
+   "ShadowSoftness": 0.3
+  },
+  "key": {
+   "azimuth": 90,
+   "elevation": 34,
+   "fixed": true
+  },
+  "grade": {
+   "Saturation": -0.25,
+   "Contrast": 0.22,
+   "Brightness": -0.02,
+   "TintColor": "#bccbff"
+  },
+  "bloom": {
+   "Intensity": 0.6,
+   "Size": 30,
+   "Threshold": 1.1
+  },
+  "atmosphere": {
+   "Density": 0.36,
+   "Offset": 0,
+   "Color": "#121a30",
+   "Decay": "#05070f",
+   "Glare": 0,
+   "Haze": 2.2
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.4,
+   "far": 0.55
+  },
+  "subject": {
+   "brightness": 0.9,
+   "range": 9,
+   "color": "#9db2ff",
+   "reach": 3,
+   "side": 1.8,
+   "up": 1.3
+  }
+ },
+ "night_hall": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "GlobalShadows": true,
+   "Brightness": 0.45,
+   "Ambient": "#0a0c12",
+   "OutdoorAmbient": "#0a0c12",
+   "ColorShift_Top": "#8fa8c8",
+   "ExposureCompensation": -0.2,
+   "EnvironmentDiffuseScale": 0.04,
+   "EnvironmentSpecularScale": 0.1,
+   "ShadowSoftness": 0.3
+  },
+  "key": {
+   "azimuth": -70,
+   "elevation": 30,
+   "fixed": true
+  },
+  "grade": {
+   "Saturation": -0.35,
+   "Contrast": 0.24,
+   "Brightness": -0.02,
+   "TintColor": "#c2d2c8"
+  },
+  "bloom": {
+   "Intensity": 0.6,
+   "Size": 30,
+   "Threshold": 1.1
+  },
+  "atmosphere": {
+   "Density": 0.42,
+   "Offset": 0,
+   "Color": "#10151a",
+   "Decay": "#040507",
+   "Glare": 0,
+   "Haze": 2.6
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.4,
+   "far": 0.55
+  },
+  "subject": {
+   "brightness": 0.7,
+   "range": 9,
+   "color": "#ffd9a8",
+   "reach": 3,
+   "side": 1.8,
+   "up": 1.2,
+   "back": {
+    "brightness": 1.1,
+    "range": 9,
+    "color": "#ffc98a",
+    "reach": 2.2,
+    "up": 0.6
+   }
+  }
+ },
+ "night_dread": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "GlobalShadows": true,
+   "Brightness": 0.25,
+   "Ambient": "#06070c",
+   "OutdoorAmbient": "#06070c",
+   "ColorShift_Top": "#8090b0",
+   "ExposureCompensation": -0.3,
+   "EnvironmentDiffuseScale": 0.03,
+   "EnvironmentSpecularScale": 0.08,
+   "ShadowSoftness": 0.3
+  },
+  "key": {
+   "azimuth": -70,
+   "elevation": 26,
+   "fixed": true
+  },
+  "grade": {
+   "Saturation": -0.5,
+   "Contrast": 0.3,
+   "Brightness": -0.03,
+   "TintColor": "#b8c4c0"
+  },
+  "bloom": {
+   "Intensity": 0.7,
+   "Size": 34,
+   "Threshold": 1.0
+  },
+  "atmosphere": {
+   "Density": 0.5,
+   "Offset": 0,
+   "Color": "#0c1014",
+   "Decay": "#030405",
+   "Glare": 0,
+   "Haze": 3.0
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.4,
+   "far": 0.6
+  },
+  "subject": {
+   "brightness": 0.6,
+   "range": 8,
+   "color": "#9db2ff",
+   "reach": 3,
+   "side": 1.8,
+   "up": 1.2,
+   "back": {
+    "brightness": 1.3,
+    "range": 9,
+    "color": "#a8c0b8",
+    "reach": 2.2,
+    "up": 0.6
+   }
+  }
+ },
+ "hospital": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "GlobalShadows": true,
+   "Brightness": 2.1,
+   "Ambient": "#98a4ac",
+   "OutdoorAmbient": "#98a4ac",
+   "ColorShift_Top": "#eaf6ff",
+   "ExposureCompensation": 0.05,
+   "EnvironmentDiffuseScale": 0.12,
+   "EnvironmentSpecularScale": 0.15,
+   "ShadowSoftness": 0.2
+  },
+  "key": {
+   "azimuth": -40,
+   "elevation": 52
+  },
+  "grade": {
+   "Saturation": -0.12,
+   "Contrast": 0.08,
+   "Brightness": 0,
+   "TintColor": "#eaf5ff"
+  },
+  "bloom": {
+   "Intensity": 0.4,
+   "Size": 24,
+   "Threshold": 1.6
+  },
+  "atmosphere": {
+   "Density": 0,
+   "Offset": 0,
+   "Color": "#ffffff",
+   "Decay": "#ffffff",
+   "Glare": 0,
+   "Haze": 0
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.45,
+   "far": 0.4
+  }
+ },
+ "dispatch": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "GlobalShadows": true,
+   "Brightness": 0.35,
+   "Ambient": "#0a1018",
+   "OutdoorAmbient": "#0a1018",
+   "ColorShift_Top": "#7fb8d8",
+   "ExposureCompensation": -0.1,
+   "EnvironmentDiffuseScale": 0.04,
+   "EnvironmentSpecularScale": 0.1,
+   "ShadowSoftness": 0.3
+  },
+  "key": {
+   "azimuth": 50,
+   "elevation": 40
+  },
+  "grade": {
+   "Saturation": -0.2,
+   "Contrast": 0.2,
+   "Brightness": -0.01,
+   "TintColor": "#c4e2f0"
+  },
+  "bloom": {
+   "Intensity": 0.7,
+   "Size": 30,
+   "Threshold": 1.0
+  },
+  "atmosphere": {
+   "Density": 0.3,
+   "Offset": 0,
+   "Color": "#0c1620",
+   "Decay": "#04080c",
+   "Glare": 0,
+   "Haze": 2.0
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.4,
+   "far": 0.5
+  },
+  "subject": {
+   "brightness": 1.1,
+   "range": 9,
+   "color": "#8fd8ff",
+   "reach": 3,
+   "side": 1.5,
+   "up": 0.8
+  }
+ },
+ "grey_morning": {
+  "lighting": {
+   "ClockTime": 13,
+   "GeographicLatitude": 20,
+   "GlobalShadows": true,
+   "Brightness": 1.7,
+   "Ambient": "#7f8388",
+   "OutdoorAmbient": "#7f8388",
+   "ColorShift_Top": "#f4efe6",
+   "ExposureCompensation": -0.05,
+   "EnvironmentDiffuseScale": 0.12,
+   "EnvironmentSpecularScale": 0.15,
+   "ShadowSoftness": 0.3
+  },
+  "key": {
+   "azimuth": 60,
+   "elevation": 30
+  },
+  "grade": {
+   "Saturation": -0.3,
+   "Contrast": 0.12,
+   "Brightness": 0,
+   "TintColor": "#eef0f2"
+  },
+  "bloom": {
+   "Intensity": 0.4,
+   "Size": 24,
+   "Threshold": 1.6
+  },
+  "atmosphere": {
+   "Density": 0.25,
+   "Offset": 0,
+   "Color": "#c8ccd0",
+   "Decay": "#8a8e92",
+   "Glare": 0,
+   "Haze": 1.4
+  },
+  "focus": {
+   "within": 14,
+   "radius": 0.45,
+   "far": 0.45
+  }
  }
 }

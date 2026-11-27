@@ -6,7 +6,7 @@ in Studio's shared table, so the place file never has to carry the code.
 
 Usage (on the machine running Studio, with a place open and the MCP server enabled):
   python -m pipeline.studio prepare                 clean the open place and add the effects
-  python -m pipeline.studio build-sets [--only a,b] build the set library into the place
+  python -m pipeline.studio build-sets [--only a,b] [--job <folder>]   build the set library into the place
   python -m pipeline.studio load --job <folder>     store timeline.json in the place and build its cast
   python -m pipeline.studio frame <n> [--shot out.png] [--roll 90]
   python -m pipeline.studio info                    sets, anchors, cameras, props, viewport
@@ -183,6 +183,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     sub.add_parser("prepare")
     build = sub.add_parser("build-sets")
     build.add_argument("--only", help="comma separated set names")
+    build.add_argument("--job", help="job folder whose shotlist.json set_text replaces in-world wording")
     load = sub.add_parser("load")
     load.add_argument("--job", required=True)
     frame = sub.add_parser("frame")
@@ -207,7 +208,13 @@ def main(argv: Optional[List[str]] = None) -> int:
         if args.command == "prepare":
             result = director.run("prepare")
         elif args.command == "build-sets":
-            result = director.run("build_sets", {"only": args.only.split(",")} if args.only else {})
+            build_args = {"only": args.only.split(",")} if args.only else {}
+            if args.job:
+                with open(Path(args.job) / "shotlist.json", "r", encoding="utf-8") as handle:
+                    text = json.load(handle).get("set_text")
+                if text:
+                    build_args["text"] = text
+            result = director.run("build_sets", build_args)
         elif args.command == "load":
             with open(Path(args.job) / "timeline.json", "r", encoding="utf-8") as handle:
                 result = director.load(json.load(handle))

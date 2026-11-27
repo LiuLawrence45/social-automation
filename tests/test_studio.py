@@ -21,7 +21,7 @@ def test_bundle_carries_every_module_and_the_library():
     for name in studio.set_names():
         assert '__modules["set_%s"]' % name in chunk
     assert "shared.__director = { hash = '%s'" % studio.director_hash() in chunk
-    assert set(studio.load_library()) == {"actions", "characters", "faces", "lighting", "poses"}
+    assert set(studio.load_library()) == {"actions", "animations", "avatar_poses", "characters", "expressions", "faces", "lighting", "poses", "rubric"}
 
 
 def test_call_chunk_checks_the_installed_hash_and_carries_the_command():

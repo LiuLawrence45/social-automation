@@ -95,3 +95,16 @@ def test_long_gap_holds_previous_word(rendered):
     job, _ = rendered
     inside, _ = caption_present(job, 80)
     assert inside > 5
+
+
+
+def test_bed_source_names_what_the_sound_stage_made(tmp_path):
+    import json
+
+    from pipeline import edit as edit_stage
+
+    (tmp_path / "bed.wav").write_bytes(b"")
+    (tmp_path / "sound_report.json").write_text(json.dumps({
+        "music": {"source": "ElevenLabs music generation"}, "items": [{"kind": "ambience"}, {"kind": "cue"}, {"kind": "cue"}], "pad": None}))
+    assert edit_stage.bed_source(tmp_path, tmp_path / "bed.wav") == "sound stage: ElevenLabs music generation, 1 generated ambience loop(s), 2 generated cue(s)"
+    assert edit_stage.bed_source(tmp_path, tmp_path / "other.wav") == "other.wav"

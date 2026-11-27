@@ -11,7 +11,7 @@ local LIGHT_SCALE = 0.3
 local PARK = CFrame.new(0, -3000, 0)
 local TRIM = "#fbf6ea"
 
-function M.begin(root, name, index, meta)
+function M.begin(root, name, index, meta, texts)
 	local folder = Util.folder(root, "Sets")
 	local old = folder:FindFirstChild(name)
 	if old then
@@ -25,7 +25,13 @@ function M.begin(root, name, index, meta)
 	self.origin = CFrame.new(index * SPACING, 0, 0)
 	self.info = { name = name, anchors = {}, cameras = {}, pieces = {}, lighting = meta and meta.lighting or "day" }
 	self.folder = folder
+	self.texts = texts or {}
 	return self
+end
+
+-- In-world wording a job may replace (shotlist.json "set_text"), so names never live in set files.
+function B:word(key, default)
+	return self.texts[key] or default
 end
 
 function B:box(size, pos, color, opts)
@@ -109,13 +115,17 @@ function B:sign(text, size, pos, color, textColor, opts)
 	return part
 end
 
-function B:light(pos, color, brightness, range)
-	local holder = self:box({ 0.2, 0.2, 0.2 }, pos, "#ffffff", { transparency = 1, name = "Light", shadow = false })
+function B:light(pos, color, brightness, range, opts)
+	opts = opts or {}
+	local holder = self:box({ 0.2, 0.2, 0.2 }, pos, "#ffffff", { transparency = 1, name = opts.name and ("Light_" .. opts.name) or "Light", shadow = false })
 	local light = Instance.new("PointLight")
 	light.Color = Util.color(color)
 	light.Brightness = (brightness or 1) * LIGHT_SCALE
 	light.Range = range or 16
-	light.Shadows = false
+	light.Shadows = opts.shadows == true
+	if opts.off then
+		light:SetAttribute("Off", true)
+	end
 	light.Parent = holder
 	return light
 end

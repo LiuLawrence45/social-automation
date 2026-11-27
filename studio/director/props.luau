@@ -142,6 +142,54 @@ function BUILD.phone(m, spec)
 	end
 end
 
+function BUILD.phone_chat(m, spec)
+	part(m, { 0.74, 1.42, 0.08 }, CFrame.new(), "#15171c")
+	local dark = spec.dark ~= false
+	local screen = part(m, { 0.66, 1.32, 0.02 }, CFrame.new(0, 0, -0.04), dark and "#11151d" or "#eef2f7", { shadow = false, material = Enum.Material.Neon })
+	local gui = Util.surface(screen, Enum.NormalId.Front, 400)
+	gui.LightInfluence = 0
+	local ink = dark and Color3.fromRGB(240, 243, 250) or Color3.fromRGB(20, 22, 28)
+	Util.label(gui, { Text = spec.clock or "3:07", Font = Enum.Font.GothamMedium, TextColor3 = ink, Size = UDim2.fromOffset(70, 22), Position = UDim2.fromOffset(12, 8), TextXAlignment = Enum.TextXAlignment.Left })
+	Util.label(gui, { Text = spec.name or "", Font = Enum.Font.GothamBold, TextColor3 = ink, Size = UDim2.fromOffset(240, 50), Position = UDim2.fromOffset(12, 40) })
+	if spec.sub then
+		Util.label(gui, { Text = spec.sub, Font = Enum.Font.GothamMedium, TextColor3 = Color3.fromRGB(150, 160, 178), Size = UDim2.fromOffset(240, 26), Position = UDim2.fromOffset(12, 92) })
+	end
+	local y = 136
+	for _, message in ipairs(spec.messages or {}) do
+		local lines = message.lines or 2
+		local height = 26 + lines * 38
+		local mine = message.me == true
+		local bubble = Util.frame(gui, {
+			Size = UDim2.fromOffset(mine and 190 or 232, height), Position = UDim2.fromOffset(mine and 62 or 12, y),
+			BackgroundColor3 = mine and Color3.fromRGB(46, 120, 255) or (dark and Color3.fromRGB(44, 50, 64) or Color3.fromRGB(222, 226, 234)),
+			Corner = UDim.new(0, 22),
+		})
+		Util.label(bubble, { Text = message.text, Font = Enum.Font.GothamBold, TextColor3 = mine and Color3.new(1, 1, 1) or ink, Size = UDim2.new(1, -24, 1, -16), Position = UDim2.fromOffset(12, 8) })
+		y += height + 14
+	end
+	if spec.glow ~= false then
+		local light = Instance.new("PointLight")
+		light.Color = Color3.fromRGB(170, 200, 255)
+		light.Brightness = spec.glow or 0.7
+		light.Range = 7
+		light.Shadows = true
+		light.Parent = screen
+	end
+end
+
+function BUILD.flashlight(m, spec)
+	part(m, { 0.3, 0.3, 1.1 }, CFrame.new(), "#1c1c1f", { material = Enum.Material.Metal })
+	local lens = part(m, { 0.36, 0.36, 0.1 }, CFrame.new(0, 0, -0.6), "#fff6d8", { material = Enum.Material.Neon, shadow = false })
+	local beam = Instance.new("SpotLight")
+	beam.Face = Enum.NormalId.Front
+	beam.Angle = spec.angle or 50
+	beam.Range = spec.range or 34
+	beam.Brightness = spec.brightness or 3
+	beam.Color = Color3.fromRGB(255, 244, 214)
+	beam.Shadows = true
+	beam.Parent = lens
+end
+
 function BUILD.notes_grid(m, spec)
 	local count, cols = spec.count or 12, spec.cols or 4
 	local gap = spec.gap or 1.35

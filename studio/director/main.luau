@@ -2,10 +2,12 @@ local HttpService = game:GetService("HttpService")
 local ServerStorage = game:GetService("ServerStorage")
 local Util = __require("util")
 local Rig = __require("rig")
+local Avatar = __require("avatar")
 local Props = __require("props")
 local Sets = __require("sets")
 local Stage = __require("stage")
 local Capture = __require("capture")
+local Judge = __require("judge")
 
 local commands = {}
 local cached = { key = nil, stage = nil, lit = nil }
@@ -59,7 +61,7 @@ function commands.build_sets(args)
 	local built = {}
 	for index, name in ipairs(__SET_NAMES) do
 		if not args.only or table.find(args.only, name) then
-			local builder = Sets.begin(root(), name, index)
+			local builder = Sets.begin(root(), name, index, nil, args.text)
 			__require("set_" .. name)(builder)
 			local model = builder:finish()
 			built[name] = #model:GetDescendants()
@@ -84,8 +86,20 @@ function commands.build_cast(args, lib)
 		if not look then
 			error("cast role '" .. role .. "' names an unknown character")
 		end
-		local model = Rig.build(folder, role, look)
-		Rig.apply(model, PARK, {})
+		if look.rig == "avatar" then
+			local signature = HttpService:JSONEncode(look)
+			local existing = folder:FindFirstChild(role)
+			if not existing or existing:GetAttribute("Look") ~= signature then
+				local model = Avatar.build(folder, role, look)
+				model:SetAttribute("Look", signature)
+				if look.faceless then
+					model:SetAttribute("Faceless", true)
+				end
+			end
+		else
+			local model = Rig.build(folder, role, look)
+			Rig.apply(model, PARK, {})
+		end
 		table.insert(built, role)
 	end
 	return built
@@ -146,9 +160,22 @@ end
 function commands.capture(args, lib)
 	local stage = stageFor(args, lib)
 	local sent, waits = 0, 0
-	for _, frameIndex in ipairs(args.frames) do
+	local items = {}
+	for _, frameIndex in ipairs(args.frames or {}) do
+		table.insert(items, { frame = frameIndex, marker = frameIndex })
+	end
+	for _, variant in ipairs(args.variants or {}) do
+		table.insert(items, variant)
+	end
+	for _, item in ipairs(items) do
+		local frameIndex = item.marker
+		if item.camera then
+			stage.cameras = stage.cameras or {}
+			stage.cameras[item.shot] = item.camera
+			stage.current = nil
+		end
 		local before = stage.current and stage.current.index
-		local info = stage:frame(frameIndex)
+		local info = stage:frame(item.frame)
 		Capture.marker(frameIndex)
 		local setName = stage.current.set.name
 		if setName ~= cached.lit then
@@ -178,7 +205,35 @@ function commands.capture(args, lib)
 		sent += 1
 	end
 	Capture.marker(nil)
+	if args.variants then
+		stage.cameras = nil
+		stage.current = nil
+	end
 	return { frames = sent, waits = waits }
+end
+
+function commands.judge(args, lib)
+	local stage = stageFor(args, lib)
+	local positions = {}
+	for position, shot in ipairs(stage.timeline.shots) do
+		positions[shot.id] = position
+	end
+	local index = positions[args.shot]
+	if not index then
+		error("unknown shot '" .. tostring(args.shot) .. "'")
+	end
+	local results = {}
+	for _, spec in ipairs(args.cameras) do
+		local ok, result = pcall(Judge.check, stage, index, spec, args.previous)
+		if ok then
+			table.insert(results, result)
+		else
+			table.insert(results, { ok = false, issues = { "error:" .. tostring(result):sub(1, 160) }, metrics = {} })
+		end
+	end
+	stage.cameras = nil
+	stage.current = nil
+	return results
 end
 
 function commands.calibrate(args)

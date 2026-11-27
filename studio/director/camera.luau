@@ -6,6 +6,7 @@ M.FOV = 36
 M.ASPECT = 16 / 9
 
 local FRAMES = {
+	extreme = { h = 2.3, head = 0.5 },
 	detail = { h = 3.4, head = 0.42 },
 	close = { h = 5.6, head = 0.36 },
 	medium = { h = 9, head = 0.33 },
@@ -13,6 +14,8 @@ local FRAMES = {
 	wide = { h = 22, head = 0.32 },
 	vast = { h = 40, head = 0.4 },
 }
+
+local ANGLES = { eye = 0, low = -16, worm = -32, high = 24, top = 55 }
 
 local function tanHalfVertical(fov)
 	return math.tan(math.rad(fov / 2)) * M.ASPECT
@@ -43,6 +46,27 @@ function M.resolve(spec, ctx)
 			fov = fov,
 		}
 	end
+	if spec.pov then
+		local eye, facing = subject(ctx, spec.pov)
+		local target = spec.on and subject(ctx, spec.on) or (eye + facing.LookVector * 12)
+		local forward = (target - eye).Unit
+		local distance = (target - eye).Magnitude
+		local wide = spec.fov or 46
+		local drop = (0.5 - (spec.head or 0.38)) * 2 * distance * tanHalfVertical(wide)
+		return { pos = eye + forward * 0.3, look = target - Vector3.new(0, drop, 0), fov = wide, hide = spec.pov }
+	end
+	if spec.ots then
+		local near = subject(ctx, spec.ots)
+		local far = subject(ctx, spec.on)
+		local flat = Vector3.new(far.X - near.X, 0, far.Z - near.Z)
+		local forward = flat.Magnitude > 0.01 and flat.Unit or Vector3.zAxis
+		local right = forward:Cross(Vector3.yAxis)
+		local side = spec.side == "left" and -1 or 1
+		local pos = near - forward * (spec.back or 3.6) + right * side * (spec.across or 1.0) + Vector3.new(0, spec.up or 0.3, 0)
+		local distance = (far - pos).Magnitude
+		local drop = (0.5 - (spec.head or 0.36)) * 2 * distance * tanHalfVertical(fov)
+		return { pos = pos, look = far - Vector3.new(0, drop, 0), fov = fov }
+	end
 	local point, facing = subject(ctx, spec.on)
 	local frame = FRAMES[spec.frame or "medium"] or FRAMES.medium
 	local height = spec.height or frame.h
@@ -51,7 +75,8 @@ function M.resolve(spec, ctx)
 	if spec.offset then
 		target = target + (facing * CFrame.new(Util.vec(spec.offset))).Position
 	end
-	local direction = (facing * CFrame.Angles(0, math.rad(spec.yaw or 0), 0) * CFrame.Angles(math.rad(spec.pitch or 0), 0, 0)).LookVector
+	local pitch = spec.pitch or ANGLES[spec.angle or "eye"] or 0
+	local direction = (facing * CFrame.Angles(0, math.rad(spec.yaw or 0), 0) * CFrame.Angles(math.rad(pitch), 0, 0)).LookVector
 	return { pos = target + direction * distance, look = target, fov = fov, height = height }
 end
 
@@ -93,6 +118,12 @@ end
 function M.plan(spec, ctx)
 	local from = M.resolve(spec.from or spec, ctx)
 	local to
+	local move, shake, ease = spec.move or "push", spec.shake or 0, spec.ease or "linear"
+	if move == "handheld" then
+		shake = math.max(shake, spec.amount or 1)
+	elseif move == "creep" and not spec.ease then
+		ease = "in"
+	end
 	if spec.to then
 		local target = spec.to
 		if type(target) == "table" and type(spec.from) == "table" and not target.pos then
@@ -103,10 +134,15 @@ function M.plan(spec, ctx)
 			target = merged
 		end
 		to = M.resolve(target, ctx)
+	elseif move == "static" or move == "handheld" then
+		to = from
+	elseif move == "creep" then
+		to = moved(from, "push", (spec.amount or 1) * 0.6)
 	else
-		to = moved(from, spec.move or "push", spec.amount)
+		to = moved(from, move, spec.amount)
 	end
-	return { from = from, to = to, ease = spec.ease or "linear", shake = spec.shake or 0, follow = spec.follow, roll = spec.roll or 0 }
+	local framing = type(spec.from) == "table" and spec.from or spec
+	return { from = from, to = to, ease = ease, shake = shake, follow = spec.follow, roll = spec.dutch or framing.dutch or spec.roll or 0, hide = from.hide }
 end
 
 function M.at(plan, u, t, followDelta)

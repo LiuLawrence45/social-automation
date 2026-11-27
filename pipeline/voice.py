@@ -9,7 +9,8 @@ and levelled to leave true-peak headroom. story.json's voice.speed (default 1.0)
 narration: 1.2 raises the target pace and shortens the allowed pauses by that factor. Word timings on the final file come from the provider's
 alignment carried through those edits (timing_source "carried", the default when the provider
 returns an alignment) or from the local aligner (pipeline.align) snapped to sound onsets
-("aligner", the default for the fallback voice). Both are checked against the sound onsets in
+("aligner", the default for the fallback voice). Carried timings that sit more than 30 ms early or late on average against the
+sound onsets are shifted by that average. Both are checked against the sound onsets in
 the final file and the aligner always runs as a transcript check when it is installed.
 """
 from __future__ import annotations
@@ -419,6 +420,11 @@ def make_narration(job: Path, provider: Optional[str] = None, reuse_raw: bool = 
     if source == "auto":
         source = "carried" if take["spans"] is not None else "aligner"
     timing = {"source": source, "aligner": None}
+    drift = onset_error(carried, sentences, final_env)
+    if drift.get("checked", 0) >= 5 and abs(drift["bias_seconds"]) > 0.03:
+        shift = drift["bias_seconds"]
+        carried = [(min(max(start - shift, 0.0), duration), min(max(end - shift, 0.0), duration)) for start, end in carried]
+        timing["carried_shift_seconds"] = round(-shift, 4)
     spans = carried
     measured = align.measure(narration, tokens, workdir)
     if measured is not None:

@@ -1,0 +1,444 @@
+{
+ "still": {
+  "LeftUpperArm": [
+   0,
+   0,
+   0
+  ],
+  "RightUpperArm": [
+   0,
+   0,
+   0
+  ],
+  "LeftLowerArm": [
+   0,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   0,
+   0,
+   0
+  ],
+  "UpperTorso": [
+   0,
+   0,
+   0
+  ],
+  "Head": [
+   0,
+   0,
+   0
+  ]
+ },
+ "reach_handle": {
+  "RightUpperArm": [
+   72,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   14,
+   0,
+   0
+  ],
+  "UpperTorso": [
+   6,
+   0,
+   0
+  ]
+ },
+ "hold_phone": {
+  "RightUpperArm": [
+   42,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   88,
+   0,
+   0
+  ],
+  "Head": [
+   -22,
+   0,
+   0
+  ],
+  "UpperTorso": [
+   4,
+   0,
+   0
+  ]
+ },
+ "phone_ear": {
+  "RightUpperArm": [
+   30,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   140,
+   0,
+   0
+  ],
+  "RightHand": [
+   0,
+   0,
+   0
+  ],
+  "Head": [
+   0,
+   0,
+   -8
+  ]
+ },
+ "scared_back": {
+  "LeftUpperArm": [
+   48,
+   0,
+   18
+  ],
+  "RightUpperArm": [
+   48,
+   0,
+   -18
+  ],
+  "LeftLowerArm": [
+   82,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   82,
+   0,
+   0
+  ],
+  "UpperTorso": [
+   -9,
+   0,
+   0
+  ],
+  "Head": [
+   4,
+   0,
+   0
+  ]
+ },
+ "cower": {
+  "LowerTorso": [
+   0,
+   0,
+   0,
+   0,
+   -1.35,
+   0
+  ],
+  "LeftUpperLeg": [
+   84,
+   0,
+   0
+  ],
+  "RightUpperLeg": [
+   84,
+   0,
+   0
+  ],
+  "LeftLowerLeg": [
+   -118,
+   0,
+   0
+  ],
+  "RightLowerLeg": [
+   -118,
+   0,
+   0
+  ],
+  "UpperTorso": [
+   22,
+   0,
+   0
+  ],
+  "LeftUpperArm": [
+   64,
+   0,
+   28
+  ],
+  "RightUpperArm": [
+   64,
+   0,
+   -28
+  ],
+  "LeftLowerArm": [
+   104,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   104,
+   0,
+   0
+  ],
+  "Head": [
+   -6,
+   0,
+   0
+  ]
+ },
+ "lie_bed": {
+  "LowerTorso": [
+   90,
+   0,
+   0,
+   0,
+   -2.2,
+   0
+  ],
+  "LeftUpperArm": [
+   0,
+   0,
+   6
+  ],
+  "RightUpperArm": [
+   0,
+   0,
+   -6
+  ],
+  "Head": [
+   0,
+   0,
+   0
+  ]
+ },
+ "sit_up_bed": {
+  "LowerTorso": [
+   0,
+   0,
+   0,
+   0,
+   -1.75,
+   0
+  ],
+  "LeftUpperLeg": [
+   88,
+   0,
+   0
+  ],
+  "RightUpperLeg": [
+   88,
+   0,
+   0
+  ],
+  "UpperTorso": [
+   8,
+   0,
+   0
+  ],
+  "LeftUpperArm": [
+   -25,
+   0,
+   8
+  ],
+  "RightUpperArm": [
+   -25,
+   0,
+   -8
+  ]
+ },
+ "lean_door": {
+  "UpperTorso": [
+   14,
+   0,
+   0
+  ],
+  "Head": [
+   18,
+   0,
+   24
+  ],
+  "LeftUpperArm": [
+   104,
+   0,
+   0
+  ],
+  "RightUpperArm": [
+   104,
+   0,
+   0
+  ],
+  "LeftLowerArm": [
+   34,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   34,
+   0,
+   0
+  ]
+ },
+ "head_tilt": {
+  "Head": [
+   6,
+   0,
+   30
+  ],
+  "LeftUpperArm": [
+   0,
+   0,
+   0
+  ],
+  "RightUpperArm": [
+   0,
+   0,
+   0
+  ],
+  "LeftLowerArm": [
+   0,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   0,
+   0,
+   0
+  ]
+ },
+ "knob": {
+  "RightUpperArm": [
+   50,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   28,
+   0,
+   0
+  ],
+  "Head": [
+   -10,
+   0,
+   0
+  ]
+ },
+ "flashlight": {
+  "RightUpperArm": [
+   66,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   22,
+   0,
+   0
+  ]
+ },
+ "crouch_look": {
+  "LowerTorso": [
+   0,
+   0,
+   0,
+   0,
+   -1.3,
+   0
+  ],
+  "LeftUpperLeg": [
+   86,
+   0,
+   0
+  ],
+  "RightUpperLeg": [
+   86,
+   0,
+   0
+  ],
+  "LeftLowerLeg": [
+   -120,
+   0,
+   0
+  ],
+  "RightLowerLeg": [
+   -120,
+   0,
+   0
+  ],
+  "UpperTorso": [
+   26,
+   0,
+   0
+  ],
+  "Head": [
+   -20,
+   0,
+   0
+  ],
+  "RightUpperArm": [
+   70,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   20,
+   0,
+   0
+  ]
+ },
+ "hands_face": {
+  "LeftUpperArm": [
+   70,
+   0,
+   22
+  ],
+  "RightUpperArm": [
+   70,
+   0,
+   -22
+  ],
+  "LeftLowerArm": [
+   128,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   128,
+   0,
+   0
+  ],
+  "Head": [
+   -14,
+   0,
+   0
+  ],
+  "UpperTorso": [
+   10,
+   0,
+   0
+  ]
+ },
+ "desk_type": {
+  "LeftUpperArm": [
+   38,
+   0,
+   0
+  ],
+  "RightUpperArm": [
+   38,
+   0,
+   0
+  ],
+  "LeftLowerArm": [
+   64,
+   0,
+   0
+  ],
+  "RightLowerArm": [
+   64,
+   0,
+   0
+  ],
+  "Head": [
+   -8,
+   0,
+   0
+  ]
+ }
+}

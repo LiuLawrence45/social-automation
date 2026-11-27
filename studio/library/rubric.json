@@ -1,0 +1,11 @@
+{
+  "criteria": [
+    {"key": "readable", "weight": 0.30, "question": "Can a viewer tell at a glance who or what this sentence is about and what is happening?"},
+    {"key": "composition", "weight": 0.20, "question": "Is the framing good: balance, depth, headroom, and not flat-on by default?"},
+    {"key": "mood", "weight": 0.20, "question": "Does the lighting and angle fit the story's genre and this moment?"},
+    {"key": "variety", "weight": 0.10, "question": "Is it clearly different from the previous shot (tile PREV)?"},
+    {"key": "captions", "weight": 0.10, "question": "Is the marked caption area clear of faces, hands holding things, and in-world text?"},
+    {"key": "defects", "weight": 0.10, "question": "Free of visible problems: clipping through walls or bodies, floating objects, a hidden or cropped face, an empty or confusing frame (10 = none)"}
+  ],
+  "threshold": 6.5
+}

@@ -1,5 +1,6 @@
 local Util = __require("util")
 local Rig = __require("rig")
+local Avatar = __require("avatar")
 local Faces = __require("faces")
 local Motion = __require("motion")
 local Camera = __require("camera")
@@ -106,6 +107,9 @@ function M:applyLighting(name, view)
 	if key and view then
 		local back = Vector3.new(view.pos.X - view.look.X, 0, view.pos.Z - view.look.Z)
 		back = back.Magnitude > 0.01 and back.Unit or Vector3.zAxis
+		if key.fixed then
+			back = Vector3.zAxis
+		end
 		local turned = CFrame.Angles(0, math.rad(-(key.azimuth or 0)), 0):VectorToWorldSpace(back)
 		local elevation = math.rad(key.elevation or 40)
 		local want = turned * math.cos(elevation) + Vector3.yAxis * math.sin(elevation)
@@ -136,6 +140,176 @@ function M:applyLighting(name, view)
 	self.focus = preset.focus or {}
 end
 
+local BLINK = {
+	{ t = 0, face = { LeftEyeClosed = 0, RightEyeClosed = 0 } },
+	{ t = 3.0, face = { LeftEyeClosed = 0, RightEyeClosed = 0 } },
+	{ t = 3.07, face = { LeftEyeClosed = 1, RightEyeClosed = 1 } },
+	{ t = 3.2, face = { LeftEyeClosed = 0, RightEyeClosed = 0 } },
+	{ t = 3.5, face = { LeftEyeClosed = 0, RightEyeClosed = 0 } },
+}
+
+local function poseJoints(lib, pose)
+	if type(pose) == "string" then
+		local found = lib.avatar_poses[pose]
+		if not found then
+			error("unknown avatar pose '" .. pose .. "'")
+		end
+		return found
+	end
+	return pose or {}
+end
+
+local function blendJoints(a, b, u)
+	local out = {}
+	for _, source in ipairs({ a, b }) do
+		for name in pairs(source) do
+			if not out[name] then
+				local from, to = a[name] or {}, b[name] or {}
+				local values = {}
+				for index = 1, 6 do
+					values[index] = Util.lerp(from[index] or 0, to[index] or 0, u)
+				end
+				out[name] = values
+			end
+		end
+	end
+	return out
+end
+
+local function jointsAt(lib, keys, u)
+	if u <= keys[1].t then
+		return blendJoints(poseJoints(lib, keys[1].pose), {}, 0)
+	end
+	for index = 2, #keys do
+		local previous, current = keys[index - 1], keys[index]
+		if u <= current.t then
+			local span = current.t - previous.t
+			local k = span > 0 and (u - previous.t) / span or 1
+			return blendJoints(poseJoints(lib, previous.pose), poseJoints(lib, current.pose), Util.ease(current.ease or "inout", k))
+		end
+	end
+	return blendJoints(poseJoints(lib, keys[#keys].pose), {}, 0)
+end
+
+local function faceAt(lib, keys, u)
+	local chosen = keys[1][2]
+	for _, key in ipairs(keys) do
+		if u >= key[1] then
+			chosen = key[2]
+		end
+	end
+	local found = lib.expressions[chosen]
+	if not found then
+		error("unknown expression '" .. tostring(chosen) .. "'")
+	end
+	return found
+end
+
+function M:planAvatar(entry, duration)
+	local spec = entry.spec
+	local layers = {}
+	local anim = spec.anim
+	local travel = (entry.to - entry.from).Magnitude
+	if anim == nil then
+		anim = travel > 0.05 and "walk" or "idle"
+	end
+	if anim then
+		local options = type(anim) == "table" and anim or { name = anim }
+		local found = self.lib.animations[options.name]
+		if not found then
+			error("unknown animation '" .. tostring(options.name) .. "'")
+		end
+		local speed = options.speed or found.speed or 1
+		if travel > 0.05 and not options.speed and found.stride then
+			speed = Util.clamp(travel / math.max(duration, 0.1) / (found.stride * entry.scale), 0.3, 1.8)
+		end
+		table.insert(layers, {
+			content = "rbxassetid://" .. found.id, speed = speed, phase = options.phase or Util.hash(spec.who),
+			loop = found.loop ~= false, hold = options.hold, priority = Enum.AnimationPriority.Core,
+		})
+	end
+	entry.layers = layers
+	entry.rootCF = CFrame.new(entry.from) * Util.yaw(entry.yaw)
+	Avatar.stage(entry.model, layers)
+	entry.head = Avatar.apply(entry.model, entry.rootCF, 0, 0)
+	entry.position = entry.from
+	entry.facing = Util.yaw(entry.yaw)
+end
+
+function M:overlayAvatar(entry, state)
+	local spec = entry.spec
+	local poseKeys = spec.pose
+	if type(poseKeys) == "string" then
+		poseKeys = { { t = 0, pose = poseKeys } }
+	end
+	local faceKeys = spec.face
+	if type(faceKeys) == "string" then
+		faceKeys = { { 0, faceKeys } }
+	end
+	local times = { 0, 1 }
+	for _, key in ipairs(poseKeys or {}) do
+		table.insert(times, key.t)
+	end
+	for _, key in ipairs(faceKeys or {}) do
+		if key[1] > 0.03 then
+			table.insert(times, key[1] - 0.03)
+		end
+		table.insert(times, key[1])
+	end
+	table.sort(times)
+	local lookAt = spec.look_at
+	local layers = table.clone(entry.layers)
+	local closesEyes = false
+	if poseKeys or faceKeys or lookAt then
+		local keys = {}
+		local last = -1
+		for _, time in ipairs(times) do
+			if time - last > 0.004 then
+				last = time
+				local key = { t = time }
+				local joints = poseKeys and jointsAt(self.lib, poseKeys, time) or {}
+				if lookAt then
+					local target
+					if lookAt == "camera" then
+						target = state.camera.from.pos:Lerp(state.camera.to.pos, time)
+					elseif state.actors[lookAt] then
+						local other = state.actors[lookAt]
+						target = other.head + (other.to - other.from) * time
+					else
+						target = self:place(lookAt).Position
+					end
+					local position = entry.from:Lerp(entry.to, Util.ease(spec.move_ease or "linear", time))
+					local head = entry.head + (position - entry.from)
+					local direction = (CFrame.new(position) * Util.yaw(entry.yaw)):VectorToObjectSpace(target - head)
+					if direction.Magnitude > 0.01 then
+						local strength = spec.look_strength or 1
+						local yaw = Util.clamp(math.deg(math.atan2(-direction.X, -direction.Z)), -75, 75) * strength
+						local pitch = Util.clamp(math.deg(math.atan2(direction.Y, math.sqrt(direction.X * direction.X + direction.Z * direction.Z))), -40, 40) * strength
+						local neck = joints.Head or { 0, 0, 0, 0, 0, 0 }
+						joints.Head = { (neck[1] or 0) + pitch, (neck[2] or 0) + yaw, neck[3] or 0, neck[4] or 0, neck[5] or 0, neck[6] or 0 }
+					end
+				end
+				if next(joints) then
+					key.joints = joints
+				end
+				if faceKeys then
+					key.face = faceAt(self.lib, faceKeys, time)
+					if (key.face.LeftEyeClosed or 0) > 0 then
+						closesEyes = true
+					end
+				end
+				table.insert(keys, key)
+			end
+		end
+		table.insert(layers, { content = Avatar.clip(keys), normalized = true, priority = Enum.AnimationPriority.Action4 })
+	end
+	if spec.blink ~= false and not closesEyes and not entry.model:GetAttribute("Faceless") then
+		table.insert(layers, { content = Avatar.clip(BLINK), speed = 1, phase = Util.hash(spec.who .. "blink"), priority = Enum.AnimationPriority.Action3 })
+	end
+	entry.layers = layers
+	Avatar.stage(entry.model, layers)
+end
+
 function M:prepare(index)
 	local shot = self.timeline.shots[index]
 	local set = self.sets[shot.set]
@@ -153,7 +327,7 @@ function M:prepare(index)
 		end
 		local from = self:place(actor.at)
 		local entry = {
-			spec = actor, model = model, scale = model:GetAttribute("Scale") or 1,
+			spec = actor, model = model, scale = model:GetAttribute("Scale") or 1, avatar = model:GetAttribute("Rig") == "avatar",
 			from = from.Position, to = actor.to and self:place(actor.to).Position or from.Position,
 			yaw = yawOf(from), holds = {},
 		}
@@ -163,7 +337,11 @@ function M:prepare(index)
 	end
 	for _, model in ipairs(self.castFolder:GetChildren()) do
 		if not present[model.Name] then
-			Rig.apply(model, PARK, {})
+			if model:GetAttribute("Rig") == "avatar" then
+				Avatar.park(model)
+			else
+				Rig.apply(model, PARK, {})
+			end
 		end
 	end
 	for _, entry in ipairs(state.order) do
@@ -206,19 +384,88 @@ function M:prepare(index)
 		end
 		state.pieces[name] = { piece = piece, from = wanted and (wanted.from or wanted[1]) or 0, to = wanted and (wanted.to or wanted[2]) or 0, ease = wanted and wanted.ease or "inout" }
 	end
+	local duration = math.max(1, shot.frame_end - shot.frame_start) / self.timeline.fps
+	for _, entry in ipairs(state.order) do
+		if entry.avatar then
+			self:planAvatar(entry, duration)
+		end
+	end
 	self:pose(0, 0)
 	for _, entry in ipairs(state.order) do
 		entry.origin = entry.position
 	end
-	state.camera = Camera.plan(shot.camera, {
+	local override = self.cameras and self.cameras[shot.id]
+	state.cameraSpec = override or shot.camera
+	state.camera = Camera.plan(state.cameraSpec, {
 		set = set,
 		actors = state.actors,
 		place = function(spec)
 			return self:place(spec)
 		end,
 	})
-	self:applyLighting(shot.time or set.lighting or "day", state.camera.from)
+	for _, entry in ipairs(state.order) do
+		if entry.avatar then
+			self:overlayAvatar(entry, state)
+			entry.hidden = state.camera.hide == entry.spec.who
+		end
+	end
+	local presetName = shot.time or set.lighting or "day"
+	self:applyLighting(presetName, state.camera.from)
+	self:prepareLights(state)
+	self:prepareSubjectLights(state, self.lib.lighting[presetName])
 	return state
+end
+
+-- Dark presets carry a "subject" light: a soft fill that rides beside the camera so a face stays readable,
+-- or, for a silhouette, a light behind the figure so its outline stands against the background.
+function M:prepareSubjectLights(state, preset)
+	state.subjectLights = {}
+	local spec = state.shot.subject_light
+	if spec == nil then
+		spec = preset.subject
+	end
+	if not spec then
+		return
+	end
+	for _, entry in ipairs(state.order) do
+		if entry.avatar and entry.spec.subject_light ~= false then
+			local back = entry.model:GetAttribute("Silhouette") == true
+			local use = back and (spec.back or {}) or spec
+			if back and not spec.back then
+				continue
+			end
+			local part = Instance.new("Part")
+			part.Name = "SubjectLight"
+			part.Anchored, part.CanCollide, part.CanQuery, part.CanTouch = true, false, false, false
+			part.Transparency = 1
+			part.Size = Vector3.new(0.2, 0.2, 0.2)
+			local light = Instance.new("PointLight")
+			light.Brightness = (use.brightness or 1) * (entry.spec.subject_level or 1)
+			light.Range = use.range or 9
+			light.Color = Util.color(use.color or "#a8b8ff")
+			light.Shadows = false
+			light.Parent = part
+			part.Parent = self.propFolder
+			table.insert(state.subjectLights, { entry = entry, part = part, back = back, spec = use })
+		end
+	end
+end
+
+function M:moveSubjectLights(state, cameraPos)
+	for _, item in ipairs(state.subjectLights or {}) do
+		local head = item.entry.head
+		local toCamera = cameraPos - head
+		local flat = Vector3.new(toCamera.X, 0, toCamera.Z)
+		flat = flat.Magnitude > 0.01 and flat.Unit or Vector3.new(0, 0, 1)
+		local side = flat:Cross(Vector3.new(0, 1, 0))
+		local spec = item.spec
+		local reach = math.min(spec.reach or 3, toCamera.Magnitude * 0.7)
+		if item.back then
+			item.part.Position = head - flat * (spec.reach or 2.5) + Vector3.new(0, spec.up or 0.5, 0)
+		else
+			item.part.Position = head + flat * reach + side * (spec.side or 1.6) + Vector3.new(0, spec.up or 1.2, 0)
+		end
+	end
 end
 
 function M:pose(t, u, cameraPos)
@@ -228,12 +475,27 @@ function M:pose(t, u, cameraPos)
 		local e = Util.ease(spec.move_ease or "linear", u)
 		entry.position = entry.from:Lerp(entry.to, e)
 		entry.rootCF = CFrame.new(entry.position) * Util.yaw(entry.yaw)
+		if entry.avatar then
+			entry.head = Avatar.apply(entry.model, entry.hidden and PARK or entry.rootCF, t, u)
+			if entry.hidden then
+				entry.head = entry.rootCF.Position + Vector3.new(0, 4.6 * entry.scale, 0)
+			end
+			entry.facing = Util.yaw(entry.yaw)
+			for _, hold in ipairs(entry.holds) do
+				local hand = Avatar.hand(entry.model, hold.hand)
+				hold.model:PivotTo(hold.spec.follow_arm == false and (CFrame.new(hand.Position) * entry.facing * hold.grip) or (hand * hold.grip))
+			end
+			continue
+		end
 		entry.pose = Motion.eval(self.lib, spec, t, u)
 		local cfs = Rig.solve(entry.rootCF, entry.pose, entry.scale)
 		entry.head = cfs.Head.Position
 		entry.facing = Util.yaw(entry.yaw + ((entry.pose.root and entry.pose.root[5]) or 0))
 	end
 	for _, entry in ipairs(state.order) do
+		if entry.avatar then
+			continue
+		end
 		local spec = entry.spec
 		local lookAt = spec.look_at
 		if lookAt then
@@ -280,6 +542,71 @@ function M:pose(t, u, cameraPos)
 	end
 end
 
+function M:prepareLights(state)
+	state.lights = {}
+	for _, holder in ipairs(state.set.model:GetDescendants()) do
+		if holder:IsA("BasePart") and holder.Name:sub(1, 6) == "Light_" then
+			local light = holder:FindFirstChildWhichIsA("Light")
+			if light then
+				local name = holder.Name:sub(7)
+				local base = light:GetAttribute("Base") or light.Brightness
+				light:SetAttribute("Base", base)
+				local color = light:GetAttribute("BaseColor") or light.Color
+				light:SetAttribute("BaseColor", color)
+				light.Brightness = base
+				light.Color = color
+				local spec = state.shot.lights and state.shot.lights[name]
+				if spec == nil then
+					local defaults = self.timeline.defaults and self.timeline.defaults.lights and self.timeline.defaults.lights[state.set.name]
+					spec = defaults and defaults[name]
+				end
+				if spec == nil and light:GetAttribute("Off") then
+					spec = { off = true }
+				end
+				table.insert(state.lights, { light = light, base = base, color = color, spec = spec, holder = holder })
+			end
+		end
+	end
+end
+
+function M:animateLights(state, t, u)
+	for _, item in ipairs(state.lights or {}) do
+		local spec = item.spec
+		local level = 1
+		if spec then
+			level = spec.level or 1
+			if spec.off then
+				level = 0
+			end
+			if spec.on and (u < spec.on[1] or u > (spec.on[2] or 1)) then
+				level = spec.else_level or 0
+			end
+			if spec.fade then
+				level = level * Util.lerp(spec.fade[1], spec.fade[2], u)
+			end
+			if spec.flicker then
+				local wave = math.sin(t * 31 + 1.7) + math.sin(t * 17.3) + math.sin(t * 7.1 + 0.4)
+				if wave > 1.1 - spec.flicker then
+					level = level * (spec.dip or 0.12)
+				end
+			end
+			if spec.pulse then
+				local colors = spec.pulse.colors or { "#ff2020", "#2040ff" }
+				local step = math.floor(t * (spec.pulse.hz or 3)) % #colors + 1
+				item.light.Color = Color3.fromHex(colors[step])
+			end
+		end
+		item.light.Brightness = item.base * level
+		for _, glow in ipairs(item.holder:GetChildren()) do
+			if glow:IsA("BasePart") then
+				local base = glow:GetAttribute("BaseColor") or glow.Color
+				glow:SetAttribute("BaseColor", base)
+				glow.Color = base:Lerp(Color3.new(0.02, 0.02, 0.03), 1 - Util.clamp(level, 0, 1))
+			end
+		end
+	end
+end
+
 function M:frame(frameIndex)
 	local timeline = self.timeline
 	local index
@@ -303,7 +630,7 @@ function M:frame(frameIndex)
 	local follow
 	local plan = state.camera
 	if plan.follow then
-		local leader = state.actors[type(plan.follow) == "string" and plan.follow or (type(shot.camera.from) == "table" and shot.camera.from.on) or shot.camera.on]
+		local leader = state.actors[type(plan.follow) == "string" and plan.follow or (type(state.cameraSpec.from) == "table" and state.cameraSpec.from.on) or state.cameraSpec.on]
 		if leader then
 			local e = Util.ease(leader.spec.move_ease or "linear", u)
 			follow = leader.from:Lerp(leader.to, e) - leader.origin
@@ -352,6 +679,9 @@ function M:frame(frameIndex)
 		item.value = value
 		Sets.movePiece(state.set, item.piece, value, pos)
 	end
+	self:animateLights(state, t, u)
+	self:moveSubjectLights(state, pos)
+	state.view = { pos = pos, look = look, fov = fov, roll = plan.roll }
 	local roll = self.options.roll or 0
 	local cameraObject = workspace.CurrentCamera
 	cameraObject.CameraType = Enum.CameraType.Scriptable
@@ -366,7 +696,7 @@ function M:frame(frameIndex)
 	if dof then
 		local distance = (look - pos).Magnitude
 		local focus = self.focus or {}
-		dof.Enabled = (shot.camera.dof ~= false) and distance < (focus.within or 14)
+		dof.Enabled = (state.cameraSpec.dof ~= false) and distance < (focus.within or 14)
 		dof.FocusDistance = distance
 		dof.InFocusRadius = math.max(2.5, distance * (focus.radius or 0.45))
 		dof.FarIntensity = focus.far or 0.4
