@@ -66,7 +66,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         words = judge.read_json(job / "words.json", required=False) or []
         if isinstance(words, dict):
             words = words.get("words", [])
-        cameras = judge.chosen_cameras(job) if args.judged else {}
+        picked = judge.chosen_cameras(job)
+        cameras = picked if args.judged else {}
+        # The render takes the judge's camera for a shot whose own is not locked; say so when this preview
+        # shows another one, or the two pictures differ and nobody knows why.
+        other = [shot_id for shot_id in wanted if not args.judged and shot_id in picked and picked[shot_id] != stager.shots[shot_id].get("camera")]
         tiles, record, public = [], {}, {}
         for position, shot_id in enumerate(wanted):
             shot = stager.shots[shot_id]
@@ -91,6 +95,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         judge.contact_sheet(tiles, out / "sheet.jpg", args.sheet_height, len(moments), mode)
         summary = {"job": str(job), "out": str(out), "sheet": str(out / "sheet.jpg"), "moments": moments, "shots": record,
                    "sets_rebuilt": stager.stage.director.rebuilt.get("rebuilt", {}), "director_installed": stager.stage.director.installs > 0,
+                   "render_uses_judged_camera": other,
                    "seconds": {"wait_and_load": round(loaded - started, 1), "frames": round(time.time() - loaded, 1)}}
         with open(out / "preview.json", "w", encoding="utf-8") as handle:
             json.dump(summary, handle, indent=1)
@@ -100,6 +105,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             for shot_id, found in public.items():
                 lines = sorted({"%s: %s %s" % (issue["actor"], issue["kind"], issue["detail"]) for frame in found["frames"] for issue in frame["issues"] if issue["in_frame"]})
                 print("%s %s%s" % (shot_id, found["status"], "".join("\n    " + line for line in lines)))
+        if other:
+            print("note: the render will use the judge's camera for %s, and this preview shows the shot list's; "
+                  "pass --judged to see the render's, or set \"locked\": true on the camera to keep yours" % ", ".join(other))
         print(json.dumps({key: summary[key] for key in ("out", "sheet", "sets_rebuilt", "seconds")}, indent=1))
         return 0
     except (RenderError, MCPError, DirectorError, LockTimeout, judge.JudgeError, subprocess.CalledProcessError, OSError) as exc:

@@ -461,6 +461,13 @@ def test_prompt_carries_the_line_the_tiles_and_the_fail_keys(job):
     assert "- style_mismatch:" in prompt and '"defects"' in prompt
 
 
+def test_the_lighting_judge_knows_a_light_patch_that_reads_as_a_sheet(job):
+    settings = quality.load_settings(json.loads((job / "story.json").read_text()))
+    assert "fake_light" in [d["key"] for d in settings["judges"]["lighting"]["fail_if"]]
+    entry = quality.verdict(settings["judges"]["lighting"], {"defects": [{"key": "fake_light", "where": "F3"}], "score": 7, "reason": "window panes lie on the floor like paper"})
+    assert entry["status"] == "fail" and entry["defects"][0]["key"] == "fake_light"
+
+
 def test_label_png_is_a_png(tmp_path):
     data = quality.label_png("a2 F153", tmp_path / "label.png", 3).read_bytes()
     assert data.startswith(b"\x89PNG") and data[16:24] == (7 * 6 + 1).to_bytes(4, "big") * 0 + ((7 * 6 + 1) * 3).to_bytes(4, "big") + (27).to_bytes(4, "big")

@@ -20,6 +20,11 @@ from . import studio
 NUMBER = r"\s*(-?[\d.]+)\s*"
 
 
+# Props that are still built, so an old shot list stages, but that a new shot must not use.
+WITHDRAWN = {"sun_patch": "a flat translucent sheet reads as paper lying on the floor or stuck to the wall, and nobody casts a shadow on it; "
+                          "daylight has to come from the lighting mood and bright windows"}
+
+
 def read_set(path: Path) -> Dict[str, Any]:
     text = path.read_text(encoding="utf-8")
     anchors = {m.group(1): {"pos": [float(m.group(2)), float(m.group(3)), float(m.group(4))], "yaw": float(m.group(5) or 0)}
@@ -83,7 +88,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         for name, ids in found["shots_by_set"].items():
             print("shots in %s: %s" % (name, ",".join(ids)))
         print("cast: %s" % ", ".join(sorted(found["cast"])))
-    print("props: %s" % ", ".join(found["props"]))
+    print("props: %s" % ", ".join(name for name in found["props"] if name not in WITHDRAWN))
+    for name, why in sorted(WITHDRAWN.items()):
+        if name in found["props"]:
+            print("  do not use %s: %s" % (name, why))
     print("faces: %s" % ", ".join(found["faces"]))
     print("animations: %s" % ", ".join(found["animations"]))
     print("lighting moods (time): %s" % ", ".join(found["lighting"]))
