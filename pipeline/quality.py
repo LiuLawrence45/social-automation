@@ -3,7 +3,7 @@
 Usage:
   python -m pipeline.quality --job <folder> [--video FILE] [--final FILE] [--shots a,b,c] [--judges x,y]
       [--provider P] [--model M] [--ceiling USD] [--workers N] [--set judge.key=value] [--out FILE]
-      [--posture FILE] [--human FILE] [--baseline FILE] [--compare FILE] [--report-only]
+      [--posture FILE] [--human FILE] [--baseline FILE] [--compare FILE] [--report-only] [--changed]
 
 One judge per concern (posture, expression, clipping, framing, lighting, story, continuity, motion) scores every shot on
 labelled sheets of frames cut from the rendered video, and one more judges the video as a whole. Rubrics,
@@ -12,13 +12,16 @@ them. Model calls go through pipeline.vision and run in a thread pool under one 
 earlier runs against the same job (quality/ledger.json). Geometric results in <job>/posture.json (or --posture) are merged
 for the shots judged in the run:
 a geometric fail fails the shot even when the picture passes, and the reverse. A shot fails when any judge
-fails it; a judge that could not answer leaves the shot incomplete, never passed. The stage writes
+fails it; a judge that could not answer leaves the shot incomplete, never passed. Every verdict keeps a
+fingerprint of the frames it was given on: when a shot is rendered again its verdicts are set aside as stale,
+and --changed judges exactly those again. The stage writes
 <job>/quality.json, <job>/QUALITY.md and the sheets every judge saw under <job>/quality/sheets/.
 """
 from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import shutil
 import struct
@@ -45,6 +48,8 @@ GEOMETRY_JUDGES = {"joint_limit": "posture", "stiff_arms": "posture", "idle": "p
 MEASURE_SIZE = (36, 64)
 LIT_LEVEL = 40
 STILL_CHANGE = 0.05
+RENDER_FRAMES = 5
+RENDER_TOLERANCE = 2
 GLYPHS = {"A": "EHHVHHH", "B": "UHHUHHU", "C": "EHGGGHE", "D": "UHHHHHU", "E": "VGGUGGV", "F": "VGGUGGG", "G": "EHGNHHF",
           "H": "HHHVHHH", "I": "E44444E", "J": "72222IC", "K": "HIKOKIH", "L": "GGGGGGV", "M": "HRLLHHH", "N": "HPLJHHH",
           "O": "EHHHHHE", "P": "UHHUGGG", "Q": "EHHHLID", "R": "UHHUKIH", "S": "FGGE11U", "T": "V444444", "U": "HHHHHHE",
@@ -245,7 +250,7 @@ def build_sheet(tiles: Sequence[Dict[str, Any]], out: Path, height: int, columns
 
 
 def measure(video: Path) -> List[Dict[str, float]]:
-    """Per frame of the video: mean brightness (0 to 255), share of lit pixels, and change from the frame before."""
+    """Per frame of the video: mean brightness (0 to 255), share of lit pixels, change from the frame before, and 4x4 block means."""
     width, height = MEASURE_SIZE
     try:
         proc = subprocess.run([ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-i", str(video), "-vf",
@@ -262,7 +267,9 @@ def measure(video: Path) -> List[Dict[str, float]]:
     for offset in range(0, len(proc.stdout) - size + 1, size):
         frame = proc.stdout[offset:offset + size]
         change = sum(abs(a - b) for a, b in zip(frame, previous)) / size if previous else 0.0
-        frames.append({"luma": sum(frame) / size, "lit": sum(frame.translate(lit_table)) / size, "change": change})
+        cells = bytes(sum(sum(frame[(row + k) * width + col:(row + k) * width + col + 4]) for k in range(4)) // 16
+                      for row in range(0, height - 3, 4) for col in range(0, width - 3, 4))
+        frames.append({"luma": sum(frame) / size, "lit": sum(frame.translate(lit_table)) / size, "change": change, "cells": cells})
         previous = frame
     return frames
 
@@ -284,6 +291,49 @@ def shot_measures(frames: Sequence[Dict[str, float]], first: int, last: int) -> 
         "change_peak_frame": first + 1 + changes.index(peak) if changes else first,
         "still_fraction": round(sum(1 for c in changes if c < STILL_CHANGE) / len(changes), 3) if changes else 1.0,
     }
+
+
+def render_signature(frames: Sequence[Dict[str, Any]], first: int, last: int) -> bytes:
+    """Fingerprint of one shot as rendered: block means of five frames across it and the brightness of every frame."""
+    inside = list(frames[max(0, first):last + 1])
+    if not inside:
+        return b""
+    picks = [inside[round(i * (len(inside) - 1) / (RENDER_FRAMES - 1))] for i in range(RENDER_FRAMES)]
+    return b"".join(f.get("cells", b"") for f in picks) + bytes(min(255, int(round(f["luma"]))) for f in inside)
+
+
+def same_render(one: bytes, other: bytes) -> bool:
+    """True when two fingerprints differ by no more than encoding the same picture again would cause."""
+    return len(one) == len(other) and all(abs(a - b) <= RENDER_TOLERANCE for a, b in zip(one, other))
+
+
+def current_renders(videos: Dict[str, Path], shots: Sequence[Dict[str, Any]],
+                    meta: Dict[str, Any]) -> Tuple[Dict[str, Dict[str, bytes]], Dict[str, List[Dict[str, Any]]]]:
+    """Fingerprint of every shot in each video that exists (by kind, then shot id), and the measured frames of each video."""
+    fps = float(meta["fps"])
+    decoded = {kind: measure(path) for kind, path in videos.items() if path.is_file()}
+    renders: Dict[str, Dict[str, bytes]] = {}
+    for kind, frames in decoded.items():
+        shift = int(round(float(meta.get("content_start", 0.0)) * fps)) if kind == "captioned" else 0
+        renders[kind] = {}
+        for shot in shots:
+            first, last = frame_range(shot, fps)
+            renders[kind][shot["id"]] = render_signature(frames, first - shift, last - shift)
+    return renders, decoded
+
+
+def set_aside(doc: Dict[str, Any], current: Dict[str, Dict[str, bytes]], kinds: Dict[str, str]) -> None:
+    """Mark as stale every verdict given on frames that have since been rendered again; a stale verdict no longer counts."""
+    registry = doc.get("renders") or {}
+    records = [(kinds.get(key, "clean"), record) for shot in doc.get("shots") or [] for key, record in shot["judges"].items()]
+    if isinstance(doc.get("video_judge"), dict):
+        records.append(("clean", doc["video_judge"]))
+    for kind, record in records:
+        now = current.get(kind) or {}
+        changed = any(shot_id in now and mark in registry and not same_render(bytes.fromhex(registry[mark]), now[shot_id])
+                      for shot_id, mark in (record.get("render") or {}).items())
+        if changed and record.get("status") != "stale":
+            record.update(judged=record.get("status"), status="stale")
 
 
 def plan_sheet(spec: Dict[str, Any], index: int, shots: Sequence[Dict[str, Any]], meta: Dict[str, Any], videos: Dict[str, Path]) -> Dict[str, Any]:
@@ -588,6 +638,7 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
                           "failing": [shot_id for shot_id, r in records if r.get("status") == "fail"],
                           "geometry_only": [shot_id for shot_id, r in records
                                             if r.get("status") == "fail" and r.get("picture_status", "fail") != "fail"]}
+    stale = {shot["id"]: [key for key in SHOT_JUDGES if (shot["judges"].get(key) or {}).get("status") == "stale"] for shot in shots}
     sources: Dict[str, int] = {}
     for shot in shots:
         source = ((shot["judges"].get("posture") or {}).get("geometry") or {}).get("source")
@@ -610,6 +661,7 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
             "fail": sum(1 for s in shots if s["status"] == "fail"),
             "incomplete": sum(1 for s in shots if s["status"] == "incomplete"),
             "judges": per_judge, "failing_by_set": by_set, "frames_sampled": len(frames), "geometry_sources": sources,
+            "stale": {shot_id: keys for shot_id, keys in stale.items() if keys},
             "provider": doc["config"]["provider"], "model": doc["config"]["model"], "spend": doc.get("usage") or {}}
 
 
@@ -647,7 +699,10 @@ def agreement(doc: Dict[str, Any], human: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def compare(before: Dict[str, Any], after: Dict[str, Any]) -> Dict[str, Any]:
-    """Per judge, which shots failed before and after, and which were fixed, newly failing or still failing."""
+    """Per judge, which shots failed before and after, and which were fixed, newly failing or still failing.
+
+    A shot whose verdict now is missing or stale is not counted as fixed.
+    """
     order = [s["id"] for s in after.get("shots", [])] + [s["id"] for s in before.get("shots", [])]
     table = {}
     for key in SHOT_JUDGES + ("any",):
@@ -657,7 +712,9 @@ def compare(before: Dict[str, Any], after: Dict[str, Any]) -> Dict[str, Any]:
                 sides.append({s["id"] for s in doc.get("shots", []) if s.get("status") == "fail"})
             else:
                 sides.append({s["id"] for s in doc.get("shots", []) if (s["judges"].get(key) or {}).get("status") == "fail"})
-        table[key] = {"before": len(sides[0]), "after": len(sides[1]), "fixed": sorted(sides[0] - sides[1], key=order.index),
+        open_now = {s["id"] for s in after.get("shots", []) if (s.get("status") == "incomplete" if key == "any" else
+                                                                (s["judges"].get(key) or {}).get("status") not in ("pass", "fail"))}
+        table[key] = {"before": len(sides[0]), "after": len(sides[1]), "fixed": sorted(sides[0] - sides[1] - open_now, key=order.index),
                       "new": sorted(sides[1] - sides[0], key=order.index), "still": sorted(sides[0] & sides[1], key=order.index)}
     return table
 
@@ -683,6 +740,9 @@ def markdown(doc: Dict[str, Any]) -> str:
         out += ["", "Geometry merged from %s. Failing on geometry alone, where the picture judge passed or did not run: %s.%s"
                 % (", ".join("@@%s@@ (%d shots)" % item for item in summary["geometry_sources"].items()), "; ".join(alone) or "none",
                    " Not merged, because the file marks them stale: %s." % " ".join(doc["geometry_stale"]) if doc.get("geometry_stale") else "")]
+    if summary.get("stale"):
+        out += ["", "Set aside, because the shot was rendered again after these verdicts were given (@@--changed@@ judges them again): %s."
+                % "; ".join("%s (%s)" % (shot_id, ", ".join(keys)) for shot_id, keys in summary["stale"].items())]
     video = doc.get("video_judge")
     if video:
         out += ["", "## Whole video", ""]
@@ -758,8 +818,11 @@ def finish(job: Path, doc: Dict[str, Any], out: Path, human: Optional[Path], bas
 def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] = None, shots: Optional[Sequence[str]] = None,
                 judges: Optional[Sequence[str]] = None, overrides: Optional[Dict[str, Any]] = None, out: Optional[Path] = None,
                 human: Optional[Path] = None, baseline: Optional[Path] = None, against: Optional[Path] = None,
-                report_only: bool = False, posture: Optional[Path] = None) -> Dict[str, Any]:
-    """Judge the rendered video of a job (or the listed shots and judges) and write the reports."""
+                report_only: bool = False, posture: Optional[Path] = None, changed: bool = False) -> Dict[str, Any]:
+    """Judge the rendered video of a job (or the listed shots and judges) and write the reports.
+
+    With changed, only the verdicts that are missing, failed to answer or were set aside as stale are judged again.
+    """
     job = Path(job)
     out = Path(out) if out else job / "quality.json"
     existing = read_json(out, required=False) or {}
@@ -768,22 +831,26 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
     described = (geometry or {}).get("describes")
     geometry_source = "%s@%d%s" % (geometry_path.name, int(geometry_path.stat().st_mtime),
                                    " (%s)" % described["label"] if isinstance(described, dict) and described.get("label") else "") if geometry else ""
+    story = read_json(job / "story.json", required=False) or {}
+    settings = load_settings(story, overrides)
+    kinds = {key: str(spec.get("video", "clean")) for key, spec in settings["judges"].items()}
+    videos = {"clean": Path(video) if video else job / "video.mp4", "captioned": Path(final) if final else job / "final.mp4"}
     if report_only:
         if not existing.get("shots"):
             raise QualityError("%s has no results to report" % out)
         if posture:
             existing["geometry_stale"] = merge_geometry({s["id"]: s for s in existing["shots"] if shots is None or s["id"] in shots},
                                                         geometry, geometry_source)
+        if (job / "shots.json").is_file():
+            set_aside(existing, current_renders(videos, load_shots(job)[1], load_shots(job)[0])[0], kinds)
         finish(job, existing, out, human, baseline, against)
         return existing
-    story = read_json(job / "story.json", required=False) or {}
-    settings = load_settings(story, overrides)
     if settings["provider"] != "manual" and not settings["model"]:
         raise QualityError("no model set; pass --model (python -m pipeline.judge models --provider %s lists them)" % settings["provider"])
     meta, all_shots = load_shots(job)
     known = [s["id"] for s in all_shots]
     every = SHOT_JUDGES + (VIDEO_JUDGE,)
-    wanted_judges = list(judges) if judges else list(SHOT_JUDGES) + ([VIDEO_JUDGE] if shots is None else [])
+    wanted_judges = list(judges) if judges else list(SHOT_JUDGES) + ([VIDEO_JUDGE] if shots is None and not changed else [])
     unknown = [k for k in wanted_judges if k not in every]
     if unknown:
         raise QualityError("unknown judges: %s" % ", ".join(unknown))
@@ -791,9 +858,12 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
         missing = [s for s in shots if s not in known]
         if missing:
             raise QualityError("unknown shot ids: %s" % ", ".join(missing))
-    videos = {"clean": Path(video) if video else job / "video.mp4", "captioned": Path(final) if final else job / "final.mp4"}
+    if changed and shots is not None:
+        raise QualityError("--changed picks the shots itself; leave --shots out")
     if not videos["clean"].is_file():
         raise QualityError("missing %s" % videos["clean"])
+    current, decoded = current_renders(videos, all_shots, meta)
+    set_aside(existing, current, kinds)
     stamps = {kind: "%s@%d" % (path.name, int(path.stat().st_mtime)) if path.is_file() else "" for kind, path in videos.items()}
     selected = set(shots) if shots is not None else set(known)
     work: List[Tuple[int, str]] = []
@@ -804,6 +874,12 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
             follows = key == "continuity" and index > 0 and all_shots[index - 1]["id"] in selected
             if shot["id"] in selected or follows:
                 work.append((index, key))
+    if changed:
+        old = {s["id"]: s.get("judges") or {} for s in existing.get("shots") or [] if isinstance(s, dict)}
+        work = [(index, key) for index, shot in enumerate(all_shots) for key in wanted_judges
+                if key in SHOT_JUDGES and (old.get(shot["id"], {}).get(key) or {}).get("status") not in ("pass", "fail")]
+        selected = {all_shots[index]["id"] for index, _ in work}
+    merged = {all_shots[index]["id"] for index, key in work if key in ("posture", "clipping")}
     sheets_dir = job / "quality" / "sheets"
     ledger_path = job / "quality" / "ledger.json"
     ledger = read_json(ledger_path, required=False) or {"runs": []}
@@ -812,7 +888,7 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
     workers = max(1, int(settings.get("workers", 8)))
     measures: Dict[str, Optional[Dict[str, Any]]] = {}
     if any(settings["judges"][key].get("measures") for _, key in work):
-        frames = measure(videos["clean"])
+        frames = decoded["clean"]
         for shot in all_shots:
             measures[shot["id"]] = shot_measures(frames, *frame_range(shot, float(meta["fps"])))
     plans: Dict[Tuple[int, str], Dict[str, Any]] = {}
@@ -860,14 +936,29 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
         entry.update({"set": shot["set"], "start": shot["start"], "end": shot["end"], "line": shot["line"]})
         if shot["id"] in measures:
             entry["measures"] = measures[shot["id"]]
+    registry = dict(existing.get("renders") or {})
+
+    def remember(kind: str, shot_ids: Sequence[str]) -> Dict[str, str]:
+        marks = {}
+        for shot_id in shot_ids:
+            signature = (current.get(kind) or {}).get(shot_id)
+            if signature is not None:
+                marks[shot_id] = hashlib.sha1(signature).hexdigest()[:12]
+                registry[marks[shot_id]] = signature.hex()
+        return marks
+
     for index, key, record in results:
+        record["render"] = remember(kinds[key], sorted({tile["shot"] for tile in plans[(index, key)]["tiles"]}))
         entries[all_shots[index]["id"]]["judges"][key] = record
-    stale = [shot_id for shot_id in existing.get("geometry_stale", []) if geometry and shot_id not in selected]
+    stale = [shot_id for shot_id in existing.get("geometry_stale", []) if geometry and shot_id not in merged]
     if geometry:
-        stale += merge_geometry({shot_id: entry for shot_id, entry in entries.items() if shot_id in selected}, geometry, geometry_source)
+        stale += merge_geometry({shot_id: entry for shot_id, entry in entries.items() if shot_id in merged}, geometry, geometry_source)
     doc = dict(existing)
-    if VIDEO_JUDGE in wanted_judges:
+    if VIDEO_JUDGE in wanted_judges and not (changed and (existing.get("video_judge") or {}).get("status") in ("pass", "fail")):
         doc["video_judge"] = judge_video(settings, story, all_shots, meta, videos["clean"], sheets_dir, job, budget)
+        doc["video_judge"]["render"] = remember("clean", known)
+    used = {mark for entry in entries.values() for record in entry["judges"].values() for mark in (record.get("render") or {}).values()}
+    used |= set(((doc.get("video_judge") or {}).get("render") or {}).values())
     usage = budget.summary()
     usage["seconds"] = round(time.time() - started, 1)
     record = dict(usage, at=time.strftime("%Y-%m-%dT%H:%M:%S"), out=out.name, provider=settings["provider"], model=settings["model"],
@@ -883,6 +974,7 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
                 "config": {"provider": settings["provider"], "model": settings["model"], "judges": judged, "workers": workers,
                            "prices": settings["prices"], "rubric": settings["judges"], "video": settings[VIDEO_JUDGE]},
                 "shots": [entries[i] for i in known], "runs": runs, "usage": total,
+                "renders": {mark: value for mark, value in registry.items() if mark in used},
                 "geometry_stale": stale if geometry else existing.get("geometry_stale", [])})
     finish(job, doc, out, human, baseline, against)
     return doc
@@ -906,6 +998,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--baseline", type=Path, help="an earlier report to measure the same verdicts against (agreement before)")
     parser.add_argument("--compare", type=Path, help="an earlier report for the before-and-after table")
     parser.add_argument("--report-only", action="store_true", help="rewrite the reports from the existing results without judging")
+    parser.add_argument("--changed", action="store_true",
+                        help="judge only what is missing or was set aside because its shot was rendered again")
     args = parser.parse_args(argv)
     try:
         overrides = parse_sets(args.sets)
@@ -914,7 +1008,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 overrides[name] = value
         doc = run_quality(args.job, args.video, args.final, args.shots.split(",") if args.shots else None,
                           args.judges.split(",") if args.judges else None, overrides, args.out, args.human, args.baseline,
-                          args.compare, args.report_only, args.posture)
+                          args.compare, args.report_only, args.posture, args.changed)
     except (QualityError, EditError, vision.VisionError) as exc:
         print("quality: %s" % exc, file=sys.stderr)
         return 1

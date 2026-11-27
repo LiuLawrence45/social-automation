@@ -249,6 +249,34 @@ def test_listed_shots_merge_and_the_next_shot_gets_continuity(job, monkeypatch):
     assert table["posture"] == {"before": 1, "after": 0, "fixed": ["s02"], "new": [], "still": []}
 
 
+def test_a_shot_rendered_again_sets_its_verdicts_aside(job, monkeypatch):
+    def frames(video, lift=0.0, again=()):
+        return [{"luma": 60.0 + lift + (40.0 if Path(video).name == "video.mp4" and index // 30 in again else 0.0), "lit": 0.4, "change": 1.0,
+                 "cells": bytes([60])} for index in range(120)]
+
+    monkeypatch.setattr(quality, "measure", frames)
+    monkeypatch.setattr(vision, "ask", fake_ask())
+    first = quality.run_quality(job)
+    assert first["summary"]["pass"] == 4 and by_id(first)["s03"]["judges"]["continuity"]["render"].keys() == {"s01", "s02", "s03"}
+    monkeypatch.setattr(quality, "measure", lambda video: frames(video, lift=1.0))
+    assert quality.run_quality(job, report_only=True)["summary"]["pass"] == 4
+    monkeypatch.setattr(quality, "measure", lambda video: frames(video, again=(1,)))
+    doc = quality.run_quality(job, report_only=True, against=job / "quality.json")
+    clean = [key for key in quality.SHOT_JUDGES if key != "framing"]
+    assert doc["summary"]["stale"] == {"s02": clean, "s03": ["continuity"], "s04": ["continuity"]}
+    assert by_id(doc)["s02"]["status"] == "incomplete" and by_id(doc)["s02"]["judges"]["posture"]["judged"] == "pass"
+    assert doc["video_judge"]["status"] == "stale" and doc["comparison"]["any"]["fixed"] == []
+    assert "Set aside, because the shot was rendered again" in (job / "QUALITY.md").read_text()
+    log = []
+    monkeypatch.setattr(vision, "ask", fake_ask(log=log))
+    doc = quality.run_quality(job, changed=True)
+    assert sorted(log) == sorted([("s02", key) for key in clean] + [("s03", "continuity"), ("s04", "continuity")])
+    assert doc["summary"]["pass"] == 4 and doc["summary"]["stale"] == {} and doc["video_judge"]["status"] == "stale"
+    log.clear()
+    doc = quality.run_quality(job, changed=True, judges=["continuity", "video"])
+    assert [key for _, key in log] == ["video"] * 3 and doc["video_judge"]["status"] == "pass" and len(doc["renders"]) == 2
+
+
 def test_measured_darkness_fails_lighting_whatever_the_model_says(job, monkeypatch):
     monkeypatch.setattr(quality, "measure", lambda video: [{"luma": 2.0, "lit": 0.001, "change": 0.2} for _ in range(120)])
     monkeypatch.setattr(vision, "ask", fake_ask())
