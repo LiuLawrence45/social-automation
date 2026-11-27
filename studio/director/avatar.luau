@@ -33,17 +33,17 @@ local PARK = CFrame.new(0, -2000, 0)
 local rigs = setmetatable({}, { __mode = "k" })
 local clips = {}
 
-local function describe(spec)
-	local description
-	if spec.bundle then
-		for _, item in ipairs(AssetService:GetBundleDetailsAsync(spec.bundle).Items) do
-			if item.Type == "UserOutfit" then
-				description = Players:GetHumanoidDescriptionFromOutfitId(item.Id)
-				break
-			end
+local function outfit(bundle)
+	for _, item in ipairs(AssetService:GetBundleDetailsAsync(bundle).Items) do
+		if item.Type == "UserOutfit" then
+			return Players:GetHumanoidDescriptionFromOutfitId(item.Id)
 		end
 	end
-	description = description or Instance.new("HumanoidDescription")
+	return nil
+end
+
+local function describe(spec)
+	local description = spec.bundle and outfit(spec.bundle) or Instance.new("HumanoidDescription")
 	if spec.wear then
 		local worn = {}
 		for index, item in ipairs(spec.wear) do
@@ -52,6 +52,27 @@ local function describe(spec)
 				error("unknown wear type '" .. tostring(item.type) .. "'")
 			end
 			table.insert(worn, { AssetId = item.id, AccessoryType = kind, Order = item.order or index })
+		end
+		description:SetAccessories(worn, true)
+	end
+	-- Some bundles ship a head with no face controls, and no face set on it can show. head_bundle takes the head
+	-- (with its brows and lashes) of another bundle and keeps this one's body, hair and clothes.
+	if spec.head_bundle then
+		local donor = outfit(spec.head_bundle)
+		if not donor then
+			error("head_bundle " .. tostring(spec.head_bundle) .. " has no outfit")
+		end
+		description.Head = donor.Head
+		local worn = {}
+		for _, item in ipairs(description:GetAccessories(true)) do
+			if item.AccessoryType ~= Enum.AccessoryType.Eyebrow and item.AccessoryType ~= Enum.AccessoryType.Eyelash then
+				table.insert(worn, item)
+			end
+		end
+		for _, item in ipairs(donor:GetAccessories(true)) do
+			if item.AccessoryType == Enum.AccessoryType.Eyebrow or item.AccessoryType == Enum.AccessoryType.Eyelash then
+				table.insert(worn, item)
+			end
 		end
 		description:SetAccessories(worn, true)
 	end
@@ -197,6 +218,7 @@ function M.build(parent, name, spec)
 	local root = model.HumanoidRootPart
 	root.Anchored = true
 	model:SetAttribute("Rig", "avatar")
+	model:SetAttribute("FaceMoves", model.Head:FindFirstChildOfClass("FaceControls") ~= nil)
 	model:SetAttribute("Scale", spec.size or 1)
 	if spec.vest then
 		vest(model, type(spec.vest) == "table" and spec.vest or {})

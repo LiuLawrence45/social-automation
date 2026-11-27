@@ -121,3 +121,35 @@ def test_a_later_submission_of_the_same_shot_wins_and_dry_run_writes_nothing(mai
     assert "cast" not in shots_of(main)["a1"]
     assert run("merge", "--job", main) == 0
     assert shots_of(main)["a1"]["cast"][0]["pose"] == "recoil"
+
+
+def test_a_refused_submission_leaves_nothing_marked_and_a_stale_copy_of_another_groups_pose_is_left_out(main, tmp_path, capsys):
+    (main / "poses.json").write_text(json.dumps({"hall_wait": {"joints": {"Head": [1, 0, 0]}}}))
+    (main / "submissions" / "pose_owners.json").write_text(json.dumps({"hall_wait": "hall"}))
+    bed = copy_of(main, tmp_path, "bed")
+    hall = copy_of(main, tmp_path, "hall")
+    newer = {"hall_wait": {"joints": {"Head": [9, 0, 0]}}}
+    (hall / "poses.json").write_text(json.dumps(newer))
+    edit(hall, "a1", cast=[{"who": "me", "at": "hall_mid", "pose": "hall_wait"}])
+    assert run("send", "--job", hall, "--to", main, "--group", "hall", "--shots", "a1") == 0
+    edit(bed, "b1", cast=[{"who": "me", "at": "hall_mid", "pose": "hall_wait"}])
+    assert run("send", "--job", bed, "--to", main, "--group", "bed", "--shots", "b1") == 0
+    for folder in (main / "submissions").glob("*-bed*"):
+        folder.rename(folder.with_name("z-first-bed"))
+    capsys.readouterr()
+    assert run("merge", "--job", main) == 2
+    assert "hall_wait" in capsys.readouterr().err
+    assert "cast" not in shots_of(main)["a1"]
+    assert not list((main / "submissions").glob("*/merged.json"))
+    edit(bed, "b1", cast=[{"who": "me", "at": "hall_mid", "pose": "listen"}])
+    for folder in (main / "submissions").glob("*-bed*"):
+        (folder / "merged.json").write_text("{}")
+    assert run("send", "--job", bed, "--to", main, "--group", "bed", "--shots", "b1") == 0
+    for folder in (main / "submissions").glob("2*-bed*"):
+        folder.rename(folder.with_name("z-second-bed"))
+    capsys.readouterr()
+    assert run("merge", "--job", main) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert sorted(report["changed"]) == ["a1", "b1"] and report["poses"] == ["hall_wait"]
+    assert json.loads((main / "poses.json").read_text()) == newer
+    assert len(list((main / "submissions").glob("*/merged.json"))) == 3

@@ -83,3 +83,10 @@ def test_posture_file_says_what_it_describes_and_which_shots_went_stale(tmp_path
                          {"job": "the-door", "label": "pass 7 draft", "stale_shots": ["k1"]}, {"k1": after})
     written = json.loads((tmp_path / "posture.json").read_text())
     assert written["describes"]["label"] == "pass 7 draft" and written["shots"]["k1"]["current"] is False and written["shots"]["k1"]["checked"] == "then"
+
+
+def test_a_face_set_on_a_head_that_cannot_move_is_a_finding_against_that_character():
+    samples = [{"frame": 3, "u": 0.5, "actors": {"caller": {"issues": [{"code": "face_fixed", "detail": "the face is set to talk but this avatar's head has no face controls, so it stays as it is", "seen": True}]}}, "scene": []}]
+    frames = posture.frames_record(samples)
+    assert frames[0]["issues"] == [{"kind": "frozen_face", "actor": "caller", "detail": samples[0]["actors"]["caller"]["issues"][0]["detail"], "code": "face_fixed", "in_frame": True}]
+    assert posture.GROUPS["face_fixed"] == "a face is set on a head that cannot move"

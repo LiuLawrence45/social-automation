@@ -202,6 +202,21 @@ function M.check(stage, index, camera, samples)
 					issue("prop_missing", side .. " hand is posed to hold something and holds nothing", anySeen)
 				end
 			end
+			-- A face asked of a head that has no face controls never shows: the shot would be judged on a face
+			-- that is not there.
+			local asked = entry.spec.face
+			if type(asked) == "table" then
+				local named
+				for _, key in ipairs(asked) do
+					if key[2] ~= "neutral" then
+						named = key[2]
+					end
+				end
+				asked = named
+			end
+			if asked and asked ~= "neutral" and not entry.model:GetAttribute("Faceless") and not entry.model.Head:FindFirstChildOfClass("FaceControls") then
+				issue("face_fixed", "the face is set to " .. tostring(asked) .. " but this avatar's head has no face controls, so it stays as it is", parts.Head and parts.Head.seen)
+			end
 			for side, reach in pairs(entry.reach or {}) do
 				busy[side] = busy[side] or "target"
 				local hand = parts[SIDES[side] .. "Hand"]
