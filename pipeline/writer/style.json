@@ -1,0 +1,145 @@
+{
+ "version": 1,
+ "note": "Compact style guide the writer and the script judge load. Numbers come from the corpus study (python -m pipeline.writer analyze); see style_stats.json for the measured values behind them. Examples are invented.",
+ "targets": {
+  "wpm": 250,
+  "seconds": 55,
+  "length_tolerance": 0.08,
+  "hook_max_words": 14,
+  "premise_by_words": 30,
+  "sentence_mean_words": [
+   5.5,
+   10
+  ],
+  "sentence_max_words": 22,
+  "short_sentence_share_min": 0.2,
+  "dialogue_share": [
+   0.1,
+   0.4
+  ],
+  "dialogue_lines_min": 3,
+  "dialogue_line_max_words": 16,
+  "first_dialogue_by_share": 0.35,
+  "speakers_max": 6,
+  "turn_position": [
+   0.6,
+   0.9
+  ],
+  "last_line_max_words": 12,
+  "grade_max": 5.5,
+  "rubric_pass": 4,
+  "rubric_floor": 3
+ },
+ "genres": {
+  "scary": {
+   "dialogue_share": [
+    0.12,
+    0.4
+   ],
+   "rules": [
+    "Keep it frightening through what is heard, half seen or wrong: a voice that should not be there, a detail that does not fit, a thing that moved. Never describe blood, wounds, bodies or pain.",
+    "The threat speaks. Give the thing, the voice or the stranger at least two short lines, and mark its voice as slightly wrong.",
+    "Use a false relief before the turn: one beat where it seems over.",
+    "End on the worst moment or one line after it. Do not explain the monster and do not rescue anyone in the last line."
+   ]
+  },
+  "rule_world": {
+   "dialogue_share": [
+    0.05,
+    0.3
+   ],
+   "rules": [
+    "Open with the rule of the world and its cost in one sentence.",
+    "Show three quick, literal consequences of the rule before the narrator turns to their own problem.",
+    "The last line returns to the first line with one new clause."
+   ]
+  },
+  "default": {
+   "rules": []
+  }
+ },
+ "rules": [
+  "First line is the hook: the strangest true thing in the story, said plainly, in 14 words or fewer. No greeting, no scene setting, no 'this is a story about'.",
+  "By 30 words a new viewer can say what the story is about.",
+  "Narrate in first person, past tense, as the person it happened to. Rules of a world are present tense.",
+  "One new filmable fact per sentence: something a camera can see or a microphone can hear. Thoughts, realisations and feelings become actions: not 'I was terrified' but 'I backed into the corner'; not 'Then I understood' but the thing that was seen.",
+  "Short sentences. Most are 4 to 10 words; a fragment is a sentence. No sentence over 22 words.",
+  "Words a ten-year-old says. Concrete nouns, plain verbs, contractions.",
+  "Wherever a character says, texts, writes or whispers something, make it a line of its own with that character as the speaker. The narrator never quotes.",
+  "Dialogue is spoken, short and incomplete the way speech is: 2 to 12 words, contractions, a name or a pet name, no explaining. The first spoken line arrives in the first third.",
+  "Lead into a spoken line with a short narrator beat that ends on a comma or a colon ('Then I heard my mother's voice.'), or let it stand alone. Never follow it with 'she said'.",
+  "The narrator never introduces themselves ('I'm Sam, the night clerk'). If the narrator needs a name, another character says it.",
+  "Escalate in steps: normal, one wrong detail, a worse one, a moment of relief, the turn. The turn falls between 60% and 90% of the way through.",
+  "The last line is 12 words or fewer and lands the turn: a twist, a cliffhanger, or a return to the first line. No moral, no summary, no 'subscribe'.",
+  "Cut every word that does not move the picture: no 'suddenly', 'very', 'really', 'literally', 'little did I know', 'I couldn't believe my eyes'.",
+  "Keep the source's premise, its best image and its ending. Merge or drop side characters, travel, backstory and explanation.",
+  "Family-safe: no gore, no slurs, no sexual content, no self-harm, no real brands or real people."
+ ],
+ "voice_descriptions": {
+  "fields": [
+   "age",
+   "gender",
+   "tone",
+   "processing"
+  ],
+  "processing_examples": [
+   "none",
+   "phone line",
+   "text message read aloud",
+   "through a door",
+   "whisper, close to the microphone",
+   "slightly wrong: slower, flatter, pitched down a little",
+   "radio",
+   "intercom"
+  ]
+ },
+ "sound_cue_kinds": [
+  "sfx",
+  "ambience",
+  "music",
+  "silence"
+ ],
+ "examples": [
+  {
+   "note": "Invented sample, scary, 96 words.",
+   "lines": [
+    {
+     "speaker": "narrator",
+     "text": "My little brother kept waving at the corner of his room."
+    },
+    {
+     "speaker": "narrator",
+     "text": "I asked him who was there."
+    },
+    {
+     "speaker": "theo",
+     "text": "The tall man. He's nice. He counts for me."
+    },
+    {
+     "speaker": "narrator",
+     "text": "That night I sat by Theo's bed. The closet door opened one inch. Then a voice came from the corner, very soft."
+    },
+    {
+     "speaker": "tall_man",
+     "text": "Seven. Eight. Nine."
+    },
+    {
+     "speaker": "narrator",
+     "text": "I grabbed Theo and ran to the kitchen. I turned on every light. Nothing followed us. I almost laughed."
+    },
+    {
+     "speaker": "narrator",
+     "text": "Then Theo tugged my sleeve and pointed behind me."
+    },
+    {
+     "speaker": "theo",
+     "text": "He says you forgot to hide."
+    },
+    {
+     "speaker": "tall_man",
+     "text": "Ten."
+    }
+   ]
+  }
+ ]
+}
