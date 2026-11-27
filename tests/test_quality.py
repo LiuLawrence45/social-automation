@@ -316,6 +316,8 @@ def test_a_borderline_fail_needs_the_majority_of_three_votes(job, monkeypatch):
     report = (job / "QUALITY.md").read_text()
     assert "2 stayed fails (s03/motion s04/framing); 1 became passes (s02/posture)" in report and "2 of 3 votes" in report
     assert doc["runs"][-1]["voted"] == 3
+    shots["s02"]["judges"]["posture"]["status"] = "stale"
+    assert quality.summarise(doc)["voted"] == {"kept": ["s03/motion", "s04/framing"], "cleared": []}
 
 
 def test_confirm_votes_on_the_fails_already_in_the_report_and_an_unanswered_vote_keeps_the_fail(job, monkeypatch):

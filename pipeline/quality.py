@@ -718,7 +718,7 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
             "incomplete": sum(1 for s in shots if s["status"] == "incomplete"),
             "judges": per_judge, "failing_by_set": by_set, "frames_sampled": len(frames), "geometry_sources": sources,
             "stale": {shot_id: keys for shot_id, keys in stale.items() if keys},
-            "voted": {"kept": [name for name, status in voted if status == "fail"], "cleared": [name for name, status in voted if status != "fail"]},
+            "voted": {"kept": [name for name, status in voted if status == "fail"], "cleared": [name for name, status in voted if status == "pass"]},
             "provider": doc["config"]["provider"], "model": doc["config"]["model"], "spend": doc.get("usage") or {}}
 
 
