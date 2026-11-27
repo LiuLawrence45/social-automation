@@ -25,7 +25,7 @@
       "threshold": 6,
       "script": true,
       "question": "Look at every visible character in every frame. Is each one doing something specific that fits the words being spoken, in a natural human posture a film director would accept?",
-      "notes": "Acceptable examples: lying asleep in bed, sitting up startled, a hand that actually reaches a handle, hunching over a phone held in both hands, cowering in a corner with arms drawn in, a nurse writing at a desk or tending a patient, an officer sweeping a torch around a room. A dark silhouette figure still has a posture: judge it too. Hands raised and held frozen in front of the body through the whole shot count as arms_out unless they are plainly doing something (pushing a door, shielding the face while recoiling). Compare the hands across the frames before calling them held: a hand that is at another height or in another shape from one frame to the next (a fist coming down from a knock, an arm being lowered) is moving.",
+      "notes": "Acceptable examples: lying asleep in bed, sitting up startled with the knees bent or the legs drawn in, a hand that closes round a handle, hunching over a phone held in both hands, cowering in a corner with arms drawn in, a nurse writing at a desk or tending a patient, an officer sweeping a torch around a room. A dark silhouette figure still has a posture: judge it too. Hands raised and held frozen in front of the body through the whole shot count as arms_out unless they are plainly doing something (pushing a door, shielding the face while recoiling). Compare the hands across the frames before calling them held: a hand that is at another height or in another shape from one frame to the next (a fist coming down from a knock, an arm being lowered) is moving. Judge the first frame as closely as the last: a pose that is wrong on the way into an action fails even when it has settled by the end of the shot. When a handle, a door or a prop is turned, pressed down, open or moving in a frame, find the hand that does it before you score.",
       "fail_if": [
         {
           "key": "idle",
@@ -41,7 +41,11 @@
         },
         {
           "key": "splayed",
-          "text": "limbs splayed, legs planted unnaturally wide, or a limb frozen in the middle of a gesture"
+          "text": "limbs splayed, legs planted unnaturally wide, or a limb frozen in the middle of a gesture; also sitting or lying with both legs straight and spread in a wide V, flat on the bed or floor like a doll that has been set down, where a person would bend the knees or keep the legs together"
+        },
+        {
+          "key": "hand_misses",
+          "text": "a handle, lever, knob, switch, door or prop is being worked and no hand is on it: it is turned, pressed down, opening or moving while the hands of the character at it are somewhere else, or a wrist or forearm lies on or across it with the hand beyond it, on the door or the plate behind it, or the fingers take a lever at its pivot against the plate while the forearm lies along its length, where a hand would close round its free end. A door or handle worked from the other side, with no character within arm's reach of it in the frame, is not this"
         },
         {
           "key": "bad_joint",
@@ -53,7 +57,13 @@
         }
       ],
       "not_applicable": "no character and no part of a character (such as a hand) is visible in any frame",
-      "defect_pass_score": 8
+      "defect_pass_score": 8,
+      "flags": {
+        "handle_without_grip": {
+          "defect": "hand_misses",
+          "text": "a character reaches for or works a handle, lever, knob, switch or prop and, in any frame where the arm has arrived at it, the hand is not what holds it. Follow the handle from its free end to where it joins the door and say for yourself where the fingers are in each frame. True when the forearm or wrist lies on or across the handle and the hand is beyond it, on the door or on the plate behind it; when the fingers sit on a lever at its pivot, against the plate, with the forearm lying along the lever's length; or when the handle is turned, pressed down or the door is opening and the character at it has no hand on it. False when the fingers are closed round the free end or the middle of the handle, false for a hand still in the air on its way to it, and false when no character is within arm's reach of it."
+        }
+      }
     },
     "expression": {
       "title": "Expression",
@@ -213,7 +223,7 @@
         },
         {
           "key": "wrong_time",
-          "text": "the script puts this shot at a time of day and the picture does not show it. From the words 'the next morning' (or 'at dawn', 'that afternoon') onwards, until the script says otherwise, every shot must give a viewer positive evidence of daytime: daylight coming through a window or an open door, sun or pale daylight on the walls and floor, or a place plainly lit by day (bright, even, neutral or cool light with soft shadows; not lamp light and not dim). A dim windowless corridor or room fails even when it does not look like night, and so does a close-up lit the same dim way; a close-up of a lit screen is exempt. Being merely visible is not evidence: say in your reason what shows daytime (the window, the door light, or the daylit look of the walls or floor), and if nothing does, report this key. A shot set in the middle of the night must not read as day. A flat pale window-shaped patch that looks stuck on a wall or floor is not evidence of daylight"
+          "text": "the script puts this shot at a time of day and the picture does not show it. From the words 'the next morning' (or 'at dawn', 'that afternoon') onwards, until the script says otherwise, every shot must give a viewer positive evidence of daytime: daylight coming through a window or an open door, sun or pale daylight on the walls and floor, or a place plainly lit by day (bright, even, neutral or cool light with soft shadows; not lamp light and not dim). A dim windowless corridor or room fails even when it does not look like night, and so does a close-up lit the same dim way; a close-up of a lit screen is exempt. Being merely visible is not evidence: say in your reason what shows daytime (the window, the door light, or the daylit look of the walls or floor), and if nothing does, report this key. A shot set in the middle of the night must not read as day. A flat pale window-shaped patch that looks stuck on a wall or floor is not evidence of daylight, but a window, a transom over a door or a glass pane that glows white or pale with the light behind it is daylight coming through, also when it throws no beam into the room. Judge the daylit look by the light itself, whether or not a window is in frame: walls, a door or a floor lit evenly in neutral or cool light, with no lamp or torch pool and no deep shadow, are lit by day, in an insert of a door or a floor as much as in a wide shot"
         }
       ],
       "defect_pass_score": 8
@@ -280,6 +290,10 @@
           "text": "a character who should be acting or reacting (speaking, walking, reaching, opening a door, crying, recoiling, working, facing a threat) holds the same pose in every frame like a statue, or is frozen in mid-stride; a moving camera does not count as the character moving, nor does breathing or a slight drift of the head; a character who is asleep, hiding, or quietly reading, sitting or waiting under plain narration may be still; a head that clearly turns, lifts or drops so that the face points somewhere new, or a hand that travels, is movement"
         },
         {
+          "key": "no_cause",
+          "text": "a door, handle, lever, lid, drawer or prop moves, or is held turned or pressed down, while a character stands at it, within arm's reach, with no hand on the part that moves; a hand flat on a door does not turn its handle. A door, handle or prop with no character within arm's reach of it (an insert of it alone, or a character standing clear of a door that opens), where the story says what moves it (someone on the other side of the door, a phone that buzzes), is not this"
+        },
+        {
           "key": "camera_nowhere",
           "text": "the camera move starts or ends on nothing (an empty wall, floor or blur) or drifts off the subject; an insert whose subject is a light, a shadow, a gap under a door or a prop is not nothing"
         }
@@ -292,7 +306,11 @@
       "flags": {
         "frozen_character": {
           "defect": "statue",
-          "text": "any visible character, in the background too (check them one by one; one is enough), whose words or moment call for action, speech or a reaction keeps one pose from the first frame of the shot to the last: same limbs, same hands, same stance, same mouth. Breathing, a slight sway or drift of the head, an eye blink, camera movement, zoom and lighting changes are not acting and do not count; compare the body against itself, using the larger second image. Facing a threat, a reveal or a shock calls for a reaction (a flinch, a step back, a turn of the head, hands coming up): standing through it in one held pose is frozen, and tense stillness does not excuse it. A character who is opening a door, speaking or working while the arms never move is frozen; one who is texting or reading a phone is frozen when neither the hands nor the head move. A character who is asleep, hiding, or quietly reading, sitting or waiting under plain narration is not. Nor is a character who is only listening, or whose line says the body froze or went cold, as long as the head or hands still move a little. Nor is a figure the story sets outside a door or in the dark to frighten, as long as its head clearly turns, lifts or drops, or a hand travels, across the frames."
+          "text": "any visible character, in the background too (check them one by one; one is enough), whose words or moment call for action, speech or a reaction keeps one pose from the first frame of the shot to the last: same limbs, same hands, same stance, same mouth. Breathing, a slight sway or drift of the head, an eye blink, camera movement, zoom and lighting changes are not acting and do not count; compare the body against itself, using the larger second image. Facing a threat, a reveal or a shock calls for a reaction (a flinch, a step back, a turn of the head, hands coming up): standing through it in one held pose is frozen, and tense stillness does not excuse it. A character who is opening a door, speaking or working while the arms never move is frozen; one whose words say they are texting, typing or calling is frozen when neither the hands nor the head move. A character who is asleep, hiding, or quietly reading, sitting or waiting under plain narration is not. Nor is a character who is only listening, or whose line says the body froze or went cold, as long as the head or hands still move a little. Nor is a figure the story sets outside a door or in the dark to frighten, as long as its head clearly turns, lifts or drops, or a hand travels, across the frames."
+        },
+        "moved_by_nothing": {
+          "defect": "no_cause",
+          "text": "something a hand should be moving moves without one. List for yourself each door, handle, lever, lid or prop that changes position across the frames or is held turned or pressed down, from the first frame on, and find the hand on it. True when a character is at it, within arm's reach, and no hand of theirs is on the part that moves: a lever pressed down while the hands are up at the chest, a door swinging open while the arms hang. False when a hand is on it. False when no character is within arm's reach of it (it is alone in the frame, or the character stands clear of it) and the story gives the cause, in this shot's words or the lines before it, such as someone on the other side of the door."
         }
       },
       "script": true
