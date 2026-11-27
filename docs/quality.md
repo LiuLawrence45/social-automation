@@ -20,17 +20,17 @@ Each judge asks one question per shot about one labelled sheet of frames (motion
 
 | judge | frames it sees | fails on |
 |---|---|---|
-| posture | 3 across the shot, no captions | idle or default stance, A-pose or T-pose leftovers, arms held out, splayed or frozen limbs, bad joints, a body that does the opposite of the words |
+| posture | 3 across the shot, no captions | idle or default stance, A-pose or T-pose leftovers, arms held out, splayed or frozen limbs (also legs laid out straight in a wide V like a doll set down), a handle, door or prop worked with no hand on it or with a forearm lying across it, bad joints, a body that does the opposite of the words |
 | expression | the same 3, with the script | a face that shows the opposite of the moment (smiling during a scare), a blank default face on fear, crying, pain or urgency, eyes or mouth stuck in one state; not applicable when no face can be read |
 | clipping | the same 3 | limbs through the body, hands through props, bodies through the set, floating, sunk feet, props not in the hand |
 | framing | 2 from the captioned video | subject cut off, dead space, the caption on a face or on what the shot is about, no subject, blocked subject |
 | lighting | 2 at phone size, plus measured brightness | unreadable in one second, subject lost in the dark, blown-out or glare artefacts, a patch of window or lamp light that reads as a flat sheet stuck on a wall or floor; also fails by measurement when under `min_lit_fraction` of the pixels are lit |
 | story | 3, with the shot's words and the script | wrong subject, the action in the words not shown, contradiction, wrong place, wrong on-screen text, no visible evidence of the time of day the script has reached (after "the next morning" every shot must show daylight: a window or transom glowing with it, or walls, a door or a floor lit evenly in neutral light with no lamp or torch pool; a dim windowless corridor fails) |
 | continuity | 2 of this shot, the middle of the previous shot and of the last earlier shot in the same set, with the script and those shots' words | avatar or outfit changed (a turned head or another angle is not a change), a blocky classic avatar beside detailed ones, position or prop jumps, time-of-day jumps, the same part of a set looking different (another door of the same set is not a change) |
-| motion | 8 evenly spaced frames as a 4x2 flip-book, a second sheet with the first, middle and last frame at full size, the script, plus measured frame-to-frame change | sliding, pops, limb snaps, a character frozen like a statue when the words call for action (stillness the words call for passes while a head or hand still moves; a text message needs no moving mouth), a camera move that starts or ends on nothing |
+| motion | 8 evenly spaced frames as a 4x2 flip-book, a second sheet with the first, middle and last frame at full size, the script, plus measured frame-to-frame change | sliding, pops, limb snaps, a character frozen like a statue when the words call for action (stillness the words call for passes while a head or hand still moves; a text message needs no moving mouth), a door, handle or prop that moves or is held pressed while a character stands at it with no hand on it, a camera move that starts or ends on nothing |
 | video | one middle frame per shot on sheets of 18, asked three times, median score | pacing, repetition, the ending, consistency under the threshold |
 
-A judge fails a shot when its score is under the threshold (6), or when it lists a fail condition and scores under `defect_pass_score` (8). A rubric may also name `flags`: yes-or-no questions the model must answer in its reply, each tied to a fail condition; a flag answered true fails the judge whatever the score. Motion has one, `frozen_character`: a visible character whose words or moment call for action, speech or a reaction keeps one pose from the first frame to the last. Breathing, a slight drift of the head, blinks and a moving camera do not count as acting. A shot fails when any judge fails it. A judge that could not answer (model error, unusable reply, spend ceiling) leaves the shot `incomplete`; it is never counted as a pass. A judge may say a shot is not applicable (no character in an insert); that is a pass with no score.
+A judge fails a shot when its score is under the threshold (6), or when it lists a fail condition and scores under `defect_pass_score` (8). A rubric may also name `flags`: yes-or-no questions the model must answer in its reply, each tied to a fail condition; a flag answered true fails the judge whatever the score. Motion has two. `frozen_character`: a visible character whose words or moment call for action, speech or a reaction keeps one pose from the first frame to the last. Breathing, a slight drift of the head, blinks and a moving camera do not count as acting. `moved_by_nothing`: a door, handle, lever, lid or prop changes position or is held turned or pressed down while a character is at it and no hand of theirs is on the part that moves; an insert with no character at the object, where the words give the cause (someone on the other side of the door), does not raise it. A shot fails when any judge fails it. A judge that could not answer (model error, unusable reply, spend ceiling) leaves the shot `incomplete`; it is never counted as a pass. A judge may say a shot is not applicable (no character in an insert); that is a pass with no score.
 
 Motion is judged on a dense frame strip, not on the clip itself: `pipeline.vision` sends images to both providers, a strip can be kept and read by a person as evidence, and the measured change between video frames is passed to the judge so a jump or a still shot does not depend on the eye alone. The measured change is for the whole picture, so it cannot tell a still character from a still shot once the camera moves, which it does in most shots; that is why the frozen-character question is put to the judge on larger frames and not decided by the number. A model that takes video would see timing better; that needs a video path in `pipeline/vision.py`, which this stage does not touch.
 
@@ -53,7 +53,7 @@ A geometric fail fails the judge even when the picture passed, and a picture fai
 
 Rubrics live in `pipeline/quality_rubric.json`: the questions, fail conditions, thresholds, frames per shot, tile heights, layout and the model defaults. `story.json` `"quality"` overrides any of it (`{"model": "...", "judges": {"posture": {"frames": 4, "threshold": 7}}}`), and `--set posture.frames=4`, `--set video.votes=5` or `--set workers=12` override that. `"accepted"` is a list of sentences every judge and the whole-video judge are told as "accepted for this video and not a defect": it is how one job records a ruling (`{"quality": {"accepted": ["The cast mixes detailed avatar styles on purpose; that mix is not a consistency defect. A default blocky classic avatar beside detailed ones still is."]}}`) without loosening the rubric for other videos. Prices come from `story.json` `judge.prices`, the table the camera judge uses.
 
-Model calls go through `pipeline.vision.ask` in a thread pool (`workers`, default 8). Spend is one `vision.Budget` shared across threads: every call first reserves `reserve_usd`, so the ceiling holds even with calls in flight, and the budget starts from the total in `quality/ledger.json`, so the ceiling covers every run against the job. Token counts are measured; the dollar figure is as good as the price table.
+Model calls go through `pipeline.vision.ask` in a thread pool (`workers`, default 8). Spend is one `vision.Budget` shared across threads: every call first reserves `reserve_usd`, so the ceiling holds even with calls in flight, and the budget starts from the total in `quality/ledger.json`, so the ceiling covers every run against the job. Token counts are measured; the dollar figure is as good as the price table. `quality/ledger.json` has one entry per run that finished, whatever report file it wrote, and its total is what the job cost: QUALITY.md prints that total first, and beside it the cost of the runs listed in the report itself when the two differ (a bake-off written to another file, or a report restored from a copy, makes them differ). A run killed before it finished is in neither.
 
 ## Shots, passes and comparison
 
@@ -72,6 +72,28 @@ A judge's fail stops failing its shot only when a reader has looked at the frame
 ```
 
 `render` is the mark the judge's record carries for that shot (`shots[].judges.<judge>.render.<shot>` in quality.json) and `answers` is that record's `reason`. When the shot is rendered again, or the judge gives a new verdict, the entry stops applying and the fail stands until someone reads the new frames. Frame numbers must lie inside the shot. A fail that came from geometry or from measured darkness is never overruled, and neither is a fail the `--human` reading holds. The judge's verdict stays `fail` in quality.json with `overruled` beside it; the shot's `failed` list, the per-judge fail counts and the before-and-after table leave it out. QUALITY.md prints every overrule in one table (shot, judge, the judge's reason, the reader's reason, the frames read) and names the entries that did not apply and why, so anyone can disagree with a row. An overrule that shows a judge is wrong in general is a reason to fix the rubric, not to keep overruling.
+
+## Holding a fail the judges passed
+
+The same file carries the fails the reader holds: defects seen in the frames that no judge reported.
+
+```
+{"reader": "who read the frames", "holds": [
+  {"shot": "t1", "judge": "posture", "render": "645ebfb47ac3", "frames": [1677, 1686, 1698],
+   "reason": "what those frames show"}]}
+```
+
+A hold fails its shot under that judge whatever the judge said: the shot's `failed` list, the per-judge counts and the before-and-after table count it, the judge's own verdict stays as it was with `held` beside it, and QUALITY.md prints every hold in a table (shot, judge, what the judge said, what the reader saw, the frames read). `render` is the mark that judge's record carries for the shot. When the shot is rendered again the hold stops applying and the report says the shot has to be read again; nothing but a new render and a new reading lifts a hold. An overrule of a fail the reader holds is refused. A hold that shows the judges miss a kind of defect is a reason to add it to the rubric.
+
+## Reading a shot
+
+The reader is the last check, and the three defects that got past the judges and the reader on the first video were all in frames the reader had open. The rules that would have caught them:
+
+- Describe before you explain. Write what each frame shows (where each hand is, what each handle and door is doing) before reading the script. If the picture needs the story to excuse it, hold the fail.
+- For everything that moves or is held turned, pressed or open (a door, a lever, a lid, a prop), name the hand on it and the frame. No hand in frame and a character standing at it is a fail, whatever the story implies; no character at it is fine when the words give the cause.
+- Read the first quarter of the shot at every third frame, then the rest. A hand on its way to a handle, an arm dropping, a body sitting up are where a pose goes wrong; the settled pose at the end is the part most likely to be right.
+- Look at the whole body in a wide shot, legs and feet included, and ask whether a person would sit, lie or stand like that.
+- When a whole-video vote names a shot, read that shot at full size and answer the claim in writing, held or not.
 
 ## Calibration against a person
 

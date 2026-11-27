@@ -680,21 +680,25 @@ def settle_votes(record: Dict[str, Any], more: Sequence[Dict[str, Any]]) -> None
 
 
 def standing(record: Optional[Dict[str, Any]]) -> bool:
-    """A judge's fail that no written overrule has set aside."""
-    return bool(record) and record.get("status") == "fail" and not record.get("overruled")
+    """A judge's fail that no written overrule has set aside, or a fail the reader holds whatever the judge said."""
+    return bool(record) and bool(record.get("held") or (record.get("status") == "fail" and not record.get("overruled")))
 
 
 def apply_overrules(job: Path, doc: Dict[str, Any], reading: Optional[Dict[str, Any]]) -> None:
-    """Set aside the judge fails a reader overruled in <job>/quality/overrules.json, and say why any other entry does not apply.
+    """Apply the reader's record in <job>/quality/overrules.json: judge fails overruled, and fails held that a judge passed.
 
-    An entry is {"shot", "judge", "render", "answers", "frames", "reason"}: the frames the reader looked at and what they
+    An overrule is {"shot", "judge", "render", "answers", "frames", "reason"}: the frames the reader looked at and what they
     show, the judge's reason it answers word for word, and the mark of the render it was read from. A shot rendered
     again, or a judge that has spoken again, is read again. A fail from geometry or measurement and a fail the
-    reader's own verdicts hold are never overruled.
+    reader holds are never overruled.
+
+    A hold is {"shot", "judge", "render", "frames", "reason"}: a defect the reader saw in those frames under that judge's
+    concern. It fails the shot whatever the judge said, until the shot is rendered again; then it has to be read again.
     """
     for shot in doc["shots"]:
         for record in shot["judges"].values():
             record.pop("overruled", None)
+            record.pop("held", None)
     doc.pop("overrules", None)
     listed = read_json(job / "quality" / "overrules.json", required=False)
     if not listed:
@@ -705,12 +709,34 @@ def apply_overrules(job: Path, doc: Dict[str, Any], reading: Optional[Dict[str, 
     reader = listed.get("reader") or "a reader"
     applied: List[Dict[str, Any]] = []
     void: List[Dict[str, Any]] = []
-    for item in listed.get("overrules") or []:
+    holds: List[Dict[str, Any]] = []
+
+    def entry_of(item: Dict[str, Any], names: Sequence[str], needs: str) -> Tuple[Dict[str, Any], str, List[int]]:
         shot, key, frames = shots.get(str(item.get("shot"))), str(item.get("judge")), item.get("frames")
         numbered = isinstance(frames, list) and all(isinstance(frame, int) for frame in frames)
-        written = all(str(item.get(name) or "").strip() for name in ("render", "answers", "reason"))
+        written = all(str(item.get(name) or "").strip() for name in names)
         if shot is None or key not in SHOT_JUDGES or not written or not numbered or not frames:
-            raise QualityError("an overrule needs a shot, a judge, a render mark, the judge's reason, frame numbers and a reason: %r" % (item,))
+            raise QualityError("%s: %r" % (needs, item))
+        return shot, key, frames
+
+    def inside(what: str, shot: Dict[str, Any], key: str, frames: List[int]) -> None:
+        first, last = frame_range(shot, fps) if fps else (min(frames), max(frames))
+        if min(frames) < first or max(frames) > last:
+            raise QualityError("%s of %s/%s names frames outside the shot (%d to %d): %s" % (what, shot["id"], key, first, last, frames))
+
+    for item in listed.get("holds") or []:
+        shot, key, frames = entry_of(item, ("render", "reason"), "a hold needs a shot, a judge, a render mark, frame numbers and a reason")
+        record = shot["judges"].get(key) or {}
+        if (record.get("render") or {}).get(shot["id"]) != item["render"]:
+            void.append({"shot": shot["id"], "judge": key, "why": "held on an earlier render; the shot has to be read again"})
+            continue
+        inside("hold", shot, key, frames)
+        record["held"] = {"by": reader, "frames": frames, "reason": item["reason"]}
+        holds.append({"shot": shot["id"], "judge": key, "judge_status": record.get("status"), "score": record.get("score"),
+                      "judge_reason": record.get("reason", ""), "frames": frames, "reason": item["reason"]})
+    for item in listed.get("overrules") or []:
+        shot, key, frames = entry_of(item, ("render", "answers", "reason"),
+                                     "an overrule needs a shot, a judge, a render mark, the judge's reason, frame numbers and a reason")
         record = shot["judges"].get(key) or {}
         why = ""
         if record.get("status") != "fail":
@@ -721,23 +747,22 @@ def apply_overrules(job: Path, doc: Dict[str, Any], reading: Optional[Dict[str, 
             why = "the shot was rendered again after it was read"
         elif record.get("reason") != item["answers"]:
             why = "the judge has given a new verdict since it was read"
-        elif (held.get(shot["id"]) or {}).get(key) == "fail":
+        elif (held.get(shot["id"]) or {}).get(key) == "fail" or record.get("held"):
             why = "the reader holds this fail"
         if why:
             void.append({"shot": shot["id"], "judge": key, "why": why})
             continue
-        first, last = frame_range(shot, fps) if fps else (min(frames), max(frames))
-        if min(frames) < first or max(frames) > last:
-            raise QualityError("overrule of %s/%s names frames outside the shot (%d to %d): %s" % (shot["id"], key, first, last, frames))
+        inside("overrule", shot, key, frames)
         record["overruled"] = {"by": reader, "frames": frames, "reason": item["reason"]}
         applied.append({"shot": shot["id"], "judge": key, "score": record.get("score"), "defects": [d["key"] for d in record.get("defects") or []],
                         "judge_reason": record.get("reason", ""), "frames": frames, "reason": item["reason"]})
-    doc["overrules"] = {"reader": reader, "applied": applied, "void": void}
+    doc["overrules"] = {"reader": reader, "applied": applied, "void": void, "held": holds}
 
 
 def shot_status(entry: Dict[str, Any], judges: Sequence[str]) -> None:
     failed = [k for k in SHOT_JUDGES if standing(entry["judges"].get(k))]
     entry["overruled"] = [k for k in SHOT_JUDGES if (entry["judges"].get(k) or {}).get("overruled")]
+    entry["held"] = [k for k in SHOT_JUDGES if (entry["judges"].get(k) or {}).get("held")]
     missing = [k for k in judges if k in SHOT_JUDGES and (entry["judges"].get(k) or {}).get("status") not in ("pass", "fail")]
     entry["failed"] = failed
     entry["unjudged"] = missing
@@ -752,7 +777,8 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
         scores = [r["score"] for _, r in records if isinstance(r.get("score"), (int, float))]
         per_judge[key] = {"fail": sum(1 for _, r in records if standing(r)),
                           "overruled": [shot_id for shot_id, r in records if r.get("overruled")],
-                          "pass": sum(1 for _, r in records if r.get("status") == "pass"),
+                          "held": [shot_id for shot_id, r in records if r.get("held")],
+                          "pass": sum(1 for _, r in records if r.get("status") == "pass" and not r.get("held")),
                           "unjudged": sum(1 for _, r in records if r.get("status") not in ("pass", "fail")),
                           "mean_score": round(sum(scores) / len(scores), 2) if scores else None,
                           "failing": [shot_id for shot_id, r in records if standing(r)],
@@ -782,6 +808,7 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
             "fail": sum(1 for s in shots if s["status"] == "fail"),
             "incomplete": sum(1 for s in shots if s["status"] == "incomplete"),
             "pass_by_overrule": sum(1 for s in shots if s["status"] == "pass" and s.get("overruled")),
+            "fail_by_hold": sum(1 for s in shots if s["status"] == "fail" and s.get("failed") and set(s["failed"]) <= set(s.get("held") or [])),
             "judges": per_judge, "failing_by_set": by_set, "frames_sampled": len(frames), "geometry_sources": sources,
             "stale": {shot_id: keys for shot_id, keys in stale.items() if keys},
             "voted": {"kept": [name for name, status in voted if status == "fail"], "cleared": [name for name, status in voted if status == "pass"]},
@@ -845,19 +872,30 @@ def compare(before: Dict[str, Any], after: Dict[str, Any]) -> Dict[str, Any]:
 def markdown(doc: Dict[str, Any]) -> str:
     summary = doc["summary"]
     spend = summary["spend"]
+    here = "$%.4f over %d calls (%d input and %d output tokens, measured)" % (spend.get("cost_usd", 0.0), spend.get("calls", 0),
+                                                                              spend.get("input_tokens", 0), spend.get("output_tokens", 0))
+    if spend.get("job_runs"):
+        spent = "Spend on this job $%.4f over %d calls in %d runs, the total of @@quality/ledger.json@@; ceiling $%.2f." % (
+            spend.get("job_total_usd", 0.0), spend.get("job_calls", 0), spend["job_runs"], spend.get("ceiling_usd", 0.0))
+        if abs(spend.get("job_total_usd", 0.0) - spend.get("cost_usd", 0.0)) >= 0.00005:
+            spent += (" Of that, %s went on the runs listed in this report; the rest went on runs written to another report file "
+                      "or dropped from this one's list." % here)
+    else:
+        spent = "Spend %s; ceiling $%.2f." % (here, spend.get("ceiling_usd", 0.0))
     out = ["# Quality report: %s" % doc.get("job", ""), "",
-           "Video @@%s@@, captioned @@%s@@. %d shots: %d pass, %d fail, %d incomplete. Model %s (%s). %d frames sampled. "
-           "Spend $%.4f over %d calls (%d input and %d output tokens, measured); ceiling $%.2f."
+           "Video @@%s@@, captioned @@%s@@. %d shots: %d pass, %d fail, %d incomplete. Model %s (%s). %d frames sampled. %s"
            % (doc.get("video", ""), doc.get("final", ""), summary["shots"], summary["pass"], summary["fail"], summary["incomplete"],
-              summary["model"], summary["provider"], summary["frames_sampled"], spend.get("cost_usd", 0.0), spend.get("calls", 0),
-              spend.get("input_tokens", 0), spend.get("output_tokens", 0), spend.get("ceiling_usd", 0.0)), "",
+              summary["model"], summary["provider"], summary["frames_sampled"], spent), "",
            "A shot fails when any judge fails it, unless a reader has read that fail from the frames and overruled it in writing "
-           "(see Overruled fails). Sheets the judges saw are under @@quality/sheets/@@.", "",
-           "## Fails per judge", "", "| judge | fail | overruled | pass | unjudged | mean score | failing shots |", "|---|---|---|---|---|---|---|"]
+           "(see Overruled fails), and when the reader holds a fail on it that the judges did not give (see Fails held by the reader). "
+           "Sheets the judges saw are under @@quality/sheets/@@.", "",
+           "## Fails per judge", "", "| judge | fail | of them held by the reader | overruled | pass | unjudged | mean score | failing shots |",
+           "|---|---|---|---|---|---|---|---|"]
     for key in SHOT_JUDGES:
         row = summary["judges"][key]
-        out.append("| %s | %d | %d | %d | %d | %s | %s |" % (key, row["fail"], len(row["overruled"]), row["pass"], row["unjudged"],
-                                                      "-" if row["mean_score"] is None else "%.1f" % row["mean_score"], " ".join(row["failing"])))
+        out.append("| %s | %d | %d | %d | %d | %d | %s | %s |" % (key, row["fail"], len(row.get("held") or []), len(row["overruled"]), row["pass"],
+                                                           row["unjudged"], "-" if row["mean_score"] is None else "%.1f" % row["mean_score"],
+                                                           " ".join(row["failing"])))
     alone = ["%s: %s" % (key, " ".join(summary["judges"][key]["geometry_only"])) for key in SHOT_JUDGES
              if summary["judges"][key].get("geometry_only")]
     if summary.get("geometry_sources"):
@@ -892,6 +930,10 @@ def markdown(doc: Dict[str, Any]) -> str:
             out.append("- **%s** (%.1f-%.1f s) \"%s\"" % (shot_id, shot["start"], shot["end"], shot["line"] or "silent"))
             for key in shot["failed"]:
                 record = shot["judges"][key]
+                if record.get("held") and not (record.get("status") == "fail" and not record.get("overruled")):
+                    out.append("  - %s, held by the reader (frames %s): %s" % (key, " ".join(str(f) for f in record["held"]["frames"]),
+                                                                             record["held"]["reason"]))
+                    continue
                 score = "" if record.get("score") is None else " %.0f/10" % record["score"]
                 keys = ", ".join(d["key"] for d in record.get("defects") or [])
                 if record.get("votes"):
@@ -900,6 +942,17 @@ def markdown(doc: Dict[str, Any]) -> str:
                                                 " (@@%s@@)" % record["sheet"] if record.get("sheet") else ""))
         out.append("")
     overrules = doc.get("overrules") or {}
+    if overrules.get("held"):
+        out += ["## Fails held by the reader", "",
+                "Read from the frames by %s. Each row fails its shot whatever the judge said, until the shot is rendered again and "
+                "read again. Shots that fail on these alone: %d." % (overrules.get("reader") or "a reader", summary.get("fail_by_hold", 0)), "",
+                "| shot | judge | what the judge said | what the reader saw | frames read |", "|---|---|---|---|---|"]
+        for row in overrules["held"]:
+            said = "%s%s: %s" % (row.get("judge_status") or "no verdict", "" if row.get("score") is None else " %.0f/10" % row["score"],
+                                 row.get("judge_reason", ""))
+            cells = [row["shot"], row["judge"], said, row["reason"], " ".join(str(frame) for frame in row["frames"])]
+            out.append("| %s |" % " | ".join(" ".join(str(cell).replace("|", "/").split()) for cell in cells))
+        out.append("")
     if overrules.get("applied") or overrules.get("void"):
         out += ["## Overruled fails", "",
                 "Read from the frames by %s. Each row is a judge's fail that no longer fails its shot, with the judge's reason and the "
@@ -947,6 +1000,10 @@ def finish(job: Path, doc: Dict[str, Any], out: Path, human: Optional[Path], bas
     """Recompute statuses and the summary, attach calibration and comparison, and write the JSON and Markdown reports."""
     reading = read_json(human) if human is not None else None
     apply_overrules(job, doc, reading)
+    paid = (read_json(job / "quality" / "ledger.json", required=False) or {}).get("runs") or []
+    if paid:
+        doc["usage"] = dict(doc.get("usage") or {}, job_total_usd=round(sum(float(r.get("cost_usd", 0.0)) for r in paid), 6),
+                            job_calls=sum(int(r.get("calls", 0)) for r in paid), job_runs=len(paid))
     for entry in doc["shots"]:
         shot_status(entry, doc["config"]["judges"])
     doc["summary"] = summarise(doc)

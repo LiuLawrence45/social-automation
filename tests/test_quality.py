@@ -483,6 +483,76 @@ def test_continuity_and_motion_read_the_script_and_are_told_about_the_set(job):
     assert "a transom over a door or a glass pane that glows white or pale" in morning and "whether or not a window is in frame" in morning
 
 
+def test_a_thing_that_moves_needs_a_hand_on_it_and_a_doll_pose_fails():
+    settings = quality.load_settings({})
+    posture, motion = settings["judges"]["posture"], settings["judges"]["motion"]
+    texts = {d["key"]: d["text"] for d in posture["fail_if"]}
+    assert "no hand is on it" in texts["hand_misses"] and "a wrist or forearm lies across it" in texts["hand_misses"]
+    assert "from the other side of a door, with no character at it in the frame, is not this" in texts["hand_misses"]
+    assert "like a doll that has been set down" in texts["splayed"] and "legs planted unnaturally wide" in texts["splayed"]
+    assert "Judge the first frame as closely as the last" in posture["notes"] and "find the hand that does it" in posture["notes"]
+    assert quality.verdict(posture, {"score": 7, "defects": [{"key": "hand_misses", "where": "F1680"}]})["status"] == "fail"
+    assert "no_cause" in [d["key"] for d in motion["fail_if"]] and motion["flags"]["moved_by_nothing"]["defect"] == "no_cause"
+    flag = motion["flags"]["moved_by_nothing"]["text"]
+    assert "a lever pressed down while the hands are up at the chest" in flag and "from the first frame on" in flag
+    assert "False when no character is at it in the frame and the words give the cause" in flag
+    moved = quality.verdict(motion, {"score": 10, "defects": [], "frozen_character": False, "moved_by_nothing": True})
+    assert moved["status"] == "fail" and moved["defects"] == [{"key": "no_cause", "where": "moved_by_nothing"}]
+    assert quality.verdict(motion, {"score": 10, "defects": [], "frozen_character": False, "moved_by_nothing": False})["status"] == "pass"
+
+
+def test_a_fail_the_reader_holds_fails_the_shot_whatever_the_judge_said(job, monkeypatch, tmp_path):
+    monkeypatch.setattr(vision, "ask", fake_ask({("s02", "posture"): {"defects": [{"key": "idle"}], "score": 3, "reason": "stands"}}))
+    doc = quality.run_quality(job, judges=["posture", "motion"])
+    assert by_id(doc)["s03"]["status"] == "pass"
+    marks = {name: by_id(doc)[name]["judges"]["posture"]["render"][name] for name in ("s02", "s03")}
+    hold = {"shot": "s03", "judge": "posture", "render": marks["s03"], "frames": [65], "reason": "the lever goes down with no hand on it"}
+    path = job / "quality" / "overrules.json"
+    path.write_text(json.dumps({"reader": "a person", "holds": [hold]}))
+    old = tmp_path / "old.json"
+    old.write_text(json.dumps({"shots": [{"id": "s03", "status": "pass", "judges": {"posture": {"status": "pass"}}}]}))
+    doc = quality.run_quality(job, report_only=True, against=old)
+    shot = by_id(doc)["s03"]
+    assert shot["status"] == "fail" and shot["failed"] == ["posture"] and shot["held"] == ["posture"]
+    assert shot["judges"]["posture"]["status"] == "pass" and shot["judges"]["posture"]["held"]["frames"] == [65]
+    row = doc["summary"]["judges"]["posture"]
+    assert (row["fail"], row["pass"], row["held"], row["failing"]) == (2, 2, ["s03"], ["s02", "s03"])
+    assert doc["summary"]["fail"] == 2 and doc["summary"]["fail_by_hold"] == 1 and doc["comparison"]["posture"]["new"] == ["s02", "s03"]
+    report = (job / "QUALITY.md").read_text()
+    assert "| s03 | posture | pass 9/10: clean | the lever goes down with no hand on it | 65 |" in report
+    assert "  - posture, held by the reader (frames 65): the lever goes down with no hand on it" in report
+    assert "| posture | 2 | 1 | 0 | 2 | 0 |" in report and "Shots that fail on these alone: 1." in report
+    entry = {"shot": "s02", "judge": "posture", "render": marks["s02"], "answers": "stands", "frames": [34], "reason": "looks fine"}
+    path.write_text(json.dumps({"holds": [dict(hold, shot="s02", render=marks["s02"], frames=[34])], "overrules": [entry]}))
+    doc = quality.run_quality(job, report_only=True)
+    assert by_id(doc)["s02"]["status"] == "fail" and doc["overrules"]["void"] == [{"shot": "s02", "judge": "posture", "why": "the reader holds this fail"}]
+    path.write_text(json.dumps({"holds": [dict(hold, render="000000000000")]}))
+    doc = quality.run_quality(job, report_only=True)
+    assert by_id(doc)["s03"]["status"] == "pass" and by_id(doc)["s03"]["held"] == [] and doc["overrules"]["held"] == []
+    assert "Not applied: s03/posture (held on an earlier render; the shot has to be read again)." in (job / "QUALITY.md").read_text()
+    path.write_text(json.dumps({"holds": [dict(hold, frames=[5])]}))
+    with pytest.raises(quality.QualityError, match="hold of s03/posture names frames outside the shot"):
+        quality.run_quality(job, report_only=True)
+    path.write_text(json.dumps({"holds": [dict(hold, reason="")]}))
+    with pytest.raises(quality.QualityError, match="a hold needs"):
+        quality.run_quality(job, report_only=True)
+
+
+def test_the_report_prints_what_the_whole_job_cost(job, monkeypatch):
+    monkeypatch.setattr(vision, "ask", fake_ask(cost=0.01))
+    quality.run_quality(job, judges=["posture"], out=job / "bakeoff.json")
+    doc = quality.run_quality(job, judges=["posture"])
+    usage = doc["usage"]
+    assert (usage["calls"], usage["cost_usd"]) == (4, 0.04) and (usage["job_runs"], usage["job_calls"], usage["job_total_usd"]) == (2, 8, 0.08)
+    report = (job / "QUALITY.md").read_text()
+    assert "Spend on this job $0.0800 over 8 calls in 2 runs, the total of `quality/ledger.json`; ceiling" in report
+    assert "Of that, $0.0400 over 4 calls (4000 input and 400 output tokens, measured) went on the runs listed in this report" in report
+    (job / "quality" / "ledger.json").write_text(json.dumps({"runs": doc["runs"]}))
+    quality.run_quality(job, report_only=True)
+    report = (job / "QUALITY.md").read_text()
+    assert "Spend on this job $0.0400 over 4 calls in 1 runs" in report and "Of that" not in report
+
+
 def test_a_fail_read_from_the_frames_and_overruled_in_writing_passes_the_shot(job, monkeypatch, tmp_path):
     monkeypatch.setattr(vision, "ask", fake_ask({("s02", "posture"): {"defects": [{"key": "idle"}], "score": 3, "reason": "stands | idle"},
                                                  ("s03", "motion"): {"defects": [{"key": "statue"}], "score": 2, "reason": "frozen"}}))
