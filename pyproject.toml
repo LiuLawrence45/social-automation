@@ -12,8 +12,11 @@ dependencies = []
 [project.optional-dependencies]
 dev = ["pytest"]
 
-[tool.setuptools]
-packages = ["pipeline"]
+[tool.setuptools.packages.find]
+include = ["pipeline*"]
+
+[tool.setuptools.package-data]
+"pipeline.source" = ["*.schema.json", "*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
