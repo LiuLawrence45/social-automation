@@ -28,7 +28,7 @@ API keys are read from the environment at call time and never written anywhere: 
 ### One command: story in, script out
 
 ```
-python -m pipeline.writer write --story STORY --out JOB [--id ID] [--names Willow,Allan] [--seconds 55] [--wpm 250]
+python -m pipeline.writer write --story STORY --out JOB [--id ID] [--cast Willow,Allan|none] [--seconds 55] [--wpm 250]
                                 [--genre auto|scary|rule_world|wholesome|comedy|drama|mystery] [--retries 2] [--ceiling 0.5]
                                 [--no-judge] [--brief FILE] [--provider P --model M --judge-model M --effort medium]
 ```
@@ -42,15 +42,17 @@ python -m pipeline.writer write --story STORY --out JOB [--id ID] [--names Willo
 | `source.json` | the story as given |
 | `script_judge.json` | every draft with its checks, rubric scores and fixes, and why the loop stopped |
 
-An existing `story.json` in the job keeps its production fields (`voice`, `display_overrides`); only the script half is replaced. `--names` lists names that must appear: up to three go to speaking characters and the rest are seen or called out. The story stage ignores the extra keys; `voice.speakers` is left for the voice stage to fill.
+An existing `story.json` in the job keeps its production fields (`voice`, `display_overrides`); only the script half is replaced. The story stage ignores the extra keys; `voice.speakers` is left for the voice stage to fill.
+
+**Cast pool.** `cast_pool` in the style file lists the channel's recurring characters (six names by default); `--cast A,B` replaces it for one run and `--cast none` keeps the source's own names. Every person in a script who has a personal name takes one from the pool, as speaker id (`willow`) and cast name, so the same characters come back across videos and the voice stage can give each a fixed voice. A script uses only as many as the story has roles for and does not have to say any name aloud. Each cast entry carries `kind`: `person` (named from the pool), `role` (known only as mom, the teacher, a stranger) or `voice` (a machine, a creature).
 
 ### Script judge
 
 ```
-python -m pipeline.writer judge --job JOB [--checks-only] [--rewrite] [--retries 2] [--ceiling 0.5] [--seconds 55] [--wpm 250] [--names A,B]
+python -m pipeline.writer judge --job JOB [--checks-only] [--rewrite] [--retries 2] [--ceiling 0.5] [--seconds 55] [--wpm 250] [--cast A,B|none]
 ```
 
-Eighteen measurable checks (length for the target seconds, hook length, sentence length, share and count of spoken lines, first spoken line, speakers, narrator quoting speech, speech tags, last line, filler and gore words, required names, reading grade, a cast entry per speaker) plus a model rubric of seven items scored 1 to 5 (premise clear in five seconds, filmable, dialogue sounds spoken, escalation, ending lands, tone safe, faithful to the source). A script passes when every check is ok, the rubric mean is at least `rubric_pass` and no item is under `rubric_floor`. `--checks-only` calls no model; `--rewrite` runs the same loop as `write` on a script that already exists. Exit status is 0 on a pass, 1 on a fail, 2 on an error.
+Eighteen measurable checks (length for the target seconds, hook length, sentence length, share and count of spoken lines, first spoken line, speakers, narrator quoting speech, speech tags, last line, filler and gore words, named people cast from the pool, reading grade, a cast entry per speaker) plus a model rubric of eight items scored 1 to 5 (premise clear in five seconds, filmable, dialogue sounds spoken, escalation, ending lands, names used only where the story needs them, tone safe, faithful to the source). The rubric runs on the strong model with fixed score anchors and is told the limits the checks enforce, so its fixes do not fight them. A script passes when every check is ok, the rubric mean is at least `rubric_pass` and no item is under `rubric_floor`. `--checks-only` calls no model; `--rewrite` runs the same loop as `write` on a script that already exists. Exit status is 0 on a pass, 1 on a fail, 2 on an error.
 
 The targets and rules live in `pipeline/writer/style.json`, which both the writer and the judge load (`--style FILE` swaps it). Its numbers come from the corpus study; `pipeline/writer/style_stats.json` holds the measured values behind them.
 
