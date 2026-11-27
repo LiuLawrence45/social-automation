@@ -93,7 +93,7 @@
     }
    },
    "source": "the-door: cast id sharath with the officer costume, as it stands after his head was replaced; he had no lines there, so the voice was chosen for the registry",
-   "faces": "head replaced 2026-11-27 (head_bundle 995); to be confirmed on the registry's own faces sheet"
+   "faces": "ok 2026-11-27 with head_bundle 995: talk, smile, scared and terrified all change the face (the bundle's own head could not)"
   },
   "jesslyn": {
    "name": "Jesslyn",
@@ -113,7 +113,7 @@
     }
    },
    "source": "the-door: cast id jesslyn with the dispatcher costume, as it stands after her head was replaced",
-   "faces": "head replaced 2026-11-27 (head_bundle 572); to be confirmed on the registry's own faces sheet"
+   "faces": "ok 2026-11-27 with head_bundle 572: talk, smile, scared and terrified all change the face (the bundle's own head could not)"
   },
   "agni": {
    "name": "Agni",

@@ -6,7 +6,7 @@ Every rule reads only the job folder and the repository (story.json, shotlist.js
 cast.json, the job's poses.json and sets, the pose and lighting libraries). Errors stop pipeline.make before the
 camera judge; warnings are printed and kept in <job>/checks.json.
 
-  names         a shot names a set, anchor, pose or lighting mood that does not exist
+  names         a shot names a set, anchor, pose, lighting mood or avatar face that does not exist
   cast          a pool member's shot-list cast entry differs from the cast registry (pipeline.cast)
   no_idle       a visible character has no action: no pose, a resting pose (stand, still) or an idle animation
   face          a visible avatar states no face, so the last shot's face or the blank default carries over
@@ -17,6 +17,9 @@ camera judge; warnings are printed and kept in <job>/checks.json.
   camera_tag    a camera the judge may replace names no "type", so the judge picks the kind of shot and the variety
                 checked here will not hold after it
   time_of_day   a line says morning or night and the shot's light says the opposite, from that line on
+  sun_patch     a shot uses the sun_patch prop, which reads as translucent paper in the render; daylight comes from
+                the scene light and bright windows
+  reach         warning: a standing hand sent to the thigh (it misses), or a hand at the ribs beside an arm that holds a prop
   new_pose      a pose defined in the job's poses.json has no action wording; warning until the geometry check has passed it
 
 Rules that need Studio or a picture live elsewhere: floating or duplicated parts, clipping and poses that miss
@@ -183,8 +186,10 @@ def check_job(job: Path) -> Dict[str, Any]:
             report("time_of_day", shot, "the script has reached daytime but the light is %r (a night mood); use a day mood, or set \"daypart\" on the shot if the line does not mean now" % mood)
         elif state == "night" and lit == "day":
             report("time_of_day", shot, "the script has reached night but the light is %r (a day mood); use a night mood, or set \"daypart\" on the shot" % mood)
-        elif state == "day" and lit == "neutral" and not any(prop.get("prop") == "sun_patch" for prop in shot.get("props") or []):
-            report("time_of_day", shot, "daytime in the script, light %r shows no time of day; the story judge wants visible daylight (a day mood or a sun_patch prop)" % mood, warn=True)
+        elif state == "day" and lit == "neutral":
+            report("time_of_day", shot, "daytime in the script, light %r shows no time of day; the story judge wants visible daylight (a day mood, bright windows in the set)" % mood, warn=True)
+        if any(isinstance(prop, dict) and prop.get("prop") == "sun_patch" for prop in shot.get("props") or []):
+            report("sun_patch", shot, "the sun_patch prop reads as translucent paper in the render; show daylight with a day lighting mood and bright windows in the set")
         visible = _visible(shot)
         speakers = {word.get("speaker") for word in words[mapped[index]["word_start"]:mapped[index]["word_end"] + 1]} if words and "word_start" in mapped[index] else set()
         scare = shot.get("scare") if isinstance(shot.get("scare"), bool) else bool(set(text_tokens) & SCARE_WORDS or speakers & wrong)
@@ -209,6 +214,16 @@ def check_job(job: Path) -> Dict[str, Any]:
                     report("no_idle", shot, "%s has no action: %s. Name a pose with an action that fits the line" % (who, "pose %s is a resting pose" % ", ".join(names) if names else "no pose is the idle stand"), who)
                 faceless = spec.get("faceless") or spec.get("silhouette")
                 faces = _faces(actor)
+                for face in faces:
+                    if face not in found["faces"]:
+                        report("names", shot, "%s: face %r does not exist for an avatar and Studio stops on it (faces: %s)" % (who, face, ", ".join(found["faces"])), who)
+                standing = all((poses.get(name) or {}).get("ground", "feet") == "feet" for name in names)
+                for side, target in (actor.get("reach") or {}).items() if isinstance(actor.get("reach"), dict) else []:
+                    point = target.get("to") if isinstance(target, dict) else target
+                    if point == "thigh" and standing:
+                        report("reach", shot, "%s: a standing body's hand does not reach the thigh (it misses by about 0.6); belt works" % who, who, warn=True)
+                    elif point == "ribs" and actor.get("holds"):
+                        report("reach", shot, "%s: a hand at the ribs collides with the arm that holds the prop; belt works" % who, who, warn=True)
                 if not faceless and not faces:
                     report("face", shot, "%s states no face; say what the face does in every shot" % who, who)
                 if scare and not faceless and faces:

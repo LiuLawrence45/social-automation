@@ -373,6 +373,19 @@ def test_checks_idle_face_fear_and_motion(tmp_path):
     assert not [entry for entry in found if entry[1] == "g"]
 
 
+def test_checks_unknown_face_sun_patch_and_reach(tmp_path):
+    me = {"who": "me", "at": "hall_mid", "pose": "listen"}
+    job = avatar_job(tmp_path, [
+        {"id": "a", "text": "One.", "cast": [dict(me, face="calm")]},
+        {"id": "b", "text": "Two.", "cast": [dict(me, pose="hug_self", face="uneasy", reach={"L": {"to": "thigh"}})], "props": [{"prop": "sun_patch", "at": "hall_mid"}]},
+        {"id": "c", "text": "Three.", "cast": [dict(me, pose="clutch_chest", face=[[0, "uneasy"], [0.5, "scared"]], reach={"L": "ribs"}, holds={"prop": "phone", "hand": "R"})]},
+    ])
+    result = checks.check_job(job)
+    assert rules(result) == [("names", "a"), ("sun_patch", "b")]
+    assert "face 'calm' does not exist" in result["errors"][0]["message"]
+    assert rules(result, "warnings") == [("reach", "b"), ("reach", "c")]
+
+
 def test_checks_time_of_day_and_allow(tmp_path):
     me = {"who": "me", "at": "hall_mid", "face": "uneasy", "pose": "listen"}
     job = avatar_job(tmp_path, [

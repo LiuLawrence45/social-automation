@@ -8,6 +8,9 @@ Every stage reads and writes one job folder and can be re-run on its own.
 
 | Stage | Command | Reads | Writes |
 |---|---|---|---|
+| Make | `python -m pipeline.make --story FILE --out J [--narrator ID]` | a story.json, or a story text for the writer | every stage below in order, resumable; stops with REQUEST-*.md where an agent decides; make.json, MAKE.md ([RUNBOOK.md](RUNBOOK.md)) |
+| Cast | `python -m pipeline.cast list|expand|sheet|faces --job J` | story.json, pipeline/cast.json | voices in story.json, avatars in shotlist.json, cast.json |
+| Checks | `python -m pipeline.checks --job J` | story.json, shotlist.json, timeline.json | the defaults before Studio; exit 1 on a failing rule |
 | Story | `python -m pipeline.story check|timeline --job J` | story.json, shotlist.json, words.json | timeline.json |
 | Voice | `python -m pipeline.voice --job J [--reuse-raw]` | story.json | narration.wav, words.json, voice_report.json |
 | Studio | `python -m pipeline.studio prepare|build-sets|load|info` | timeline.json | sets and cast in the open place |
