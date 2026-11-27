@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
@@ -111,19 +112,36 @@ def frames_record(samples: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return out
 
 
-def write_public(job: Path, entries: Sequence[Dict[str, Any]]) -> None:
-    """posture.json beside the job: the geometric findings per shot and frame, readable without Studio."""
+def shot_stamp(shot: Dict[str, Any], camera: Any, cast: Any) -> str:
+    """Changes when this one shot's staging, timing, camera or the cast does."""
+    basis = {"shot": {k: shot.get(k) for k in ("id", "set", "cast", "props", "set_state", "frame_start", "frame_end")}, "camera": camera, "cast": cast}
+    return hashlib.sha1(json.dumps(basis, sort_keys=True).encode("utf-8")).hexdigest()[:12]
+
+
+def file_sha1(path: Path) -> Optional[str]:
+    return hashlib.sha1(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def write_public(job: Path, entries: Sequence[Dict[str, Any]], describes: Optional[Dict[str, Any]] = None, stamps: Optional[Dict[str, str]] = None) -> None:
+    """posture.json beside the job: the geometric findings per shot and frame, readable without Studio.
+
+    "describes" says which shot list and timeline the file was measured on; a shot whose staging changed since
+    it was measured carries "current": false until it is checked again.
+    """
     shots = {}
     for entry in entries:
         record = {"status": "fail" if entry.get("status") == "fail" else "pass", "characters": entry.get("status") != "no_character",
                   "reasons": entry.get("reasons", []), "frames": entry.get("frames", [])}
+        if stamps is not None:
+            record["current"] = entry.get("stamp") == stamps.get(entry["id"])
+            record["checked"] = entry.get("checked")
         if entry.get("vision"):
             record["vision"] = {"lowest": entry["vision"].get("lowest"), "sheet": entry["vision"].get("sheet")}
         shots[entry["id"]] = record
     target = Path(job) / "posture.json"
     partial = target.with_suffix(".json.part")
     with open(partial, "w", encoding="utf-8") as handle:
-        json.dump({"version": 1, "shots": shots}, handle, indent=1)
+        json.dump(dict({"version": 1}, **({"describes": describes} if describes else {}), shots=shots), handle, indent=1)
     partial.replace(target)
 
 
@@ -283,6 +301,7 @@ def check_shots(job: Path, stager: Any, cfg: Dict[str, Any], shots: Optional[Seq
     entries = {e["id"]: e for e in record.get("shots", []) if isinstance(e, dict) and "id" in e} if shots is not None else {}
     budget = vision.Budget(cfg["ceiling_usd"])
     stopped = False
+    stamps = {shot["id"]: shot_stamp(shot, cameras.get(shot["id"], shot.get("camera")), timeline.get("cast")) for shot in timeline["shots"]}
 
     def save() -> None:
         ordered = [entries[i] for i in known if i in entries]
@@ -291,7 +310,10 @@ def check_shots(job: Path, stager: Any, cfg: Dict[str, Any], shots: Optional[Seq
                           "vision": use_vision, "model": cfg.get("model") if use_vision else None, "shots": ordered,
                           "summary": summarise(ordered), "usage": usage}
         judge._write_judge(job, doc)
-        write_public(job, ordered)
+        describes = {"job": job.name, "label": story.get("label") if isinstance(story.get("label"), str) else None, "key": key,
+                     "shotlist_sha1": file_sha1(job / "shotlist.json"), "timeline_sha1": file_sha1(job / "timeline.json"),
+                     "written": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "stale_shots": [i for i in known if i in entries and entries[i].get("stamp") != stamps[i]]}
+        write_public(job, ordered, describes, stamps)
 
     for shot in timeline["shots"]:
         shot_id = shot["id"]
@@ -299,7 +321,8 @@ def check_shots(job: Path, stager: Any, cfg: Dict[str, Any], shots: Optional[Seq
             continue
         camera = cameras.get(shot_id, shot.get("camera"))
         text = judge.shot_text(shot, data["words"])
-        entry: Dict[str, Any] = {"id": shot_id, "text": text, "status": "pass", "reasons": [], "cast": cast_actions(shot, poses), "geometry": [], "vision": None}
+        entry: Dict[str, Any] = {"id": shot_id, "text": text, "status": "pass", "reasons": [], "cast": cast_actions(shot, poses), "geometry": [], "vision": None,
+                                 "stamp": stamps[shot_id], "checked": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
         if not shot.get("cast"):
             entry["status"] = "no_character"
         else:

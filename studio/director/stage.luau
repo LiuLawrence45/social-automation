@@ -202,6 +202,7 @@ function M:overlayAvatar(entry, state)
 	local spec = entry.spec
 	local info = Pose.describe(self.lib, spec, entry.moving)
 	info.look_strength = spec.look_strength
+	info.seed = Util.hash(tostring(spec.who) .. tostring(state.shot.id))
 	entry.action = info.action or false
 	entry.action_known = true
 	entry.wants_prop = info.holds

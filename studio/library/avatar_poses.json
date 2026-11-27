@@ -16,6 +16,7 @@
   }
  },
  "still": {
+  "life": 0.6,
   "rest": true,
   "action": "standing at rest",
   "joints": {
@@ -47,6 +48,7 @@
   ]
  },
  "listen": {
+  "life": 1.2,
   "action": "standing tense and listening, a hand at the chest",
   "joints": {
    "UpperTorso": [-5, 0, 0],
@@ -59,6 +61,7 @@
   }
  },
  "clutch_chest": {
+  "life": 1.4,
   "action": "hands drawn in to the chest, shoulders hunched",
   "joints": {
    "UpperTorso": [-8, 0, 0],
@@ -70,6 +73,7 @@
   }
  },
  "hand_over_mouth": {
+  "life": 1.4,
   "action": "a hand clapped over the mouth",
   "joints": {
    "UpperTorso": [3, 0, 0],
@@ -81,6 +85,7 @@
   }
  },
  "recoil": {
+  "life": 1.5,
   "action": "leaning back on the heels, hands pulled in to the chest",
   "joints": {
    "UpperTorso": [7, 0, 0],
@@ -97,6 +102,7 @@
   }
  },
  "hands_face": {
+  "life": 1.4,
   "action": "face buried in both hands, shoulders shaking",
   "joints": {
    "UpperTorso": [-12, 0, 0],
@@ -111,6 +117,7 @@
   ]
  },
  "hug_self": {
+  "life": 1.3,
   "action": "arms wrapped around the body",
   "joints": {
    "UpperTorso": [-6, 0, 0],
@@ -122,6 +129,7 @@
   }
  },
  "shiver": {
+  "life": 1.5,
   "action": "hugging itself and shivering",
   "joints": {
    "UpperTorso": [-8, 0, 0],
@@ -138,6 +146,7 @@
   ]
  },
  "head_tilt": {
+  "life": 0.6,
   "action": "standing dead still with the head cocked to one side",
   "joints": {
    "Head": [4, 0, 26],
@@ -209,6 +218,7 @@
   }
  },
  "lean_listen": {
+  "life": 0.7,
   "action": "leaning in close with a hand flat on the door",
   "joints": {
    "UpperTorso": [-12, 0, 0],
@@ -218,6 +228,7 @@
   }
  },
  "lie_sleep": {
+  "life": 0.5,
   "ground": "body",
   "action": "asleep on the back, a hand on the stomach",
   "joints": {
@@ -232,6 +243,7 @@
   }
  },
  "sit_up_bed": {
+  "life": 1.3,
   "ground": "body",
   "action": "bolt upright in bed, hands clutched to the chest",
   "joints": {
@@ -279,6 +291,7 @@
   }
  },
  "cower": {
+  "life": 1.5,
   "ground": "body",
   "action": "huddled on the floor, arms around the knees",
   "joints": {
@@ -298,6 +311,7 @@
   }
  },
  "cower_call": {
+  "life": 1.5,
   "ground": "body",
   "holds": "R",
   "action": "huddled on the floor with a phone to the ear",
@@ -421,6 +435,7 @@
   }
  },
  "creep": {
+  "life": 1.2,
   "action": "creeping forward, a hand at the chest",
   "joints": {
    "UpperTorso": [-8, 0, 0],
@@ -453,6 +468,7 @@
   }
  },
  "cover_ears": {
+  "life": 1.4,
   "action": "hands clamped over the ears",
   "joints": {
    "UpperTorso": [-8, 0, 0],
@@ -491,6 +507,7 @@
   ]
  },
  "sit_bed_mouth": {
+  "life": 1.4,
   "ground": "body",
   "action": "sitting up in bed, a hand pressed over the mouth",
   "joints": {
@@ -522,6 +539,7 @@
   }
  },
  "palm_door": {
+  "life": 0.6,
   "action": "a palm pressed flat against the door, head cocked to one side",
   "joints": {
    "UpperTorso": [-4, 0, 0],
@@ -531,6 +549,7 @@
   }
  },
  "hand_frame": {
+  "life": 0.6,
   "action": "standing in the doorway with one hand on the door frame, head cocked",
   "joints": {
    "Head": [4, 0, -22],
@@ -539,6 +558,7 @@
   }
  },
  "back_away": {
+  "life": 1.5,
   "action": "backing away, hands pulled in to the chest",
   "joints": {
    "UpperTorso": [5, 0, 0],
@@ -558,6 +578,7 @@
   ]
  },
  "gasp_back": {
+  "life": 1.5,
   "action": "weight thrown back on the heels, a hand clapped over the mouth",
   "joints": {
    "UpperTorso": [7, 0, 0],

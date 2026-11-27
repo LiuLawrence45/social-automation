@@ -52,3 +52,16 @@ def test_posture_file_keeps_every_sampled_frame_and_marks_what_is_out_of_frame(t
     written = json.loads((tmp_path / "posture.json").read_text())
     assert written["version"] == 1 and written["shots"]["k1"]["status"] == "fail" and len(written["shots"]["k1"]["frames"]) == 3
     assert written["shots"]["h1"] == {"status": "pass", "characters": False, "reasons": [], "frames": []}
+    assert "describes" not in written
+
+
+def test_posture_file_says_what_it_describes_and_which_shots_went_stale(tmp_path):
+    shot = {"id": "k1", "set": "house_bedroom", "cast": [{"who": "me", "pose": "recoil"}], "frame_start": 0, "frame_end": 30}
+    before = posture.shot_stamp(shot, {"on": "me"}, {"me": {}})
+    assert before == posture.shot_stamp(dict(shot, text="other words"), {"on": "me"}, {"me": {}})
+    after = posture.shot_stamp(dict(shot, cast=[{"who": "me", "pose": "cower"}]), {"on": "me"}, {"me": {}})
+    assert after != before and before != posture.shot_stamp(shot, {"on": "me", "yaw": 30}, {"me": {}})
+    posture.write_public(tmp_path, [{"id": "k1", "status": "pass", "stamp": before, "checked": "then"}],
+                         {"job": "the-door", "label": "pass 7 draft", "stale_shots": ["k1"]}, {"k1": after})
+    written = json.loads((tmp_path / "posture.json").read_text())
+    assert written["describes"]["label"] == "pass 7 draft" and written["shots"]["k1"]["current"] is False and written["shots"]["k1"]["checked"] == "then"

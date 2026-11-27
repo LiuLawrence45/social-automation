@@ -142,7 +142,7 @@ local function groundShift(model, joints, mode)
 end
 
 local function resolvePose(lib, name)
-	local merged = { joints = {}, reach = {}, wobble = {}, actions = {}, rest = true, upper = true, ground = nil, holds = {} }
+	local merged = { joints = {}, reach = {}, wobble = {}, actions = {}, rest = true, upper = true, ground = nil, holds = {}, life = 1 }
 	for piece in string.gmatch(name, "[^+]+") do
 		local found = lib.avatar_poses[piece]
 		if not found then
@@ -171,6 +171,9 @@ local function resolvePose(lib, name)
 		end
 		if found.ground then
 			merged.ground = found.ground
+		end
+		if found.life ~= nil then
+			merged.life = found.life
 		end
 		if found.holds then
 			merged.holds[found.holds] = true
@@ -218,6 +221,8 @@ function M.describe(lib, spec, moving)
 		reach[side] = type(value) == "table" and value.to ~= nil and value or { to = value }
 		dense = true
 	end
+	local life = spec.life == false and 0 or (type(spec.life) == "number" and spec.life or 1)
+	dense = dense or life > 0
 	if spec.look_at then
 		dense = dense or moving
 	end
@@ -225,7 +230,7 @@ function M.describe(lib, spec, moving)
 	if moving and not action then
 		action = "walking"
 	end
-	return { keys = keys, action = action, rest = rest and not moving, upper = upper, dense = dense, reach = reach, holds = holds }
+	return { keys = keys, action = action, rest = rest and not moving, upper = upper, dense = dense, reach = reach, holds = holds, life = life }
 end
 
 -- An elbow is a hinge: a forearm blended between two poses keeps its bend and its turn about its own length and
@@ -486,6 +491,26 @@ function M.jointsAt(lib, model, info, ctx, u)
 			local values = joints[wobble[1]] or { 0, 0, 0, 0, 0, 0 }
 			joints[wobble[1]] = values
 			values[wobble[2]] = (values[wobble[2]] or 0) + weight * wobble[3] * math.sin(2 * math.pi * (seconds * wobble[4] + (wobble[5] or 0)))
+		end
+	end
+	-- Nobody holds a pose like a statue: the chest rises with the breath and the head and shoulders drift a few
+	-- degrees over the shot. Each drift passes its middle at the middle of the shot, so even a one-second shot
+	-- shows it, and a pose's "life" (0 still, 1 calm, more when frightened) scales it.
+	local life = Util.lerp(previous.def.life, current.def.life, k) * (info.life or 1)
+	if life > 0 then
+		local span = math.max(ctx.duration, 0.4)
+		local turn = (info.seed or 0) < 0.5 and 1 or -1
+		local breath = math.max(0.2, 0.3 + 0.12 * (life - 1))
+		local drift = math.min(0.3, 0.3 / span)
+		for _, sway in ipairs({
+			{ "UpperTorso", 1, 1.3, breath, 0 }, { "Head", 1, -0.7, breath, 0.05 },
+			{ "LeftUpperArm", 1, -0.9, breath, 0 }, { "RightUpperArm", 1, -0.9, breath, 0 },
+			{ "Head", 2, 3.2 * turn, drift, 0 }, { "Head", 3, 1.0 * turn, drift, 0.12 },
+			{ "UpperTorso", 2, 1.2 * turn, drift, -0.05 }, { "UpperTorso", 3, -0.9 * turn, drift, 0.06 },
+		}) do
+			local values = joints[sway[1]] or { 0, 0, 0, 0, 0, 0 }
+			joints[sway[1]] = values
+			values[sway[2]] = (values[sway[2]] or 0) + life * sway[3] * math.sin(2 * math.pi * (sway[4] * (seconds - span / 2) + sway[5]))
 		end
 	end
 	local target = ctx.look and ctx.look(u)
