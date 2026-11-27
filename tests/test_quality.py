@@ -167,7 +167,8 @@ def test_geometry_and_picture_each_fail_on_their_own(job, monkeypatch):
     assert "Geometry merged from" in report and chr(96) + "later.json@" in report and chr(96) + "posture.json@" in report
 
 
-def test_geometry_is_merged_only_for_the_shots_judged(job):
+def test_geometry_is_merged_only_for_the_shots_judged(job, monkeypatch):
+    monkeypatch.setattr(vision, "ask", fake_ask())
     quality.run_quality(job, judges=["posture", "clipping"])
     (job / "posture.json").write_text(json.dumps({"version": 1, "describes": {"label": "next pass"}, "shots": {
         shot: {"status": "fail", "frames": [{"frame": 1, "issues": [{"kind": "idle", "actor": "me"}]}]} for shot in ("s01", "s02")}}))
