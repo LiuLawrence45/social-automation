@@ -38,6 +38,8 @@ GROUPS = {
     "hand_off_target": "hand misses what it reaches for",
     "no_action": "standing with nothing to do",
     "prop_missing": "posed to hold something that is not there",
+    "piece_floating": "a prop or set piece floats free",
+    "piece_twice": "a set piece is built twice",
     "vision_posture": "posture looks unnatural (vision)",
     "vision_clipping": "clipping is visible (vision)",
     "vision_action": "action does not read (vision)",
@@ -82,7 +84,11 @@ def load_poses() -> Dict[str, Any]:
 
 KINDS = {"clip_scenery": "intersect", "clip_self": "intersect", "clip_other": "intersect", "clip_prop": "intersect", "joint_limit": "joint_limit",
          "floating": "floating", "arms_out": "stiff_arms", "arm_out": "stiff_arms", "arms_splayed": "stiff_arms", "stance_wide": "stiff_arms",
-         "no_action": "idle", "hand_off_target": "reach_miss", "prop_missing": "prop_missing"}
+         "no_action": "idle", "hand_off_target": "reach_miss", "prop_missing": "prop_missing",
+         "piece_floating": "floating_piece", "piece_twice": "duplicate_piece"}
+# Findings about the set and the props, not about a character; they count in shots that show nobody too.
+SCENE = "the set"
+SCENE_CODES = ("piece_floating", "piece_twice")
 
 
 def describe(issue: Dict[str, Any]) -> str:
@@ -108,6 +114,9 @@ def frames_record(samples: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 if kind == "intersect" and issue.get("code") == "clip_scenery" and "floor" in str(issue.get("detail")).lower():
                     kind = "sunk"
                 issues.append({"kind": kind, "actor": who, "detail": describe(issue), "code": issue.get("code"), "in_frame": bool(issue.get("seen"))})
+        for issue in sample.get("scene") if isinstance(sample.get("scene"), list) else []:
+            issues.append({"kind": KINDS.get(issue.get("code"), str(issue.get("code"))), "actor": SCENE, "detail": describe(issue), "code": issue.get("code"),
+                           "in_frame": bool(issue.get("seen"))})
         out.append({"frame": sample.get("frame"), "u": sample.get("u"), "issues": issues})
     return out
 
@@ -130,7 +139,7 @@ def write_public(job: Path, entries: Sequence[Dict[str, Any]], describes: Option
     """
     shots = {}
     for entry in entries:
-        record = {"status": "fail" if entry.get("status") == "fail" else "pass", "characters": entry.get("status") != "no_character",
+        record = {"status": "fail" if entry.get("status") == "fail" else "pass", "characters": entry.get("characters", entry.get("status") != "no_character"),
                   "reasons": entry.get("reasons", []), "frames": entry.get("frames", [])}
         if stamps is not None:
             record["current"] = entry.get("stamp") == stamps.get(entry["id"])
@@ -171,11 +180,10 @@ def fold(samples: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """One finding per character, code and detail across the sampled moments, with where it was seen."""
     found: Dict[Any, Dict[str, Any]] = {}
     for sample in samples:
-        actors = sample.get("actors")
-        if not isinstance(actors, dict):
-            continue
-        for who, record in actors.items():
-            issues = record.get("issues") if isinstance(record, dict) else None
+        actors = sample.get("actors") if isinstance(sample.get("actors"), dict) else {}
+        groups = [(who, record.get("issues") if isinstance(record, dict) else None) for who, record in actors.items()]
+        groups.append((SCENE, sample.get("scene")))
+        for who, issues in groups:
             for issue in issues if isinstance(issues, list) else []:
                 key = (who, issue.get("code"), issue.get("detail"))
                 entry = found.setdefault(key, {"who": who, "code": issue.get("code"), "detail": issue.get("detail"), "seen": False, "at": [], "depth": None})
@@ -261,7 +269,7 @@ def summarise(entries: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     groups: Dict[str, List[str]] = {}
     failed, with_characters = [], 0
     for entry in entries:
-        if entry["status"] != "no_character":
+        if entry.get("characters", entry["status"] != "no_character"):
             with_characters += 1
         if entry["status"] != "fail":
             continue
@@ -323,21 +331,20 @@ def check_shots(job: Path, stager: Any, cfg: Dict[str, Any], shots: Optional[Seq
         text = judge.shot_text(shot, data["words"])
         entry: Dict[str, Any] = {"id": shot_id, "text": text, "status": "pass", "reasons": [], "cast": cast_actions(shot, poses), "geometry": [], "vision": None,
                                  "stamp": stamps[shot_id], "checked": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
-        if not shot.get("cast"):
+        measured = stager.posture(shot_id, camera, opts["samples"])
+        samples = measured.get("samples") if isinstance(measured, dict) else []
+        samples = samples if isinstance(samples, list) else []
+        entry["geometry"] = fold(samples)
+        entry["frames"] = frames_record(samples)
+        for finding in entry["geometry"]:
+            if finding["seen"] and finding["code"] not in entry["reasons"]:
+                entry["reasons"].append(finding["code"])
+        entry["characters"] = bool(shot.get("cast")) and characters_seen(samples)
+        if not entry["characters"]:
             entry["status"] = "no_character"
+            entry["reasons"] = [reason for reason in entry["reasons"] if reason in SCENE_CODES]
         else:
-            measured = stager.posture(shot_id, camera, opts["samples"])
-            samples = measured.get("samples") if isinstance(measured, dict) else []
-            samples = samples if isinstance(samples, list) else []
-            entry["geometry"] = fold(samples)
-            entry["frames"] = frames_record(samples)
-            for finding in entry["geometry"]:
-                if finding["seen"] and finding["code"] not in entry["reasons"]:
-                    entry["reasons"].append(finding["code"])
-            if not characters_seen(samples):
-                entry["status"] = "no_character"
-                entry["reasons"] = []
-            elif use_vision and not stopped:
+            if use_vision and not stopped:
                 paths = stager.moments(shot_id, camera, opts["moments"], job / "judge" / "posture" / shot_id, opts["still_height"])
                 sheet = job / "judge" / "posture" / ("%s.jpg" % shot_id)
                 moments_sheet(paths, sheet)
@@ -363,8 +370,8 @@ def check_shots(job: Path, stager: Any, cfg: Dict[str, Any], shots: Optional[Seq
                             entry["reasons"].append("vision_" + criterion["key"])
                 elif not stopped:
                     raise PostureError("the model returned no usable posture scores for %s" % shot_id)
-            if entry["reasons"]:
-                entry["status"] = "fail"
+        if entry["reasons"]:
+            entry["status"] = "fail"
         entries[shot_id] = entry
         note = ", ".join(entry["reasons"]) if entry["reasons"] else ""
         lowest = (entry["vision"] or {}).get("lowest")

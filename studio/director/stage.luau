@@ -466,6 +466,14 @@ function M:pose(t, u, cameraPos)
 				if turn == "eyes" then
 					local head = entry.model.Head
 					hold.model:PivotTo(CFrame.lookAt(hand.Position, head.CFrame * Vector3.new(0, head.Size.Y * 0.1, -head.Size.Z * 0.3)) * hold.grip)
+				elseif turn == "ear" then
+					-- A phone on a call: flat against the side of the head, running from the ear down to the mouth, screen to the cheek.
+					local head = entry.model.Head
+					local side = hold.hand == "L" and -1 or 1
+					local at = head.CFrame * Vector3.new(side * head.Size.X * 0.56, -head.Size.Y * 0.12, -head.Size.Z * 0.12)
+					local along = head.CFrame:VectorToWorldSpace(Vector3.new(0, 0.82, 0.57)).Unit
+					local out = head.CFrame:VectorToWorldSpace(Vector3.new(side, 0, 0))
+					hold.model:PivotTo(CFrame.fromMatrix(at, along:Cross(out), along, out) * hold.grip)
 				elseif turn == "forward" then
 					local chest = entry.model.UpperTorso.CFrame
 					hold.model:PivotTo(CFrame.lookAt(hand.Position, hand.Position + chest.LookVector) * hold.grip)

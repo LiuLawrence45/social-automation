@@ -215,8 +215,9 @@ function BUILD.notes_grid(m, spec)
 end
 
 function BUILD.clock(m, spec)
-	local body = part(m, { 2.2, 1.0, 0.3 }, CFrame.new(0, 0.5, 0), "#1c1c1c")
-	local screen = part(m, { 2.0, 0.8, 0.02 }, CFrame.new(0, 0.5, -0.16), "#0b1a12", { shadow = false })
+	part(m, { 2.2, 1.0, 0.3 }, CFrame.new(0, 0.5, 0), "#4a4d52")
+	-- The face glows a little, so the digits sit on a display in a dark room and do not hang in the air.
+	local screen = part(m, { 2.0, 0.8, 0.02 }, CFrame.new(0, 0.5, -0.16), "#12301f", { shadow = false, material = Enum.Material.Neon })
 	text(screen, Enum.NormalId.Front, spec.text or "7:00", { color = spec.text_color or "#6bff8e", font = Enum.Font.Code, ppi = 80, pad = 0.05, unlit = true })
 end
 

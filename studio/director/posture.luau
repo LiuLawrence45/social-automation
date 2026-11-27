@@ -25,6 +25,12 @@ local ARM_RAISED = 35
 local ARM_SPLAYED = 14
 local STANCE_WIDE = 11
 local NEAR_BODY = 0.75
+-- Things: how near two parts count as touching, how large a part anchors what touches it (a floor, a wall),
+-- and how much of the frame a prop may fill before it is an insert held up to the lens and not a thing in the room.
+local TOUCH = 0.06
+local PROP_TOUCH = 0.14
+local GROUND = 9.5
+local INSERT = 0.25
 -- Pairs of one body that may not pass through each other; neighbours on the skeleton are left out.
 local SELF_PAIRS = {}
 for _, side in pairs(SIDES) do
@@ -420,7 +426,199 @@ function M.check(stage, index, camera, samples)
 
 			actors[who] = { issues = issues, metrics = metrics }
 		end
-		table.insert(out, { u = u, frame = frameIndex, actors = actors })
+		-- Things: a prop or a piece of the set that touches nothing, and anything built twice.
+		local scene = {}
+		local function note(code, detail, visible)
+			table.insert(scene, { code = code, detail = detail, seen = visible and true or false })
+		end
+		local origin = state.set.origin
+		local function label(part)
+			local p = origin:PointToObjectSpace(part.Position)
+			local owner = part.Parent and part.Parent:IsA("Model") and part.Parent.Name:match("^Piece_(.+)")
+			return string.format("%s%s %.2fx%.2fx%.2f at %.1f, %.1f, %.1f", part.Name, owner and (" of " .. owner) or "", part.Size.X, part.Size.Y, part.Size.Z, p.X, p.Y, p.Z)
+		end
+		local function seenPart(part)
+			local x, y, depth = project(view, part.Position)
+			if not x or x < -0.02 or x > 1.02 or y < -0.02 or y > 1.02 then
+				return false
+			end
+			local skip = { stage.castFolder, stage.propFolder }
+			for _ = 1, 6 do
+				rays.FilterDescendantsInstances = skip
+				local hit = workspace:Raycast(view.pos, part.Position - view.pos, rays)
+				if not hit or hit.Instance == part then
+					return true
+				end
+				if solid(hit.Instance) then
+					return hit.Distance > depth - 0.3
+				end
+				table.insert(skip, hit.Instance)
+			end
+			return true
+		end
+		local setParts, slot = {}, {}
+		for _, item in ipairs(state.set.model:GetDescendants()) do
+			if item:IsA("BasePart") and solid(item) and item.Position.Y > -1000 then
+				table.insert(setParts, item)
+				slot[item] = #setParts
+			end
+		end
+		local group = {}
+		for i = 1, #setParts do
+			group[i] = i
+		end
+		local function root(i)
+			while group[i] ~= i do
+				group[i] = group[group[i]]
+				i = group[i]
+			end
+			return i
+		end
+		local within = OverlapParams.new()
+		within.FilterType = Enum.RaycastFilterType.Include
+		within.FilterDescendantsInstances = { state.set.model }
+		for i, part in ipairs(setParts) do
+			for _, other in ipairs(workspace:GetPartBoundsInBox(part.CFrame, part.Size + Vector3.one * TOUCH * 2, within)) do
+				local j = slot[other]
+				if j and j ~= i then
+					group[root(i)] = root(j)
+				end
+			end
+		end
+		local grounded, loose = {}, {}
+		for i, part in ipairs(setParts) do
+			if math.max(part.Size.X, part.Size.Y, part.Size.Z) >= GROUND then
+				grounded[root(i)] = true
+			end
+		end
+		for i, part in ipairs(setParts) do
+			local r = root(i)
+			if not grounded[r] and not part:GetAttribute("Floats") then
+				local size = part.Size.X * part.Size.Y * part.Size.Z
+				if not loose[r] or size > loose[r].size then
+					loose[r] = { part = part, size = size, seen = loose[r] and loose[r].seen }
+				end
+				loose[r].seen = loose[r].seen or seenPart(part)
+			end
+		end
+		for _, item in pairs(loose) do
+			if item.seen then
+				note("piece_floating", label(item.part) .. " touches no wall, floor or furniture", true)
+			end
+		end
+		if #out == 0 then
+			local built = {}
+			for _, part in ipairs(setParts) do
+				local p = part.Position
+				local key = string.format("%.2f %.2f %.2f %.2f %.2f %.2f", p.X, p.Y, p.Z, part.Size.X, part.Size.Y, part.Size.Z)
+				if built[key] then
+					note("piece_twice", label(part) .. " is built twice in the same place", seenPart(part))
+				end
+				built[key] = true
+			end
+			local named = {}
+			for _, child in ipairs(state.set.model:GetChildren()) do
+				if child:IsA("Model") then
+					if named[child.Name] then
+						note("piece_twice", "the set builds the moving piece " .. (child.Name:match("^Piece_(.+)") or child.Name) .. " twice, and only one of them moves", true)
+					end
+					named[child.Name] = true
+				end
+			end
+			local copies = 0
+			for _, child in ipairs(state.set.model.Parent:GetChildren()) do
+				if child.Name == state.set.model.Name then
+					copies += 1
+				end
+			end
+			if copies > 1 then
+				note("piece_twice", "the set " .. state.set.model.Name .. " stands " .. copies .. " times in the place", true)
+			end
+		end
+		local function corners(cf, size)
+			local list = { cf.Position }
+			for _, sx in ipairs({ -0.5, 0.5 }) do
+				for _, sy in ipairs({ -0.5, 0.5 }) do
+					for _, sz in ipairs({ -0.5, 0.5 }) do
+						table.insert(list, cf:PointToWorldSpace(Vector3.new(size.X * sx, size.Y * sy, size.Z * sz)))
+					end
+				end
+			end
+			return list
+		end
+		local function apart(cfA, sizeA, cfB, sizeB)
+			local least = math.huge
+			for _, point in ipairs(corners(cfA, sizeA)) do
+				least = math.min(least, distanceToBox(point, cfB, sizeB))
+			end
+			for _, point in ipairs(corners(cfB, sizeB)) do
+				least = math.min(least, distanceToBox(point, cfA, sizeA))
+			end
+			return least
+		end
+		local models = {}
+		for _, model in ipairs(stage.propFolder:GetChildren()) do
+			if model:IsA("Model") then
+				local parts = {}
+				for _, item in ipairs(model:GetDescendants()) do
+					if item:IsA("BasePart") and item.Transparency < 0.95 then
+						table.insert(parts, item)
+					end
+				end
+				if #parts > 0 then
+					table.insert(models, { model = model, parts = parts })
+				end
+			end
+		end
+		for _, entry in ipairs(models) do
+			local held = false
+			for _, part in ipairs(entry.parts) do
+				if held then
+					break
+				end
+				for _, other in ipairs(workspace:GetPartBoundsInBox(part.CFrame, part.Size + Vector3.one * PROP_TOUCH * 2, scenery)) do
+					if solid(other) then
+						held = true
+						break
+					end
+				end
+				for _, body in pairs(bodies) do
+					for _, item in pairs(body.parts) do
+						if not held and apart(part.CFrame, part.Size, item.cf, item.size) <= PROP_TOUCH * body.scale then
+							held = true
+						end
+					end
+				end
+				for _, other in ipairs(models) do
+					if not held and other ~= entry then
+						for _, otherPart in ipairs(other.parts) do
+							if apart(part.CFrame, part.Size, otherPart.CFrame, otherPart.Size) <= PROP_TOUCH then
+								held = true
+								break
+							end
+						end
+					end
+				end
+			end
+			if not held then
+				local cf, size = entry.model:GetBoundingBox()
+				local x0, x1, y0, y1 = 1, 0, 1, 0
+				local behind = false
+				for _, point in ipairs(corners(cf, size)) do
+					local x, y = project(view, point)
+					if x then
+						x0, x1, y0, y1 = math.min(x0, x), math.max(x1, x), math.min(y0, y), math.max(y1, y)
+					else
+						behind = true
+					end
+				end
+				local filled = math.max(0, math.min(x1, 1) - math.max(x0, 0)) * math.max(0, math.min(y1, 1) - math.max(y0, 0))
+				if not behind and filled < INSERT then
+					note("piece_floating", entry.model.Name .. " touches no surface and no hand", seen(cf.Position))
+				end
+			end
+		end
+		table.insert(out, { u = u, frame = frameIndex, actors = actors, scene = scene })
 	end
 	if camera then
 		stage.cameras[shot.id] = nil

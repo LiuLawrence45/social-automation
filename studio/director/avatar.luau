@@ -70,6 +70,11 @@ local function describe(spec)
 			description[property] = Util.color(spec.skin)
 		end
 	end
+	-- Bare legs painted one colour read as long trousers under shorts or a skirt.
+	if spec.legs then
+		description.LeftLegColor = Util.color(spec.legs)
+		description.RightLegColor = Util.color(spec.legs)
+	end
 	return description
 end
 

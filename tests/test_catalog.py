@@ -55,6 +55,24 @@ def test_posture_file_keeps_every_sampled_frame_and_marks_what_is_out_of_frame(t
     assert "describes" not in written
 
 
+def test_a_floating_piece_is_a_finding_of_the_set_even_with_nobody_in_the_shot(tmp_path):
+    samples = [
+        {"frame": 5, "u": 0, "actors": {}, "scene": [{"code": "piece_floating", "detail": "clock touches no surface and no hand", "seen": True},
+                                                      {"code": "piece_twice", "detail": "Part of handle is built twice in the same place", "seen": False}]},
+        {"frame": 9, "u": 1, "actors": {}, "scene": [{"code": "piece_floating", "detail": "clock touches no surface and no hand", "seen": True}]},
+    ]
+    found = posture.fold(samples)
+    assert [(f["who"], f["code"], f["seen"], f["at"]) for f in found] == [("the set", "piece_floating", True, [0, 1]), ("the set", "piece_twice", False, [0])]
+    frames = posture.frames_record(samples)
+    assert frames[0]["issues"][0] == {"kind": "floating_piece", "actor": "the set", "detail": "clock touches no surface and no hand", "code": "piece_floating", "in_frame": True}
+    assert frames[0]["issues"][1]["kind"] == "duplicate_piece" and not frames[0]["issues"][1]["in_frame"]
+    entry = {"id": "b3", "status": "fail", "characters": False, "reasons": ["piece_floating"], "frames": frames}
+    assert posture.summarise([entry]) == {"shots": 1, "with_characters": 0, "failed": 1, "failed_ids": ["b3"], "groups": {"a prop or set piece floats free": ["b3"]}}
+    posture.write_public(tmp_path, [entry])
+    written = json.loads((tmp_path / "posture.json").read_text())["shots"]["b3"]
+    assert written["status"] == "fail" and written["characters"] is False and written["reasons"] == ["piece_floating"]
+
+
 def test_posture_file_says_what_it_describes_and_which_shots_went_stale(tmp_path):
     shot = {"id": "k1", "set": "house_bedroom", "cast": [{"who": "me", "pose": "recoil"}], "frame_start": 0, "frame_end": 30}
     before = posture.shot_stamp(shot, {"on": "me"}, {"me": {}})
