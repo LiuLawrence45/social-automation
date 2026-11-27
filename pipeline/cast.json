@@ -71,10 +71,18 @@
   },
   "sharath": {
    "name": "Sharath",
-   "look": "man, black hair, blue jacket, blue trousers, faceted style (bundle Mike Kerr)",
+   "look": "man, short black hair, no beard, round young face, blue jacket, blue trousers (bundle Mike Kerr; the head of bundle Billie, whose face moves, and a separate hairstyle)",
    "avatar": {
     "rig": "avatar",
-    "bundle": 749
+    "bundle": 749,
+    "head_bundle": 995,
+    "wear": [
+     {
+      "type": "hair",
+      "id": 9243992729
+     }
+    ],
+    "skin": "#e0b49a"
    },
    "voice": {
     "voice_id": "iP95p4xoKVk53GoZ742B",
@@ -84,15 +92,17 @@
      "stability": 0.6
     }
    },
-   "source": "the-door: cast id sharath with the officer costume; he had no lines there, so the voice was chosen for the registry",
-   "faces": "FAIL 2026-11-27: the face does not move (talk, smile, scared, terrified all identical); needs a head with face controls"
+   "source": "the-door: cast id sharath with the officer costume, as it stands after his head was replaced; he had no lines there, so the voice was chosen for the registry",
+   "faces": "head replaced 2026-11-27 (head_bundle 995); to be confirmed on the registry's own faces sheet"
   },
   "jesslyn": {
    "name": "Jesslyn",
-   "look": "young woman, light hair in a ponytail, blue top (bundle Linlin)",
+   "look": "young woman, light bob with a clip, blue top, fair skin (bundle Linlin; the head of bundle Summer, whose face moves)",
    "avatar": {
     "rig": "avatar",
-    "bundle": 741
+    "bundle": 741,
+    "head_bundle": 572,
+    "skin": "#efc3a2"
    },
    "voice": {
     "voice_id": "EXAVITQu4vr4xnSDxMaL",
@@ -102,8 +112,8 @@
      "stability": 0.7
     }
    },
-   "source": "the-door: cast id jesslyn with the dispatcher costume",
-   "faces": "FAIL 2026-11-27: the face does not move; the Studio owner is replacing the head"
+   "source": "the-door: cast id jesslyn with the dispatcher costume, as it stands after her head was replaced",
+   "faces": "head replaced 2026-11-27 (head_bundle 572); to be confirmed on the registry's own faces sheet"
   },
   "agni": {
    "name": "Agni",

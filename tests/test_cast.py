@@ -63,9 +63,10 @@ def test_costume_matches_the_first_video():
     story = make_story([{"speaker": "narrator", "text": "I called."}, {"speaker": "jesslyn", "text": "Stay on the line."}],
                        casting={"jesslyn": {"costume": "dispatcher"}, "allan": {"costume": "officer"}, "sharath": {"costume": "officer"}})
     out = cast.expand(story, registry)
-    assert out["avatars"]["jesslyn"] == {"rig": "avatar", "bundle": 741, "headset": {"side": "L"}}
+    assert out["avatars"]["jesslyn"] == {"rig": "avatar", "bundle": 741, "head_bundle": 572, "skin": "#efc3a2", "headset": {"side": "L"}}
     assert out["avatars"]["allan"] == {"rig": "avatar", "bundle": 573, "vest": {"text": "POLICE"}, "legs": "#141926"}
-    assert out["avatars"]["sharath"] == {"rig": "avatar", "bundle": 749, "vest": {"text": "POLICE"}}
+    assert out["avatars"]["sharath"] == {"rig": "avatar", "bundle": 749, "head_bundle": 995, "wear": [{"type": "hair", "id": 9243992729}], "skin": "#e0b49a",
+                                         "vest": {"text": "POLICE"}}
     assert out["speakers"]["jesslyn"] == {"voice_id": "EXAVITQu4vr4xnSDxMaL", "voice_name": "Sarah", "settings": {"speed": 1, "stability": 0.7},
                                           "process": {"filter": "highpass=f=380,lowpass=f=3100,acompressor=threshold=-18dB:ratio=4:makeup=3", "gain_db": -1}}
     assert "allan" not in out["speakers"]
@@ -76,11 +77,11 @@ def test_role_played_by_a_member_and_job_overrides():
     story = make_story([{"speaker": "narrator", "text": "She texted."}, {"speaker": "mom", "text": "Stay there."}],
                        casting={"mom": {"is": "jesslyn", "avatar": {"skin": "#aa8866"}, "voice": {"settings": {"stability": 0.9}, "process": {"gain_db": 2}}}})
     out = cast.expand(story, registry)
-    assert out["avatars"]["mom"] == {"rig": "avatar", "bundle": 741, "skin": "#aa8866"}
+    assert out["avatars"]["mom"] == {"rig": "avatar", "bundle": 741, "head_bundle": 572, "skin": "#aa8866"}
     assert out["speakers"]["mom"]["voice_name"] == "Sarah"
     assert out["speakers"]["mom"]["settings"] == {"speed": 1, "stability": 0.9}
     assert out["speakers"]["mom"]["process"] == {"gain_db": 2}
-    assert registry["characters"]["jesslyn"]["avatar"] == {"rig": "avatar", "bundle": 741}
+    assert registry["characters"]["jesslyn"]["avatar"] == {"rig": "avatar", "bundle": 741, "head_bundle": 572, "skin": "#efc3a2"}
 
 
 def test_extras_are_defined_in_the_job_only():

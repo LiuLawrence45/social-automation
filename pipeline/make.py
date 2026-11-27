@@ -191,7 +191,7 @@ def sound_from_story(story: Dict[str, Any]) -> Dict[str, Any]:
     genre = (story.get("writer") or {}).get("genre") or story.get("genre") or "default"
     prompt = story.get("music") if isinstance(story.get("music"), str) and story["music"].strip() else MUSIC.get(genre, MUSIC["default"])
     out = {"normalise": True, "prompt_influence": 0.4,
-           "music": {"prompt": prompt.strip() + " Instrumental only, no vocals.", "gain_db": 0, "duck_db": -3.5, "fallback": "sad" if genre == "scary" else "calm",
+           "music": {"prompt": prompt.strip() + " Instrumental only, no vocals.", "gain_db": 0, "duck_db": -3.5, "fallback": "sad" if genre == "scary" else "warm",
                      "fade_in": 0.6, "fade_out": 0.05, "cuts": []},
            "ambience": [], "cues": []}  # type: Dict[str, Any]
     for index, cue in enumerate(story.get("sound_cues") or []):

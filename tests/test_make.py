@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pipeline import checks, make, story as story_mod
+from pipeline import bed, checks, make, story as story_mod
 
 SAMPLE = Path(__file__).resolve().parent.parent / "examples" / "found-box"
 STAGE_ORDER = ["pipeline.sound", "pipeline.judge shots", "pipeline.judge posture", "pipeline.render video", "pipeline.edit", "pipeline.quality"]
@@ -322,6 +322,8 @@ def test_sound_json_from_the_writers_cues():
                                                      {"line": 1, "at": "start", "kind": "sfx", "prompt": "Beep.", "seconds": 1},
                                                      {"line": 1, "at": "end", "kind": "silence", "prompt": "Quiet.", "seconds": 1}]})
     sound = make.sound_from_story(story)
+    plain = make.sound_from_story(story_mod.validate_story(json.loads((SAMPLE / "story.json").read_text(encoding="utf-8"))))
+    assert sound["music"]["fallback"] in bed.MOODS and plain["music"]["fallback"] in bed.MOODS
     assert sound["music"]["prompt"].startswith("A thin drone.") and sound["music"]["cuts"] == [{"at": {"word": 4, "offset": 0.3}, "seconds": 1.0}]
     assert sound["ambience"][0]["from"] == {"word": 0, "offset": 0} and sound["cues"][0]["at"] == {"word": 3, "offset": 0.0}
 
