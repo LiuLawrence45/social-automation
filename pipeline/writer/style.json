@@ -1,6 +1,6 @@
 {
  "version": 1,
- "note": "Compact style guide the writer and the script judge load. Numbers come from the corpus study (python -m pipeline.writer analyze); see style_stats.json for the measured values behind them. Examples are invented.",
+ "note": "Compact style guide the writer and the script judge load. The targets are bands read off the corpus study of 349 story shorts (501 collected on 2026-11-27; python -m pipeline.writer analyze); style_stats.json holds the measured values behind them. Examples are invented.",
  "targets": {
   "wpm": 250,
   "seconds": 55,

@@ -281,8 +281,9 @@ def study(rows: Sequence[Dict[str, Any]], texts: Dict[str, str], tally: Dict[str
                        for channel, count in collections.Counter(row["channel"] for row in rows).most_common(20) if count >= 5},
         "recurring_phrases": phrases([texts[row["id"]] for row in rows]),
         "recurring_phrases_scary": phrases([texts[row["id"]] for row in scary]),
-        "recurring_openers": dict(collections.Counter(" ".join(word.lower() for word in textstats.words(texts[row["id"]])[:3]) for row in rows).most_common(15)),
-        "recurring_title_openers": dict(collections.Counter(row["title_opener"] for row in rows).most_common(15)),
+        "recurring_openers": {opener: count for opener, count in collections.Counter(
+            " ".join(word.lower() for word in textstats.words(texts[row["id"]])[:3]) for row in rows).most_common(15) if count >= 3},
+        "recurring_title_openers": {opener: count for opener, count in collections.Counter(row["title_opener"] for row in rows).most_common(15) if count >= 3},
     }
     return out
 
