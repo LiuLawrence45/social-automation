@@ -14,6 +14,8 @@ camera judge; warnings are printed and kept in <job>/checks.json.
   motion        the line implies action and nobody in the shot moves, or a character is frozen for a long shot
   pose_variety  one pose carries too large a share of a character's shots, or too many shots in a row
   camera_variety  neighbouring locked cameras share type and side, a type exceeds its share, too little camera movement
+  camera_tag    a camera the judge may replace names no "type", so the judge picks the kind of shot and the variety
+                checked here will not hold after it
   time_of_day   a line says morning or night and the shot's light says the opposite, from that line on
   new_pose      a pose defined in the job's poses.json has no action wording; warning until the geometry check has passed it
 
@@ -224,6 +226,9 @@ def check_job(job: Path) -> Dict[str, Any]:
             moving = moving or alive
             if not alive and seconds.get(shot["id"], 0.0) >= float(settings["still_seconds"]):
                 report("motion", shot, "%s does not move for %.1f s; walk, change pose or face during the shot, or use a pose that moves" % (who, seconds[shot["id"]]), who)
+        if not judge.is_locked(shot) and not (shot.get("camera") or {}).get("type"):
+            report("camera_tag", shot, "the camera names no \"type\", so the camera judge chooses the kind of shot and can break the variety rules after it has "
+                                       "been paid for; add \"type\": \"%s\" (what its numbers say now) or another of %s" % (judge.camera_type(shot.get("camera") or {}), ", ".join(judge.SHOT_TYPES)))
         changes = any(isinstance(value, list) for value in (shot.get("set_state") or {}).values())
         if visible and not moving and not changes and set(text_tokens) & ACTION_WORDS:
             report("motion", shot, "the line implies action (%s) and nobody in the shot moves" % ", ".join(sorted(set(text_tokens) & ACTION_WORDS)))

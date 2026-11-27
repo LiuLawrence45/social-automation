@@ -577,8 +577,11 @@ class Make:
         price = float(self.settings()["prices"]["elevenlabs_usd_per_1k_credits"])
         if report.get("provider") == "elevenlabs":
             ledger_add(self.job, "sound", credits * price / 1000.0, {"credits": credits, "usd_per_1k_credits": price, "estimate": True})
-        return "%s%s, %.1f s bed, %s generated, %s reused, %d credits" % (made, report.get("provider", "?"), float(report.get("duration") or 0.0),
-                                                                        report.get("generated", "?"), report.get("reused", "?"), credits)
+        music = report.get("music") or {}
+        unpriced = report.get("provider") == "elevenlabs" and music.get("cached") is False and not music.get("cost") and "generation" in str(music.get("source"))
+        return "%s%s, %.1f s bed, %s generated, %s reused, %d credits%s" % (made, report.get("provider", "?"), float(report.get("duration") or 0.0),
+                                                                          report.get("generated", "?"), report.get("reused", "?"), credits,
+                                                                          "; a score was generated and the sound stage reports no cost for it, so it is not in the ledger" if unpriced else "")
 
     def changed_shots(self, stage: str) -> Optional[List[str]]:
         """Shot ids whose staging changed since this stage last finished; None means every shot."""
@@ -809,7 +812,7 @@ def caption_band_problems(doc: Dict[str, Any]) -> List[str]:
         camera = chosen.get("camera") or {}
         if "caption_band" in (camera.get("allow") or []):
             continue
-        head = (geometry.get("metrics") or {}).get("head")
+        head = (chosen.get("metrics") or geometry.get("metrics") or {}).get("head")
         noted = [str(item) for key in ("notes", "issues", "warnings") for item in (geometry.get(key) or []) if "caption" in str(item) or "band" in str(item)]
         if isinstance(head, (list, tuple)) and len(head) == 2 and CAPTION_BAND[0] <= float(head[1]) <= CAPTION_BAND[1]:
             problems.append("%s: the head sits at %.0f%% of the height, inside the caption band" % (entry.get("id"), 100 * float(head[1])))

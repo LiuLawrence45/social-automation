@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pipeline import bed, checks, make, story as story_mod
+from pipeline import bed, checks, judge, make, story as story_mod
 
 SAMPLE = Path(__file__).resolve().parent.parent / "examples" / "found-box"
 STAGE_ORDER = ["pipeline.sound", "pipeline.judge shots", "pipeline.judge posture", "pipeline.render video", "pipeline.edit", "pipeline.quality"]
@@ -55,7 +55,7 @@ class Fake:
         elif module == "pipeline.judge" and args[0] == "shots":
             timeline = json.loads((job / "timeline.json").read_text(encoding="utf-8"))
             old = json.loads((job / "judge.json").read_text(encoding="utf-8")) if (job / "judge.json").is_file() else {"usage": {"cost_usd": 0.0}}
-            shots = [{"id": shot["id"], "chosen": {"camera": dict(shot["camera"]), "geometry": {"metrics": {"head": [0.5, self.head]}}}} for shot in timeline["shots"]]
+            shots = [{"id": shot["id"], "chosen": {"camera": dict(shot["camera"]), "metrics": {"head": [0.5, self.head]}}} for shot in timeline["shots"]]
             cost = 0.0 if "none" in args else 0.05
             (job / "judge.json").write_text(json.dumps(dict(old, shots=shots, usage={"cost_usd": old["usage"]["cost_usd"] + cost}, config={"model": "m"}, variety={"problems": []})), encoding="utf-8")
         elif module == "pipeline.judge" and args[0] == "posture":
@@ -102,10 +102,16 @@ def good_sample(tmp_path):
     (source / "story.json").write_text(json.dumps(story), encoding="utf-8")
     shotlist = json.loads((source / "shotlist.json").read_text(encoding="utf-8"))
     for shot in shotlist["shots"]:
+        tag(shot)
         for actor in shot.get("cast", []):
             actor.setdefault("action", "nod")
     (source / "shotlist.json").write_text(json.dumps(shotlist), encoding="utf-8")
     return source
+
+
+def tag(shot):
+    if not judge.is_locked(shot):
+        shot["camera"].setdefault("type", judge.camera_type(shot["camera"]))
 
 
 def run(job, fake, *args):
@@ -139,13 +145,15 @@ def test_sample_stops_on_the_defaults_then_finishes(tmp_path):
     assert run(job, fake, "--story", str(SAMPLE / "story.json")) == 3
     assert state_of(job)["stages"]["checks"]["status"] == "needs_agent"
     request = (job / "REQUEST-checks.md").read_text(encoding="utf-8")
-    assert "no_idle" in request and "s04" in request and "pipeline.make --out" in request and "{run}" not in request
+    assert "no_idle" in request and "s04" in request and "camera_tag" in request and "pipeline.make --out" in request and "{run}" not in request
     assert "pipeline.judge shots" not in fake.modules()
     story = json.loads((job / "story.json").read_text(encoding="utf-8"))
     story["judge"]["variety"] = {"cap": 1.0, "slack": 0.0, "min_moving": 0.0}
     (job / "story.json").write_text(json.dumps(story), encoding="utf-8")
     shotlist = json.loads((job / "shotlist.json").read_text(encoding="utf-8"))
     shotlist["shots"][3]["cast"][1]["action"] = "nod"
+    for shot in shotlist["shots"]:
+        tag(shot)
     (job / "shotlist.json").write_text(json.dumps(shotlist), encoding="utf-8")
     assert checks.check_job(job)["errors"] == []
     assert run(job, fake) == 0
@@ -168,6 +176,8 @@ def test_checks_read_the_shot_list_not_a_stale_timeline(tmp_path):
     by["s01"]["camera"]["type"] = by["s04"]["camera"]["type"] = "wide"
     by["s04"]["cast"][1]["action"] = "nod"
     by["s06"]["camera"]["pitch"], by["s09"]["camera"]["pitch"], by["s10"]["camera"]["dutch"] = 24, -15, 8
+    for shot in shotlist["shots"]:
+        tag(shot)
     (job / "shotlist.json").write_text(json.dumps(shotlist), encoding="utf-8")
     assert checks.check_job(job)["errors"] == []
 
