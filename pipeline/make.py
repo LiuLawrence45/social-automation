@@ -337,13 +337,14 @@ class Make:
 
     def plan(self) -> List[Dict[str, Any]]:
         first, last = self.options.get("from"), self.options.get("to")
-        rows, forced, upstream = [], False, False
+        rows, forced, earlier = [], False, False
         for stage in STAGES:
             forced = forced or stage == first
             fresh = self.fresh(stage)
-            run = forced or upstream or not fresh
-            upstream = upstream or (run and stage not in ("fix",))
-            rows.append({"stage": stage, "run": run, "why": "forced by --from" if forced else "first run or its inputs changed" if not fresh else "an earlier stage runs" if run else "done, inputs unchanged"})
+            run = forced or not fresh
+            rows.append({"stage": stage, "run": run, "why": "forced by --from" if forced else "first run or its inputs changed" if not fresh
+                         else "done; runs only if an earlier stage changes what it reads" if earlier else "done, inputs unchanged"})
+            earlier = earlier or run
             if stage == last:
                 break
         return rows
@@ -789,7 +790,7 @@ class Make:
                 "fix": "failing shots are a STOP for an agent (REQUEST-fix-N.md) until none fail, the rounds or the ceiling run out, or they are accepted",
                 "final": "final.mp4, QUALITY.md, MAKE.md",
             }[stage]
-            self.say("%-8s %-4s %-32s %s" % (stage, "run" if row["run"] else "skip", row["why"], what if row["run"] else ""))
+            self.say("%-8s %-4s %-58s %s" % (stage, "run" if row["run"] else "skip", row["why"], what if row["run"] else ""))
         self.say("spend so far $%.4f" % ledger_total(self.job))
         return 0
 
