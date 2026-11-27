@@ -476,6 +476,11 @@ def test_continuity_and_motion_read_the_script_and_are_told_about_the_set(job):
     motion = settings["judges"]["motion"]
     assert motion["script"] and "text message" in motion["notes"] and "Words that imply an action still need the action." in motion["notes"]
     assert "speaking or working while the arms never move is frozen" in motion["flags"]["frozen_character"]["text"]
+    assert "whose words say they are texting" in motion["flags"]["frozen_character"]["text"]
+    assert "quietly reading, sitting or waiting under plain narration is not" in motion["flags"]["frozen_character"]["text"]
+    morning = [d["text"] for d in settings["judges"]["story"]["fail_if"] if d["key"] == "wrong_time"][0]
+    assert "A dim windowless corridor or room fails" in morning and "stuck on a wall or floor is not evidence" in morning
+    assert "a transom over a door or a glass pane that glows white or pale" in morning and "whether or not a window is in frame" in morning
 
 
 def test_a_fail_read_from_the_frames_and_overruled_in_writing_passes_the_shot(job, monkeypatch, tmp_path):
