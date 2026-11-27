@@ -443,30 +443,39 @@ def judge_video(settings: Dict[str, Any], story: Dict[str, Any], shots: Sequence
                      % int(spec.get("weakest", 8)))
         lines.append('Reply with JSON only: {"scores": {%s}, "weakest": [{"shot": "id", "reason": "one line"}], "reason": "one line on the whole video"}'
                      % ", ".join('"%s": 0' % k for k in keys))
-        reply = ask(settings, budget, "\n".join(lines), paths, int(spec.get("max_output_tokens", 3000)), job / "quality" / "manual",
-                    "video", ("scores",))
+        votes = max(1, int(spec.get("votes", 3)))
+        replies = [ask(settings, budget, "\n".join(lines), paths, int(spec.get("max_output_tokens", 3000)), job / "quality" / "manual",
+                       "video_%d" % vote, ("scores",)) for vote in range(votes)]
     except (vision.BudgetExceeded, vision.Pending, vision.VisionError, QualityError, EditError) as exc:
         return {"status": "error", "reason": "not judged: %s" % str(exc)[:200], "sheets": [_rel(job, p) for p in paths]}
-    raw = reply.get("scores") if isinstance(reply.get("scores"), dict) else {}
     scores: Dict[str, Optional[float]] = {}
+    spread: Dict[str, List[float]] = {}
     for name in keys:
-        try:
-            scores[name] = min(10.0, max(0.0, float(raw.get(name))))
-        except (TypeError, ValueError):
-            scores[name] = None
+        values = []
+        for reply in replies:
+            try:
+                values.append(min(10.0, max(0.0, float((reply.get("scores") or {}).get(name)))))
+            except (TypeError, ValueError, AttributeError):
+                continue
+        spread[name] = sorted(values)
+        scores[name] = spread[name][len(values) // 2] if values else None
     known = {s["id"] for s in shots}
-    weakest = []
-    for item in reply.get("weakest") or []:
-        if isinstance(item, dict):
-            shot_id, why = str(item.get("shot", item.get("id", item.get("shot_id", "")))), str(item.get("reason", ""))
-        else:
-            shot_id, _, why = str(item).partition(":")
-        if shot_id.strip() in known:
-            weakest.append({"shot": shot_id.strip(), "reason": why.strip()})
+    named: Dict[str, List[str]] = {}
+    for reply in replies:
+        for item in reply.get("weakest") or []:
+            if isinstance(item, dict):
+                shot_id, why = str(item.get("shot", item.get("id", item.get("shot_id", "")))), str(item.get("reason", ""))
+            else:
+                shot_id, _, why = str(item).partition(":")
+            if shot_id.strip() in known:
+                named.setdefault(shot_id.strip(), []).append(why.strip())
+    weakest = [{"shot": shot_id, "votes": len(reasons), "reason": reasons[0]}
+               for shot_id, reasons in sorted(named.items(), key=lambda pair: -len(pair[1]))][:int(spec.get("weakest", 8))]
     threshold = float(spec.get("threshold", 6))
     failed = [name for name in keys if scores[name] is None or scores[name] < threshold]
-    return {"status": "fail" if failed else "pass", "scores": scores, "threshold": threshold, "failed": failed, "weakest": weakest,
-            "reason": str(reply.get("reason") or ""), "sheets": [_rel(job, p) for p in paths]}
+    return {"status": "fail" if failed else "pass", "scores": scores, "votes": spread, "threshold": threshold, "failed": failed,
+            "weakest": weakest, "reason": " / ".join(str(reply.get("reason") or "") for reply in replies),
+            "sheets": [_rel(job, p) for p in paths]}
 
 
 def merge_geometry(entries: Dict[str, Dict[str, Any]], posture: Optional[Dict[str, Any]]) -> None:
@@ -525,7 +534,12 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
     for shot in shots:
         for record in shot["judges"].values():
             frames.update((str(record.get("source")), frame) for frame in record.get("frames") or [])
-    return {"shots": len(shots), "pass": sum(1 for s in shots if s["status"] == "pass"),
+    def weakness(shot: Dict[str, Any]) -> Tuple[int, float]:
+        scores = [r["score"] for r in shot["judges"].values() if isinstance(r.get("score"), (int, float))]
+        return -len(shot.get("failed") or []), sum(scores) / len(scores) if scores else 10.0
+
+    weakest = [{"shot": s["id"], "failed": s["failed"]} for s in sorted(shots, key=weakness)[:8] if s.get("failed")]
+    return {"shots": len(shots), "pass": sum(1 for s in shots if s["status"] == "pass"), "weakest": weakest,
             "fail": sum(1 for s in shots if s["status"] == "fail"),
             "incomplete": sum(1 for s in shots if s["status"] == "incomplete"),
             "judges": per_judge, "failing_by_set": by_set, "frames_sampled": len(frames),
@@ -600,10 +614,12 @@ def markdown(doc: Dict[str, Any]) -> str:
         if video.get("scores"):
             out.append("%s. Scores: %s (threshold %s). %s" % (video["status"].upper(), ", ".join("%s %s" % (k, v) for k, v in video["scores"].items()),
                                                           video.get("threshold"), video.get("reason", "")))
-            out += ["", "Weakest shots:"] + ["- %s: %s" % (w["shot"], w["reason"]) for w in video.get("weakest", [])]
+            out += ["", "Weakest shots named by the whole-video judge:"] + ["- %s: %s" % (w["shot"], w["reason"]) for w in video.get("weakest", [])]
         else:
             out.append(video.get("reason", ""))
-    out += ["", "## Failing shots by set", ""]
+    out += ["", "Weakest shots by number of failed judges, then mean score: %s."
+            % ", ".join("%s (%s)" % (w["shot"], ", ".join(w["failed"])) for w in summary.get("weakest", [])),
+            "", "## Failing shots by set", ""]
     shots = {s["id"]: s for s in doc["shots"]}
     for name, ids in summary["failing_by_set"].items():
         out += ["### %s (%d)" % (name, len(ids)), ""]
