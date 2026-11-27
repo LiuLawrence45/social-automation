@@ -561,7 +561,7 @@ function M.check(stage, index, camera, samples)
 			if model:IsA("Model") then
 				local parts = {}
 				for _, item in ipairs(model:GetDescendants()) do
-					if item:IsA("BasePart") and item.Transparency < 0.95 then
+					if item:IsA("BasePart") and (item.Transparency < 0.95 or item:FindFirstChildWhichIsA("SurfaceGui")) then
 						table.insert(parts, item)
 					end
 				end

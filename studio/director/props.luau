@@ -177,6 +177,29 @@ function BUILD.phone_chat(m, spec)
 	end
 end
 
+-- Daylight through a window as it lands on a floor, a wall or a door: bright panes with the shadow of the
+-- glazing bars between them. Lies flat where it is placed; pitch 90 stands it against a wall or a door.
+function BUILD.sun_patch(m, spec)
+	local cols, rows = spec.cols or 2, spec.rows or 2
+	local width, length, bar = spec.pane_width or 1.1, spec.pane_length or 1.7, spec.bar or 0.16
+	for row = 1, rows do
+		for col = 1, cols do
+			local x = (col - (cols + 1) / 2) * (width + bar) + (row - (rows + 1) / 2) * (spec.skew or 0.5)
+			local z = (row - (rows + 1) / 2) * (length + bar)
+			-- An unlit wash over whatever lies under it, so the floor or door still shows through the light.
+			local pane = part(m, { width, 0.02, length }, CFrame.new(x, 0.012, z), "#ffffff", { shadow = false, transparency = 1 })
+			local gui = Util.surface(pane, Enum.NormalId.Top, 20)
+			gui.LightInfluence = 0
+			local wash = Instance.new("Frame")
+			wash.Size = UDim2.fromScale(1, 1)
+			wash.BorderSizePixel = 0
+			wash.BackgroundColor3 = Util.color(spec.color or "#fff2d2")
+			wash.BackgroundTransparency = spec.fade or 0.5
+			wash.Parent = gui
+		end
+	end
+end
+
 function BUILD.flashlight(m, spec)
 	part(m, { 0.3, 0.3, 1.1 }, CFrame.new(), "#1c1c1f", { material = Enum.Material.Metal })
 	-- glow: how bright the lens itself looks (1 a bare glowing lens, 0 a dark one); the beam is unchanged. A torch
