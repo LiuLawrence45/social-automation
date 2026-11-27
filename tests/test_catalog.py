@@ -78,6 +78,8 @@ def test_posture_file_says_what_it_describes_and_which_shots_went_stale(tmp_path
     before = posture.shot_stamp(shot, {"on": "me"}, {"me": {}})
     assert before == posture.shot_stamp(dict(shot, text="other words"), {"on": "me"}, {"me": {}})
     after = posture.shot_stamp(dict(shot, cast=[{"who": "me", "pose": "cower"}]), {"on": "me"}, {"me": {}})
+    assert before == posture.shot_stamp(shot, {"on": "me"}, {"me": {}, "officer": {"bundle": 1}})
+    assert before != posture.shot_stamp(shot, {"on": "me"}, {"me": {"bundle": 2}})
     assert after != before and before != posture.shot_stamp(shot, {"on": "me", "yaw": 30}, {"me": {}})
     posture.write_public(tmp_path, [{"id": "k1", "status": "pass", "stamp": before, "checked": "then"}],
                          {"job": "the-door", "label": "pass 7 draft", "stale_shots": ["k1"]}, {"k1": after})

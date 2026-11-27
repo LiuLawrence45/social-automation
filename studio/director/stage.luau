@@ -189,9 +189,11 @@ function M:planAvatar(entry, duration)
 	end
 	entry.based = anim and true or false
 	entry.duration = duration
+	entry.stock = layers
 	entry.layers = layers
 	entry.rootCF = CFrame.new(entry.from) * Util.yaw(entry.yaw)
 	Avatar.stage(entry.model, layers)
+	Avatar.rest(entry.model)
 	entry.head = Avatar.apply(entry.model, entry.rootCF, 0, 0)
 	entry.position = entry.from
 	entry.facing = Util.yaw(entry.yaw)
@@ -256,7 +258,7 @@ function M:overlayAvatar(entry, state)
 	entry.poseAt = function(u)
 		return Pose.jointsAt(self.lib, entry.model, info, ctx, u)
 	end
-	local layers = table.clone(entry.layers)
+	local layers = table.clone(entry.stock)
 	local closesEyes = false
 	local keys = {}
 	local last = -1
@@ -382,21 +384,37 @@ function M:prepare(index)
 		end
 	end
 	self:pose(0, 0)
-	for _, entry in ipairs(state.order) do
-		entry.origin = entry.position
-	end
 	local override = self.cameras and self.cameras[shot.id]
 	state.cameraSpec = override or shot.camera
-	state.camera = Camera.plan(state.cameraSpec, {
-		set = set,
-		actors = state.actors,
-		place = function(spec)
-			return self:place(spec)
-		end,
-	})
+	local function planCamera()
+		for _, entry in ipairs(state.order) do
+			entry.origin = entry.position
+		end
+		state.camera = Camera.plan(state.cameraSpec, {
+			set = set,
+			actors = state.actors,
+			place = function(spec)
+				return self:place(spec)
+			end,
+		})
+	end
+	planCamera()
+	-- A camera on a character frames the head where this shot's own pose puts it, at the shot's start (or at
+	-- the camera's frame_at, 0 to 1). The pose can turn the head to the camera, so pose and camera are settled
+	-- in two rounds from the rest pose. Nothing here may depend on what the avatar was doing in the shot staged
+	-- before: that once made the same shot frame differently in a preview and in a render.
+	local at = Util.clamp(tonumber(type(state.cameraSpec) == "table" and state.cameraSpec.frame_at) or 0, 0, 1)
+	for _ = 1, 2 do
+		for _, entry in ipairs(state.order) do
+			if entry.avatar then
+				self:overlayAvatar(entry, state)
+			end
+		end
+		self:pose(at * duration, at)
+		planCamera()
+	end
 	for _, entry in ipairs(state.order) do
 		if entry.avatar then
-			self:overlayAvatar(entry, state)
 			entry.hidden = state.camera.hide == entry.spec.who
 		end
 	end

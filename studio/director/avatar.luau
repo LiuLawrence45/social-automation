@@ -367,6 +367,16 @@ function M.stage(model, plan)
 	end
 end
 
+-- Stopping an animation leaves every joint where it last was. This puts the body back in its rest pose, so
+-- what a shot starts from never depends on the shot staged before it.
+function M.rest(model)
+	for _, item in ipairs(model:GetDescendants()) do
+		if item:IsA("Motor6D") then
+			item.Transform = CFrame.identity
+		end
+	end
+end
+
 function M.apply(model, rootCF, t, u)
 	local rig = rigOf(model)
 	model.HumanoidRootPart.CFrame = rootCF * CFrame.new(0, Pose.restLift(model), 0)

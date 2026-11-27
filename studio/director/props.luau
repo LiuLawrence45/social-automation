@@ -184,8 +184,10 @@ function BUILD.phone_chat(m, spec)
 	end
 end
 
--- Daylight through a window as it lands on a floor, a wall or a door: bright panes with the shadow of the
--- glazing bars between them. Lies flat where it is placed; pitch 90 stands it against a wall or a door.
+-- WITHDRAWN, do not use in a new shot: in a rendered picture it reads as translucent paper on the floor or the
+-- wall, and a character casts no shadow on it. Daylight has to come from the lighting mood and bright windows.
+-- Kept so an old shot list still stages. (It was: daylight through a window as it lands on a surface, bright
+-- panes with the shadow of the glazing bars between them; flat where it is placed.)
 function BUILD.sun_patch(m, spec)
 	local cols, rows = spec.cols or 2, spec.rows or 2
 	local width, length, bar = spec.pane_width or 1.1, spec.pane_length or 1.7, spec.bar or 0.16

@@ -123,8 +123,14 @@ def frames_record(samples: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
 
 def shot_stamp(shot: Dict[str, Any], camera: Any, cast: Any) -> str:
-    """Changes when this one shot's staging, timing, camera or the cast does."""
-    basis = {"shot": {k: shot.get(k) for k in ("id", "set", "cast", "props", "set_state", "frame_start", "frame_end")}, "camera": camera, "cast": cast}
+    """Changes when this one shot's staging, timing or camera does, or the look of somebody in it.
+
+    Only the cast members the shot stages count, so giving one character a new head leaves the shots
+    without that character current.
+    """
+    here = {actor.get("who") for actor in shot.get("cast") or [] if isinstance(actor, dict)}
+    looks = {who: look for who, look in cast.items() if who in here} if isinstance(cast, dict) else cast
+    basis = {"shot": {k: shot.get(k) for k in ("id", "set", "cast", "props", "set_state", "frame_start", "frame_end")}, "camera": camera, "cast": looks}
     return hashlib.sha1(json.dumps(basis, sort_keys=True).encode("utf-8")).hexdigest()[:12]
 
 
