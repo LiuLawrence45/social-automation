@@ -4,6 +4,30 @@ Pipeline for narrated short-story videos staged in Roblox Studio: a story and a 
 
 ## Stages
 
+### Find a story for a private demo
+
+Run these from the checkout, or install the package first. The source commands use Python 3.9+ and SQLite with JSON functions. They never post to Reddit or send story text to a model. The database defaults to `~/social-automation-output/SOCI-6/reddit.sqlite`; to change it, put `--db PATH` before the command.
+
+```sh
+python3 -m pipeline.source fetch --input ~/social-automation-output/reddit/posts.json
+python3 -m pipeline.source fetch --input ~/social-automation-output/SOCI-6/no_sleep_posts.csv --subreddits nosleep
+python3 -m pipeline.source coverage
+python3 -m pipeline.source search ghost --subreddit shortstories --candidates --min-words 250 --max-words 1200
+python3 -m pipeline.source show POST_ID
+python3 -m pipeline.source script POST_ID
+python3 -m pipeline.source index
+```
+
+`search` matches title, author and body, sorted by source score (unknown last). The candidate filter flags series, meta posts, mature content, missing maturity flags, and stories outside 100–3,000 words. Add `--include-unknown` to consider stories whose source omitted the maturity flag; this is not a suitability check. The index next to the database contains metadata and original links, not story bodies. The default is HTML for up to 10,000 rows and CSV above that; pass `index FILE.csv` or `index FILE.html` to choose.
+
+`script` writes `drafts/POST_ID/story.json` next to the database. It takes passages in order from the opening, action, turn and ending. This is an extractive first draft, not an original retelling: read through the cuts before recording. It needs at least 200 spoken source words and never pads a short post. Keep the database, index and drafts private; attribution is not permission to publish.
+
+On the Mac, refresh the archive exports together: `python3 -m pipeline.source refresh --input ~/social-automation-output/reddit/posts*.json`. The importer also accepts the published [610-row](https://huggingface.co/datasets/chloeliu/reddit_nosleep_posts) and [99k-row](https://huggingface.co/datasets/ElcaidaLabs/NosleepReddit100K) NoSleep CSV snapshots. The larger CSV supplies only title, body and permalink: missing authors, creation dates and scores stay null. The retrieval field for a cache is its snapshot file timestamp, not proof of when Reddit last updated it.
+
+`refresh --input PATH [PATH ...]` reimports a changed snapshot and regenerates the index. It is safe to schedule; this project does not install a timer. The historical shortstories JSON omits its subreddit; unlabeled JSON rows are assumed to be from r/shortstories. For an approved live feed, use `fetch --route archive --approved` for the Arctic Shift backfill, or `refresh --route reddit --approved` for new posts and current scores by ID. Add subs with `--subreddits shortstories nosleep scarystories shortscarystories`, and bound each run with `--pages N`. Progress commits after each page. Snapshot scores are historical, not current; upstream archives and Reddit's new-post listing have coverage limits.
+
+The live OAuth route requires an approved app, `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, and a truthful identifying `REDDIT_USER_AGENT`. The client paces requests at one per second and honors rate-limit headers. Reddit [requires explicit approval](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy); eligible free OAuth clients get [100 queries/minute averaged over 10 minutes](https://support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki). A key alone does not establish approval or rights in a story. Neither live feed runs by default. For a separate public-domain source, see [the optional Gutenberg collector](pipeline/source/GUTENBERG.md).
+
 Every stage reads and writes one job folder and can be re-run on its own.
 
 | Stage | Command | Reads | Writes |
@@ -87,4 +111,3 @@ Both files are validated before any rendering (`pipeline/handoff.py`).
 ### How the caption font size was derived
 
 libass scales the ASS `Fontsize` so that the font's ascent plus descent equals the size, not the em. For Montserrat ExtraBold, libass takes the OS/2 Windows metrics (usWinAscent 1109 + usWinDescent 453 = 1562 units per 1000-unit em). An em of 100 px therefore needs a Fontsize of 100 x 1.562, which rounds to 156. The constants live in `pipeline/captions.py`. It was checked on a rendered frame: the cap height of the letter H measured 69 px (cap height is 0.70 em, so 70 px expected), which confirms a 100 px em.
-

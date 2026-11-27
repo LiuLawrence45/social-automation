@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Private Reddit submission",
+  "type": "object",
+  "required": ["id", "subreddit", "title", "author", "url", "created_utc", "score", "num_comments", "flair", "word_count", "text", "over_18", "removed", "retrieved_at", "route", "note"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+$"},
+    "subreddit": {"type": "string"},
+    "title": {"type": "string"},
+    "author": {"type": ["string", "null"]},
+    "url": {"type": "string", "format": "uri"},
+    "created_utc": {"type": ["integer", "null"]},
+    "score": {"type": ["integer", "null"]},
+    "num_comments": {"type": ["integer", "null"]},
+    "flair": {"type": ["string", "null"]},
+    "word_count": {"type": "integer", "minimum": 0},
+    "text": {"type": "string"},
+    "over_18": {"type": ["boolean", "null"]},
+    "removed": {"type": "boolean"},
+    "retrieved_at": {"type": "string", "format": "date-time"},
+    "route": {"type": "string"},
+    "note": {"type": "string"}
+  }
+}
