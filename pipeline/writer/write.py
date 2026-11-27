@@ -52,7 +52,7 @@ Return one JSON object and nothing else:
 
 FORM RULES
 - "lines" is the whole spoken script in order. "narrator" speaks the narration. Every other speaker is a character, with an id in lowercase letters, digits and underscores, and exactly one "cast" entry. Include a cast entry for the narrator too.
-- cast "kind" is "person" for someone with a personal name (the name comes from the cast pool and the speaker id is that name in lowercase), "role" for a person known only by what they are (mom, the teacher, a stranger), or "voice" for anything that is not a person (a machine, a creature, something unseen). The narrator's cast name is the pool name of the person telling the story, or "Narrator" when nobody in the story tells it.
+- cast "kind" is "person" for someone with a personal name (the name comes from the cast pool and the speaker id is that name in lowercase), "role" for a person known only by what they are (mom, the teacher, a stranger), or "voice" for anything that is not a person (a machine, a creature, something unseen). The narrator is kind "person" with a pool name when the story names its teller, and otherwise kind "role" with the name "Narrator".
 - A character whose voice changes (for example the same voice heard up close at the end) may have a second id such as "thing_close" with its own cast entry.
 - Text is only the words to be spoken: no quotation marks, no stage directions, no speaker names, no emoji, no dashes used as punctuation. Write numbers as words.
 - voice.processing is "none" or an audible treatment such as {processing}.
@@ -249,7 +249,7 @@ def normalise(data: Any) -> Dict[str, Any]:
     for speaker in speakers:
         entry = given.get(speaker, {})
         voice = entry.get("voice") if isinstance(entry.get("voice"), dict) else {}
-        kind = entry.get("kind") if entry.get("kind") in CAST_KINDS else "person"
+        kind = entry.get("kind") if entry.get("kind") in CAST_KINDS else ("role" if speaker == "narrator" else "person")
         cast.append({"speaker": speaker, "name": str(entry.get("name") or speaker.replace("_", " ").title()), "kind": kind, "role": str(entry.get("role") or ""),
                      "voice": {"age": str(voice.get("age") or ""), "gender": str(voice.get("gender") or ""), "tone": str(voice.get("tone") or ""),
                                "processing": str(voice.get("processing") or "none")}})

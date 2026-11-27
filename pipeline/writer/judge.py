@@ -34,7 +34,7 @@ SCRIPT (speaker: text), {words} words:
 {script}
 
 CAST: {cast}
-
+{limits_block}
 Score each item from 1 to 5. Use these anchors and do not drift from them:
 1 = broken, 2 = a clear fault a viewer would notice, 3 = works but has one fault you can name, 4 = ready to film as it is, 5 = as good as the best shorts in the genre.
 Give a 4 unless you can quote the words that are at fault. Taste alone ("could be punchier") is not a fault.
@@ -64,7 +64,7 @@ def _check(key: str, ok: bool, value: Any, target: Any, fix: str) -> Dict[str, A
 def check_script(story: Dict[str, Any], targets: Dict[str, Any], pool: Sequence[str] = ()) -> List[Dict[str, Any]]:
     """The measurable checks. Every entry has id, ok, value, target and, when it fails, a fix instruction.
 
-    pool is the cast pool: with one, every cast entry of kind "person" and the narrator must carry a name from it.
+    pool is the cast pool: with one, every cast entry of kind "person" must carry a name from it.
     No name has to appear in the spoken text.
     """
     lines = story.get("lines") or []
@@ -122,7 +122,7 @@ def check_script(story: Dict[str, Any], targets: Dict[str, Any], pool: Sequence[
         for entry in entries:
             name = str(entry.get("name") or "")
             if entry.get("speaker") == NARRATOR:
-                if name not in pool and name.lower() != NARRATOR:
+                if entry.get("kind") == "person" and name not in pool:
                     outside.append(name)
             elif entry.get("kind", "person") == "person" and (name not in pool or entry.get("speaker") != name.lower()):
                 outside.append(name)
@@ -142,7 +142,7 @@ def format_script(lines: Sequence[Dict[str, Any]]) -> str:
 
 
 def rubric(story: Dict[str, Any], genre: str, source_text: Optional[str], client: llm.Client, pool: Sequence[str] = (),
-           previous: Sequence[str] = (), **options: Any) -> Dict[str, Any]:
+           previous: Sequence[str] = (), targets: Optional[Dict[str, Any]] = None, **options: Any) -> Dict[str, Any]:
     """The model rubric: eight scores from 1 to 5 with reasons and a fix for each item under 4."""
     scary = genre == "scary"
     names_block = ""
@@ -154,6 +154,14 @@ def rubric(story: Dict[str, Any], genre: str, source_text: Optional[str], client
         names_question += " Score 2 or lower if a person carries a personal name that is not in the CAST POOL."
     cast_line = "; ".join("%s = %s (%s)" % (entry.get("speaker"), entry.get("name"), entry.get("kind", "person"))
                           for entry in story.get("cast") or [] if isinstance(entry, dict)) or "none given"
+    limits_block = ""
+    if targets:
+        stats = textstats.measure_lines(story["lines"], targets["wpm"], NARRATOR)
+        limits_block = ("LIMITS the writer is held to, which no fix may break: %d to %d words in all; no spoken line over %d words; spoken dialogue %d%% to %d%% of the words "
+                        "(it is %d%% now, so ask for fewer spoken words, never more, when it is at the top).\n"
+                        % (int(round(targets["words"] * (1 - targets["length_tolerance"]))), int(round(targets["words"] * (1 + targets["length_tolerance"]))),
+                           targets["dialogue_line_max_words"], round(targets["dialogue_share"][0] * 100), round(targets["dialogue_share"][1] * 100),
+                           round(stats["dialogue_share"] * 100)))
     previous_block = ""
     if previous:
         previous_block = "\nEARLIER FINDINGS (already acted on by the writer):\n%s\n" % "\n".join("- " + item for item in previous)
@@ -162,7 +170,7 @@ def rubric(story: Dict[str, Any], genre: str, source_text: Optional[str], client
         source_words = source_text.split()
         source_block = "\nSOURCE STORY (what the script adapts):\n%s\n" % " ".join(source_words[:1800])
     prompt = RUBRIC_PROMPT.format(
-        genre=genre, source_block=source_block, names_block=names_block, names_question=names_question, cast=cast_line, previous_block=previous_block, words=len(textstats.words(textstats.script_text(story["lines"]))),
+        genre=genre, source_block=source_block, names_block=names_block, names_question=names_question, cast=cast_line, limits_block=limits_block, previous_block=previous_block, words=len(textstats.words(textstats.script_text(story["lines"]))),
         script=format_script(story["lines"]),
         tone_question=("is it unsettling without gore: no blood, wounds, bodies or pain described, the threat implied through sound, voice and wrong details, safe for a young audience?"
                        if scary else "does it hold one clear tone, and is it safe for a young audience (no gore, slurs or sexual content)?"),
@@ -212,7 +220,7 @@ def judge_story(story: Dict[str, Any], targets: Dict[str, Any], genre: str, pool
     item is under targets["rubric_floor"]. previous is the list of fixes already asked for, so the rubric does not reverse itself.
     """
     checks = check_script(story, targets, pool)
-    scores = rubric(story, genre, source_text, client, pool, previous, **options) if client is not None else None
+    scores = rubric(story, genre, source_text, client, pool, previous, targets, **options) if client is not None else None
     fixes = [check["fix"] for check in checks if not check["ok"]]
     if scores is not None:
         fixes += scores["fixes"]

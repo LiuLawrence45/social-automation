@@ -275,7 +275,8 @@ def test_rubric_scores_and_summary():
     report = judge.judge_story(script, targets(), "scary", ["Mara"], SOURCE, client)
     assert report["summary"]["passed"] is False and report["summary"]["rubric_low"] == ["filmable"]
     assert any("Not filmable" in fix and "never seen her" in fix for fix in report["fixes"])
-    assert "CAST POOL: Mara" in client.calls[0]["prompt"] and "narrator = Mara (person)" in client.calls[0]["prompt"] and "SOURCE STORY" in client.calls[0]["prompt"]
+    assert "CAST POOL: Mara" in client.calls[0]["prompt"] and "narrator = Mara (person)" in client.calls[0]["prompt"]
+    assert "LIMITS" in client.calls[0]["prompt"] and "no spoken line over 12 words" in client.calls[0]["prompt"] and "SOURCE STORY" in client.calls[0]["prompt"]
     report = judge.judge_story(script, targets(), "scary", ["Mara"], SOURCE, client, ["Line 4: show it instead."])
     assert report["summary"]["passed"] is True and report["summary"]["rubric_mean"] == 4.0 and report["summary"]["score"] == 87.5
     assert "EARLIER FINDINGS" in client.calls[1]["prompt"]
