@@ -203,7 +203,7 @@
         },
         {
           "key": "wrong_time",
-          "text": "the script puts this shot at a time of day and the picture does not show it. From the words 'the next morning' (or 'at dawn', 'that afternoon') onwards, until the script says otherwise, every shot must give a viewer positive evidence of daytime: daylight coming through a window or an open door, sun or pale daylight on the walls and floor, or a room plainly lit by day. A dim windowless corridor or room with no such evidence fails even when it does not look like night, and so does a close-up of a floor or door lit the same dim way; only a close-up of a lit screen is exempt. A shot set in the middle of the night must not read as day"
+          "text": "the script puts this shot at a time of day and the picture does not show it. From the words 'the next morning' (or 'at dawn', 'that afternoon') onwards, until the script says otherwise, every shot must give a viewer positive evidence of daytime: daylight coming through a window or an open door, sun or pale daylight on the walls and floor, or a room plainly lit by day. A dim windowless corridor or room with no such evidence fails even when it does not look like night, and so does a close-up of a floor or door lit the same dim way; only a close-up of a lit screen is exempt. Being bright enough to see is not evidence of daytime: name in your reason the window, open door or patch of daylight you can see, and if you cannot name one, report this key. A shot set in the middle of the night must not read as day"
         }
       ],
       "defect_pass_score": 8
