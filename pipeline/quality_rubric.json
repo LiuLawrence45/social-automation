@@ -1,0 +1,318 @@
+{
+  "version": 1,
+  "provider": "gemini",
+  "model": "",
+  "ceiling_usd": 2,
+  "reserve_usd": 0.05,
+  "workers": 8,
+  "max_output_tokens": 4000,
+  "prices": {},
+  "format": "The video is a vertical 9:16 narrated short staged in Roblox Studio: jointed humanoid avatars (R15 rigs with faces, hair and clothes) acting on built sets, about one shot per second, with one-word captions burned in at 69% of the frame height in the finished version.",
+  "system": "You are a strict quality-control reviewer for the finished picture of a short narrated video. You see frames taken from the rendered video and judge only what is visible in them, never what the makers intended. A stylised avatar look is fine; the question is whether a viewer would notice something wrong. When a listed fail condition is visible, report it even if the rest of the frame is good. Never report a defect you cannot point to in a specific labelled frame. Reply with one JSON object and nothing else.",
+  "scale": "Score 0 to 10 for this concern only: 9 to 10 nothing a viewer would notice, 7 to 8 small imperfections only, 5 to 6 a viewer would notice something off, 0 to 4 plainly wrong.",
+  "judges": {
+    "posture": {
+      "title": "Posture and action",
+      "video": "clean",
+      "frames": 3,
+      "tile_height": 720,
+      "threshold": 6,
+      "script": true,
+      "question": "Look at every visible character in every frame. Is each one doing something specific that fits the words being spoken, in a natural human posture a film director would accept?",
+      "notes": "Acceptable examples: lying asleep in bed, sitting up startled, a hand that actually reaches a handle, hunching over a phone held in both hands, cowering in a corner with arms drawn in, a nurse writing at a desk or tending a patient, an officer sweeping a torch around a room. A dark silhouette figure still has a posture: judge it too. Hands raised and held frozen in front of the body through the whole shot count as arms_out unless they are plainly doing something (pushing a door, shielding the face while recoiling).",
+      "fail_if": [
+        {
+          "key": "idle",
+          "text": "a character just stands or sits in a neutral stance (upright, arms hanging or held loosely, legs straight) with no action, gesture or reaction that fits the words"
+        },
+        {
+          "key": "default_pose",
+          "text": "A-pose or T-pose leftovers: arms held away from the body or out to the sides as in an avatar's default stance"
+        },
+        {
+          "key": "arms_out",
+          "text": "one or both arms held stiffly straight out in front or to the side for no reason the words explain (zombie arms), including while standing, walking or facing a door"
+        },
+        {
+          "key": "splayed",
+          "text": "limbs splayed, legs planted unnaturally wide, or a limb frozen in the middle of a gesture"
+        },
+        {
+          "key": "bad_joint",
+          "text": "a joint hyperextended, bent the wrong way or twisted; a head, hand or foot at an impossible angle"
+        },
+        {
+          "key": "wrong_action",
+          "text": "the body does the opposite of the words (standing upright when the words say asleep, cowering or crying; calm when the words say terrified)"
+        }
+      ],
+      "not_applicable": "no character and no part of a character (such as a hand) is visible in any frame",
+      "defect_pass_score": 8
+    },
+    "expression": {
+      "title": "Expression",
+      "video": "clean",
+      "frames": 3,
+      "tile_height": 720,
+      "threshold": 6,
+      "defect_pass_score": 8,
+      "script": true,
+      "question": "Look at every face you can read in every frame. Does each expression fit the moment: what that character feels as these words are spoken?",
+      "notes": "Work out the moment from the script: who is afraid, who is asleep, who is calm at work, who is worried, who is pretending. Judge the face only: eyes, brows and mouth. A dark silhouette with only lit eyes has no expression to judge, and a face turned away, hidden, or too small or dark to read does not count. A smile, smirk or pleased look in any one frame of a moment of fear, danger or a scare fails the shot, even when other frames show fear. Before a character knows of the danger, and for people calmly doing a job (a nurse, a dispatcher, an officer), a calm or neutral face is right. A look of fear held through a short shot is not a frozen face.",
+      "fail_if": [
+        {
+          "key": "wrong_emotion",
+          "text": "a face shows the opposite of the moment: smiling, smirking or looking pleased during fear, danger or a scare; cheerful where the words describe crying, pleading or worry"
+        },
+        {
+          "key": "blank",
+          "text": "a blank, neutral default face on a moment of fear, shock, crying, pain or urgency for that character"
+        },
+        {
+          "key": "frozen_face",
+          "text": "eyes or mouth stuck in a state the moment contradicts: eyes wide open while the words say the character is asleep, a mouth hanging open on a calm line, a fixed doll stare where the character should be looking at something"
+        }
+      ],
+      "not_applicable": "no face can be read in any frame (no character, only silhouettes, or faces turned away or hidden)"
+    },
+    "clipping": {
+      "title": "Clipping and floating",
+      "video": "clean",
+      "frames": 3,
+      "tile_height": 720,
+      "threshold": 6,
+      "question": "Check every character and every prop for geometry that passes through other geometry or hangs in the air.",
+      "notes": "Look closely at hands on phones and door handles, arms against the torso, bodies against walls, doors, desks and beds, and feet against the floor. Darkness is not clipping; judge only what you can see. Report clipping only where you can see one surface pass through another; a hand that hovers near a surface without touching it is a posture problem, not clipping.",
+      "fail_if": [
+        {
+          "key": "limb_through_body",
+          "text": "an arm, hand or leg passes through the character's own torso, head or other limb"
+        },
+        {
+          "key": "hand_through_prop",
+          "text": "a hand or arm passes through a phone, handle, door, desk, wall or other object instead of touching it"
+        },
+        {
+          "key": "body_through_set",
+          "text": "a character's body, head or limb passes through a wall, door, floor, furniture or bedding (for example lying half inside a mattress or standing inside a desk)"
+        },
+        {
+          "key": "floating",
+          "text": "feet clearly above the floor, or a character or prop hanging in the air with nothing holding it"
+        },
+        {
+          "key": "sunk",
+          "text": "feet or legs sunk into the floor"
+        },
+        {
+          "key": "prop_not_in_hand",
+          "text": "a prop that should be held (phone, keys, torch) floats beside the hand or sits at an angle no grip could hold"
+        },
+        {
+          "key": "characters_intersect",
+          "text": "two characters pass through each other"
+        }
+      ],
+      "not_applicable": "no character and no held prop is visible in any frame",
+      "defect_pass_score": 8
+    },
+    "framing": {
+      "title": "Framing and composition",
+      "video": "captioned",
+      "frames": 2,
+      "tile_height": 720,
+      "threshold": 6,
+      "question": "These frames come from the finished video with its captions. Is the subject of the shot framed on purpose, with the caption clear of what matters?",
+      "fail_if": [
+        {
+          "key": "subject_cut_off",
+          "text": "the subject's head or the thing the shot is about is cut by the frame edge in a way that looks accidental, including a character shown mostly as a back, torso or legs with the head out of frame"
+        },
+        {
+          "key": "dead_space",
+          "text": "most of the frame is empty wall, floor, ceiling or darkness while the subject is small or pushed to an edge"
+        },
+        {
+          "key": "caption_covers",
+          "text": "the burned-in caption word sits on a face or on the thing the shot is about (the message on a phone screen, a door handle, a footprint)"
+        },
+        {
+          "key": "no_subject",
+          "text": "it is not clear what the subject of the shot is"
+        },
+        {
+          "key": "blocked",
+          "text": "something in the foreground blocks the subject by accident"
+        }
+      ],
+      "defect_pass_score": 8
+    },
+    "lighting": {
+      "title": "Lighting and readability",
+      "video": "clean",
+      "frames": 2,
+      "tile_height": 480,
+      "threshold": 6,
+      "measures": true,
+      "min_lit_fraction": 0.01,
+      "question": "Imagine this shot on a phone for one second. Can a viewer tell what it shows? A dark horror look is wanted; an unreadable frame is not.",
+      "fail_if": [
+        {
+          "key": "unreadable",
+          "text": "so dark or murky that a viewer could not say in one second what or who the shot shows"
+        },
+        {
+          "key": "subject_lost",
+          "text": "the subject (face, figure, hand, prop, text) merges into the background so its shape cannot be read, for example a person who is only a black shape in a dark room so a viewer cannot tell who it is or what they are doing; a dark figure whose lit eyes and outline read at once is fine"
+        },
+        {
+          "key": "blown_out",
+          "text": "highlights clipped to white so detail on the subject is lost, or a glowing blob or glare artefact hangs in the frame; a place that is simply bright, such as a lit hospital, is not a defect"
+        }
+      ],
+      "defect_pass_score": 8
+    },
+    "story": {
+      "title": "Story match",
+      "video": "clean",
+      "frames": 3,
+      "tile_height": 720,
+      "threshold": 6,
+      "script": true,
+      "question": "Does this clip show what the words spoken during it say? Judge the picture against the words of this shot, using the script only for context.",
+      "fail_if": [
+        {
+          "key": "wrong_subject",
+          "text": "the frames show someone or something other than what the words are about"
+        },
+        {
+          "key": "action_missing",
+          "text": "the words describe an action or event (a text arriving, a knob turning, walking to the door, reaching, crying, calling, searching, footprints) and the frames show neither it nor a clear reaction to it"
+        },
+        {
+          "key": "contradicts",
+          "text": "the picture contradicts the words (says asleep but the character stands; says nobody is here but someone is plainly there; says outside the door but shown inside)"
+        },
+        {
+          "key": "wrong_place",
+          "text": "the place shown contradicts the words"
+        },
+        {
+          "key": "text_wrong",
+          "text": "on-screen text the words depend on (a phone message, a sign) is missing, unreadable or says something else"
+        },
+        {
+          "key": "wrong_time",
+          "text": "the script puts this shot at a time of day and the light in the picture contradicts it: every shot from the words 'the next morning' (or 'at dawn', 'that afternoon') onwards must read as daylight until the script says otherwise, and a shot set in the middle of the night must not read as day"
+        }
+      ],
+      "defect_pass_score": 8
+    },
+    "continuity": {
+      "title": "Continuity",
+      "video": "clean",
+      "frames": 2,
+      "tile_height": 640,
+      "threshold": 6,
+      "neighbours": true,
+      "question": "Compare this shot (the unprefixed tiles) with the shot before it (PREV) and, when present, the last earlier shot in the same set (EARLIER). Would a viewer feel a break?",
+      "notes": "A cut to another place or to an insert is normal. Judge whether the same character is the same avatar in the same outfit, whether positions and props follow from the previous shot when the place and action are continuous, whether time of day and lamp states agree within one place, and whether every character belongs to one visual style. Report a defect only when this shot's own tiles show it: a problem that exists only inside the PREV or EARLIER tile belongs to that shot, not this one. Characters drawn in different detailed art styles are not a defect here; only a blocky classic or default avatar is.",
+      "fail_if": [
+        {
+          "key": "avatar_changed",
+          "text": "the same character has a different avatar, face, hair, skin or outfit than in another tile"
+        },
+        {
+          "key": "style_mismatch",
+          "text": "a character is a blocky classic or default low-detail avatar while the others are detailed avatars, or the rendering style differs between tiles"
+        },
+        {
+          "key": "position_jump",
+          "text": "in one place and one continuous action, a character or prop is somewhere that cannot follow from the previous shot (teleports, a door open then shut, a phone in hand then gone)"
+        },
+        {
+          "key": "time_jump",
+          "text": "time of day or lamp state changes between tiles of the same place without the words saying so"
+        },
+        {
+          "key": "set_changed",
+          "text": "the same room looks like a different room"
+        }
+      ],
+      "defect_pass_score": 8
+    },
+    "motion": {
+      "title": "Motion",
+      "video": "clean",
+      "frames": 8,
+      "columns": 4,
+      "tile_height": 480,
+      "threshold": 6,
+      "measures": true,
+      "question": "The tiles are evenly spaced frames across the whole shot, in time order. Read them as a flip-book and judge the movement, not the pose in any one frame.",
+      "notes": "The measured change figures tell you how much the picture differs from one video frame to the next; a single spike inside the shot is a jump, and a figure near zero throughout means nothing moves.",
+      "fail_if": [
+        {
+          "key": "sliding",
+          "text": "a character changes position across the frames while the legs do not step (slides or glides over the floor)"
+        },
+        {
+          "key": "pop",
+          "text": "a character, limb, prop, light or the camera jumps between two neighbouring frames in a way smooth motion cannot explain; a light that flickers or pulses as a visible effect is not a pop"
+        },
+        {
+          "key": "limb_snap",
+          "text": "a limb is in unrelated poses in neighbouring frames"
+        },
+        {
+          "key": "statue",
+          "text": "a character who should be acting or reacting (speaking, walking, reaching, opening a door, crying, recoiling, working, facing a threat) holds the same pose in every frame like a statue, or is frozen in mid-stride; a moving camera does not count as the character moving, nor does breathing or a slight drift of the head; a character who is asleep, hiding, or quietly reading, sitting or waiting under plain narration may be still"
+        },
+        {
+          "key": "camera_nowhere",
+          "text": "the camera move starts or ends on nothing (an empty wall, floor or blur) or drifts off the subject; an insert whose subject is a light, a shadow, a gap under a door or a prop is not nothing"
+        }
+      ],
+      "defect_pass_score": 8,
+      "detail": {
+        "frames": 3,
+        "tile_height": 720
+      },
+      "flags": {
+        "frozen_character": {
+          "defect": "statue",
+          "text": "any visible character, in the background too (check them one by one; one is enough), whose words or moment call for action, speech or a reaction keeps one pose from the first frame of the shot to the last: same limbs, same hands, same stance, same mouth. Breathing, a slight sway or drift of the head, an eye blink, camera movement, zoom and lighting changes are not acting and do not count; compare the body against itself, using the larger second image. Facing a threat, a reveal or a shock calls for a reaction (a flinch, a step back, a turn of the head, hands coming up): standing through it in one held pose is frozen, and tense stillness does not excuse it. A character who is opening a door, speaking, texting or working while the arms never move is frozen. A character who is asleep, hiding, or quietly reading, sitting or waiting under plain narration is not. Nor is a character who is only listening, or whose line says the body froze or went cold, as long as the head or hands still move a little."
+        }
+      }
+    }
+  },
+  "video": {
+    "title": "Whole video",
+    "tile_height": 400,
+    "columns": 6,
+    "tiles_per_sheet": 18,
+    "threshold": 6,
+    "weakest": 8,
+    "max_output_tokens": 6000,
+    "question": "The sheets show one middle frame per shot in story order, labelled with the shot id. Judge the video as a whole.",
+    "criteria": [
+      {
+        "key": "pacing",
+        "text": "do shot lengths and changes of place keep pace with the words, with no stretch that drags or rushes"
+      },
+      {
+        "key": "repetition",
+        "text": "10 means no repetition; low when the same framing, pose or picture keeps coming back"
+      },
+      {
+        "key": "ending",
+        "text": "does the last line land: do the final shots build to and hold on a picture that pays off the story"
+      },
+      {
+        "key": "consistency",
+        "text": "one visual style, one look per character and per place across the whole video"
+      }
+    ],
+    "votes": 3
+  }
+}
