@@ -506,14 +506,15 @@ def command_video(stage: Stage, args: argparse.Namespace) -> Dict[str, Any]:
         rendered.append(shot["id"])
         capture_seconds += time.time() - began
         print("shot %s: %d frames in %.1f s" % (shot["id"], shot["frame_end"] - shot["frame_start"], time.time() - began), flush=True)
-    joined = folder / "all.h264"
+    joined, part = folder / "all.h264", job / "video.part.mp4"
     with open(joined, "wb") as handle:
         for shot in timeline["shots"]:
             handle.write((folder / (shot["id"] + ".h264")).read_bytes())
     subprocess.run([ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y", "-framerate", str(timeline["fps"]), "-i", str(joined),
                     "-c", "copy", "-bsf:v", "setts=pts=N:dts=N:duration=1:time_base=1/%d" % timeline["fps"],
                     "-video_track_timescale", str(timeline["fps"]), "-movflags", "+faststart",
-                    str(job / "video.mp4")], check=True)
+                    str(part)], check=True)
+    os.replace(str(part), str(job / "video.mp4"))
     joined.unlink()
     with open(job / "shots.json", "w", encoding="utf-8") as handle:
         json.dump(story.shots_handoff(timeline), handle, indent=1)

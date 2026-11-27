@@ -135,14 +135,14 @@ end
 local function vest(model, spec)
 	local torso, hips = model.UpperTorso, model.LowerTorso
 	local color = Util.color(spec.color, Color3.fromRGB(20, 28, 51))
-	local size = Vector3.new(torso.Size.X * 0.9, torso.Size.Y * 0.8, torso.Size.Z * 0.82)
+	local size = Vector3.new(torso.Size.X * 0.74, torso.Size.Y * 0.8, torso.Size.Z * 0.84)
 	local shell = fixed(model, torso, "Vest", size, CFrame.new(0, -torso.Size.Y * 0.06, 0), color, Enum.Material.Fabric)
 	for _, face in ipairs({ Enum.NormalId.Front, Enum.NormalId.Back }) do
 		local gui = Util.surface(shell, face, 120)
 		local label = Instance.new("TextLabel")
 		label.BackgroundTransparency = 1
 		label.Size = face == Enum.NormalId.Back and UDim2.fromScale(0.86, 0.3) or UDim2.fromScale(0.4, 0.16)
-		label.Position = face == Enum.NormalId.Back and UDim2.fromScale(0.07, 0.12) or UDim2.fromScale(0.54, 0.14)
+		label.Position = face == Enum.NormalId.Back and UDim2.fromScale(0.07, 0.12) or UDim2.fromScale(0.06, 0.14)
 		label.Text = spec.text or "POLICE"
 		label.TextScaled = true
 		label.Font = Enum.Font.GothamBold
