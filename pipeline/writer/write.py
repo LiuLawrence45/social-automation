@@ -273,8 +273,8 @@ def _source_text(record: Dict[str, Any]) -> str:
 def _names_line(names: List[str]) -> str:
     if not names:
         return "none required"
-    return ("%s. Use every one, spelled exactly: give them to characters who speak or are spoken to, or to a place; the narrator may take one. "
-            "Do not list them; spread them through the story." % ", ".join(names))
+    return ("%s. Use every one, spelled exactly. Give up to three of them to characters who speak; the rest are names that are seen or called out "
+            "(a name tag, a locker, a roll call, a place). The narrator is named only if another character says the name." % ", ".join(names))
 
 
 def _system(style: Dict[str, Any], genre: str, targets: Dict[str, Any]) -> str:

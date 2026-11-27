@@ -33,7 +33,9 @@ GENRE: {genre}
 SCRIPT (speaker: text), {words} words:
 {script}
 
-Score each item from 1 (fails) to 5 (excellent):
+Score each item from 1 to 5. Use these anchors and do not drift from them:
+1 = broken, 2 = a clear fault a viewer would notice, 3 = works but has one fault you can name, 4 = ready to film as it is, 5 = as good as the best shorts in the genre.
+Give a 4 unless you can quote the words that are at fault. Taste alone ("could be punchier") is not a fault.
 - "premise_clear": after the first 5 seconds (about 20 words) can a viewer who knows nothing say what this story is about? Give "by_word": the count of words by which it is clear.
 - "filmable": is every sentence something a camera can show or a microphone can record (an action, an object, a place, a spoken line)? List up to 4 sentences that are not, in "weak".
 - "dialogue_spoken": do the spoken lines sound like people talking (short, contractions, no explaining for the viewer's sake), and does each one earn its place? List up to 4 stiff lines in "weak".
@@ -43,8 +45,8 @@ Score each item from 1 (fails) to 5 (excellent):
 - "faithful": {faithful_question}
 
 Return one JSON object and nothing else:
-{{"premise_clear": {{"score": n, "by_word": n, "why": "..."}}, "filmable": {{"score": n, "weak": ["..."], "why": "..."}}, "dialogue_spoken": {{"score": n, "weak": ["..."], "why": "..."}}, "escalation": {{"score": n, "why": "..."}}, "ending_lands": {{"score": n, "why": "..."}}, "tone_safe": {{"score": n, "why": "..."}}, "faithful": {{"score": n, "why": "..."}}, "fixes": ["up to 5 concrete edits, most important first, each naming the line to change and what to change it to"]}}
-Keep every "why" under 25 words. In "fixes", never ask for anything a sentence in this script already does, and never ask to undo a change listed under EARLIER FINDINGS.
+{{"premise_clear": {{"score": n, "by_word": n, "why": "..."}}, "filmable": {{"score": n, "weak": ["..."], "why": "..."}}, "dialogue_spoken": {{"score": n, "weak": ["..."], "why": "..."}}, "escalation": {{"score": n, "why": "..."}}, "ending_lands": {{"score": n, "why": "..."}}, "tone_safe": {{"score": n, "why": "..."}}, "faithful": {{"score": n, "why": "..."}}, "fixes": ["one concrete edit for each item scored under 4, most important first, naming the line number and the new wording; an empty list when every item is 4 or 5"]}}
+Keep every "why" under 25 words. Leave "weak" empty for an item you score 4 or 5. In "fixes", never ask for anything the script already does, never ask to undo a change listed under EARLIER FINDINGS, never ask for the source's names back when REQUIRED NAMES are given, and never ask for more words than the script has room for.
 {previous_block}"""
 
 
@@ -143,7 +145,7 @@ def rubric(story: Dict[str, Any], genre: str, source_text: Optional[str], client
                        if scary else "does it hold one clear tone, and is it safe for a young audience (no gore, slurs or sexual content)?"),
         faithful_question=("does it keep the source's premise, its strongest image and its ending, without inventing a different story?"
                            if source_text else "is the story self-consistent, with nothing set up and dropped? (No source was given.)"))
-    reply = client(prompt, tier="cheap", max_tokens=6000, purpose="script rubric", effort="medium", **options)
+    reply = client(prompt, tier="strong", max_tokens=4000, purpose="script rubric", effort="low", **options)
     data = llm.extract_json(reply["text"])
     if not isinstance(data, dict):
         raise llm.LLMError("the rubric reply is not an object")
