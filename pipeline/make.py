@@ -271,8 +271,9 @@ class Make:
                  "The full procedure is in RUNBOOK.md at the repository root.", "", "## What is needed", "", needed.strip(), ""]
         if detail.strip():
             lines += ["## Findings", "", detail.strip(), ""]
-        lines += ["## Inputs", ""] + ["- %s" % item for item in inputs] + ["", "## Commands", ""]
-        lines += ["    %s" % line.replace("{run}", self.prefix).replace("{job}", str(self.job)) for line in commands]
+        fill = lambda text: text.replace("{run}", self.prefix).replace("{job}", str(self.job))
+        lines += ["## Inputs", ""] + ["- %s" % fill(item) for item in inputs] + ["", "## Commands", ""]
+        lines += ["    %s" % fill(line) for line in commands]
         lines += ["    %s pipeline.make --out %s" % (self.prefix, self.job), "", "## Done when", "", done.strip(), ""]
         path.write_text("\n".join(lines), encoding="utf-8")
         return path

@@ -240,7 +240,9 @@ def check_job(job: Path) -> Dict[str, Any]:
             run = run + 1 if before[1] == after[1] else 1
             if run == int(settings["pose_run"]) + 1:
                 report("pose_variety", None, "%s holds pose %s for more than %d shots running, up to %s" % (who, after[1], int(settings["pose_run"]), after[0]), who)
-    spread = judge.variety((timeline or {}).get("shots") or shots, None, (story.get("judge") or {}).get("variety"), locked_neighbours_only=True)
+    timed = {shot["id"]: shot for shot in (timeline or {}).get("shots", [])}
+    spread = judge.variety([dict(shot, start=timed[shot["id"]]["start"], end=timed[shot["id"]]["end"]) if shot["id"] in timed else shot for shot in shots],
+                           None, (story.get("judge") or {}).get("variety"), locked_neighbours_only=True)
     for problem in spread["problems"]:
         report("camera_variety", None, problem)
     counts = {}  # type: Dict[str, int]

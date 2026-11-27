@@ -139,7 +139,7 @@ def test_sample_stops_on_the_defaults_then_finishes(tmp_path):
     assert run(job, fake, "--story", str(SAMPLE / "story.json")) == 3
     assert state_of(job)["stages"]["checks"]["status"] == "needs_agent"
     request = (job / "REQUEST-checks.md").read_text(encoding="utf-8")
-    assert "no_idle" in request and "s04" in request and "pipeline.make --out" in request
+    assert "no_idle" in request and "s04" in request and "pipeline.make --out" in request and "{run}" not in request
     assert "pipeline.judge shots" not in fake.modules()
     story = json.loads((job / "story.json").read_text(encoding="utf-8"))
     story["judge"]["variety"] = {"cap": 1.0, "slack": 0.0, "min_moving": 0.0}
@@ -147,6 +147,7 @@ def test_sample_stops_on_the_defaults_then_finishes(tmp_path):
     shotlist = json.loads((job / "shotlist.json").read_text(encoding="utf-8"))
     shotlist["shots"][3]["cast"][1]["action"] = "nod"
     (job / "shotlist.json").write_text(json.dumps(shotlist), encoding="utf-8")
+    assert checks.check_job(job)["errors"] == []
     assert run(job, fake) == 0
     state = state_of(job)
     assert [state["stages"][stage]["status"] for stage in make.STAGES] == ["done"] * len(make.STAGES)
@@ -156,6 +157,19 @@ def test_sample_stops_on_the_defaults_then_finishes(tmp_path):
     assert make.ledger_total(job) == pytest.approx(0.30)
     assert state["stages"]["voice"]["inputs"] and state["stages"]["render"]["outputs"] == ["video.mp4", "shots.json"]
     assert [name for name in fake.modules() if name != "pipeline.story timeline"][-6:] == STAGE_ORDER
+
+
+def test_checks_read_the_shot_list_not_a_stale_timeline(tmp_path):
+    job = tmp_path / "job"
+    assert run(job, Fake(job), "--story", str(SAMPLE / "story.json"), "--to", "shots") == 0
+    assert "camera_variety" in checks.check_job(job)["counts"]
+    shotlist = json.loads((job / "shotlist.json").read_text(encoding="utf-8"))
+    by = {shot["id"]: shot for shot in shotlist["shots"]}
+    by["s01"]["camera"]["type"] = by["s04"]["camera"]["type"] = "wide"
+    by["s04"]["cast"][1]["action"] = "nod"
+    by["s06"]["camera"]["pitch"], by["s09"]["camera"]["pitch"], by["s10"]["camera"]["dutch"] = 24, -15, 8
+    (job / "shotlist.json").write_text(json.dumps(shotlist), encoding="utf-8")
+    assert checks.check_job(job)["errors"] == []
 
 
 def test_rerun_skips_finished_stages_and_from_reruns(tmp_path):
