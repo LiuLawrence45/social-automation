@@ -5,7 +5,7 @@
   "ceiling_usd": 2,
   "reserve_usd": 0.05,
   "workers": 8,
-  "max_output_tokens": 1500,
+  "max_output_tokens": 4000,
   "prices": {},
   "format": "The video is a vertical 9:16 narrated short staged in Roblox Studio: jointed humanoid avatars (R15 rigs with faces, hair and clothes) acting on built sets, about one shot per second, with one-word captions burned in at 69% of the frame height in the finished version.",
   "system": "You are a strict quality-control reviewer for the finished picture of a short narrated video. You see frames taken from the rendered video and judge only what is visible in them, never what the makers intended. A stylised avatar look is fine; the question is whether a viewer would notice something wrong. When a listed fail condition is visible, report it even if the rest of the frame is good. Never report a defect you cannot point to in a specific labelled frame. Reply with one JSON object and nothing else.",
@@ -19,7 +19,7 @@
       "threshold": 6,
       "script": true,
       "question": "Look at every visible character in every frame. Is each one doing something specific that fits the words being spoken, in a natural human posture a film director would accept?",
-      "notes": "Acceptable examples: lying asleep in bed, sitting up startled, a hand that actually reaches a handle, hunching over a phone held in both hands, cowering in a corner with arms drawn in, a nurse writing at a desk or tending a patient, an officer sweeping a torch around a room. A dark silhouette figure still has a posture: judge it too.",
+      "notes": "Acceptable examples: lying asleep in bed, sitting up startled, a hand that actually reaches a handle, hunching over a phone held in both hands, cowering in a corner with arms drawn in, a nurse writing at a desk or tending a patient, an officer sweeping a torch around a room. A dark silhouette figure still has a posture: judge it too. Hands raised and held frozen in front of the body through the whole shot count as arms_out unless they are plainly doing something (pushing a door, shielding the face while recoiling).",
       "fail_if": [
         {
           "key": "idle",
@@ -55,7 +55,7 @@
       "tile_height": 720,
       "threshold": 6,
       "question": "Check every character and every prop for geometry that passes through other geometry or hangs in the air.",
-      "notes": "Look closely at hands on phones and door handles, arms against the torso, bodies against walls, doors, desks and beds, and feet against the floor. Darkness is not clipping; judge only what you can see.",
+      "notes": "Look closely at hands on phones and door handles, arms against the torso, bodies against walls, doors, desks and beds, and feet against the floor. Darkness is not clipping; judge only what you can see. Report clipping only where you can see one surface pass through another; a hand that hovers near a surface without touching it is a posture problem, not clipping.",
       "fail_if": [
         {
           "key": "limb_through_body",
@@ -134,11 +134,11 @@
         },
         {
           "key": "subject_lost",
-          "text": "the subject (face, figure, hand, prop, text) merges into the background; an intentional silhouette is fine only when its outline stands clearly against a lighter background"
+          "text": "the subject (face, figure, hand, prop, text) merges into the background so its shape cannot be read; a dark figure whose lit eyes and outline read at once is fine"
         },
         {
           "key": "blown_out",
-          "text": "blown-out or flat full-bright lighting that breaks the mood of the neighbouring shots"
+          "text": "highlights clipped to white so detail on the subject is lost, or a glowing blob or glare artefact hangs in the frame; a place that is simply bright, such as a lit hospital, is not a defect"
         }
       ]
     },
@@ -181,7 +181,7 @@
       "threshold": 6,
       "neighbours": true,
       "question": "Compare this shot (the unprefixed tiles) with the shot before it (PREV) and, when present, the last earlier shot in the same set (EARLIER). Would a viewer feel a break?",
-      "notes": "A cut to another place or to an insert is normal. Judge whether the same character is the same avatar in the same outfit, whether positions and props follow from the previous shot when the place and action are continuous, whether time of day and lamp states agree within one place, and whether every character belongs to one visual style.",
+      "notes": "A cut to another place or to an insert is normal. Judge whether the same character is the same avatar in the same outfit, whether positions and props follow from the previous shot when the place and action are continuous, whether time of day and lamp states agree within one place, and whether every character belongs to one visual style. Report a defect only when this shot's own tiles show it: a problem that exists only inside the PREV or EARLIER tile belongs to that shot, not this one.",
       "fail_if": [
         {
           "key": "avatar_changed",
@@ -230,7 +230,7 @@
         },
         {
           "key": "statue",
-          "text": "a character who should be acting (speaking, walking, reaching, crying, working) holds exactly the same pose in every frame like a statue"
+          "text": "a character who should be acting or reacting (speaking, walking, reaching, crying, recoiling, working) holds exactly the same pose in every frame like a statue, or is frozen in mid-stride; a moving camera does not count as the character moving, and a sleeping or hiding character may be still"
         },
         {
           "key": "camera_nowhere",
