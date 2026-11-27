@@ -61,6 +61,18 @@ Model calls go through `pipeline.vision.ask` in a thread pool (`workers`, defaul
 
 `"sets"` describes a set in words for every judge of a shot in it, for what the frames of one shot cannot show: `{"quality": {"sets": {"house_hall": "a corridor with a dark front door at one end and a white bedroom door in the side wall"}}}`. Write it from the rendered frames. The continuity judge needs it to tell two doors of one set apart; no judge is told how a shot was staged or what it was meant to show beyond the story's words.
 
+## Overruling a judge
+
+A judge's fail stops failing its shot only when a reader has looked at the frames and written down why the judge is wrong. The record is `<job>/quality/overrules.json`, read on every run and by `--report-only`:
+
+```
+{"reader": "who read the frames", "overrules": [
+  {"shot": "h4", "judge": "posture", "render": "ee477452aa35", "answers": "the judge's reason, word for word",
+   "frames": [99, 116, 143], "reason": "what those frames show instead"}]}
+```
+
+`render` is the mark the judge's record carries for that shot (`shots[].judges.<judge>.render.<shot>` in quality.json) and `answers` is that record's `reason`. When the shot is rendered again, or the judge gives a new verdict, the entry stops applying and the fail stands until someone reads the new frames. Frame numbers must lie inside the shot. A fail that came from geometry or from measured darkness is never overruled, and neither is a fail the `--human` reading holds. The judge's verdict stays `fail` in quality.json with `overruled` beside it; the shot's `failed` list, the per-judge fail counts and the before-and-after table leave it out. QUALITY.md prints every overrule in one table (shot, judge, the judge's reason, the reader's reason, the frames read) and names the entries that did not apply and why, so anyone can disagree with a row. An overrule that shows a judge is wrong in general is a reason to fix the rubric, not to keep overruling.
+
 ## Calibration against a person
 
 `--human FILE` takes a person's verdicts, `{"reader": "...", "notes": [...], "verdicts": {"a2": {"posture": "fail", "clipping": "pass"}}}`, and reports how many of them the judges match, which fails the judges passed and which passes they failed. `--baseline OLD.json` measures the same verdicts against an earlier report, which gives agreement before and after a rubric change. The comparison is with what each judge said of the picture (`picture_status`), not with a fail that came from merged geometry, which a reader of frames cannot see. Read the same sheets the judges saw (`quality/sheets/`) and include shots the judges passed.
