@@ -46,7 +46,7 @@ GEOMETRY_JUDGES = {"joint_limit": "posture", "stiff_arms": "posture", "idle": "p
                    "arm_out": "posture", "arms_out": "posture", "arms_splayed": "posture", "stance_wide": "posture",
                    "no_action": "posture", "hand_off_target": "posture",
                    "intersect": "clipping", "floating": "clipping", "sunk": "clipping", "prop_missing": "clipping",
-                   "floating_piece": "clipping", "duplicate_piece": "clipping"}
+                   "floating_piece": "clipping", "duplicate_piece": "clipping", "frozen_face": "expression"}
 SET_PIECES = {"floating_piece": "floating set piece", "duplicate_piece": "set piece built twice"}
 MEASURE_SIZE = (36, 64)
 LIT_LEVEL = 40
@@ -605,7 +605,7 @@ def geometry_results(posture: Optional[Dict[str, Any]]) -> Tuple[Dict[str, Dict[
 
 
 def merge_geometry(entries: Dict[str, Dict[str, Any]], posture: Optional[Dict[str, Any]], source: str) -> List[str]:
-    """Fold posture.json into the posture and clipping judges of the given shots; returns those skipped as stale.
+    """Fold posture.json into the posture, clipping and expression judges of the given shots; returns those skipped as stale.
 
     A shot the geometry failed fails the judge its issues belong to, whatever the picture says; issues marked
     out of frame count only when no issue is in frame. The picture's own verdict is kept as picture_status, and
@@ -623,7 +623,7 @@ def merge_geometry(entries: Dict[str, Dict[str, Any]], posture: Optional[Dict[st
                 found.setdefault(issue["judge"], []).append("%s (%s)" % (issue["text"], issue["where"]))
             if not found and not result["hidden"]:
                 found["clipping"] = ["geometric check failed without listed issues"]
-        for judge in ("posture", "clipping"):
+        for judge in ("posture", "clipping", "expression"):
             record = entry["judges"].setdefault(judge, {"status": "unjudged", "reason": "", "defects": []})
             picture = record.get("picture_status", record.get("status"))
             issues = found.get(judge, [])
@@ -947,7 +947,7 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
         work = [(index, key) for index, shot in enumerate(all_shots) for key in wanted_judges
                 if key in SHOT_JUDGES and (old.get(shot["id"], {}).get(key) or {}).get("status") not in ("pass", "fail")]
         selected = {all_shots[index]["id"] for index, _ in work}
-    merged = {all_shots[index]["id"] for index, key in work if key in ("posture", "clipping")}
+    merged = {all_shots[index]["id"] for index, key in work if key in ("posture", "clipping", "expression")}
     sheets_dir = job / "quality" / "sheets"
     ledger_path = job / "quality" / "ledger.json"
     ledger = read_json(ledger_path, required=False) or {"runs": []}
