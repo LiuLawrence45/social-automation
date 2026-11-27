@@ -395,6 +395,8 @@ class Make:
         self.state["spend_usd"] = ledger_total(self.job)
         self.state["ceiling_usd"] = float(self.settings()["ceiling_usd"]) if (self.job / "story.json").is_file() else None
         write_json(self.state_path, self.state)
+        if stage == "final" and status == "done":
+            (self.job / "MAKE.md").write_text(self.report(), encoding="utf-8")
         self.say("%-8s %s in %.1f s%s%s" % (stage, status.replace("_", " "), seconds, ", $%.4f" % spent if spent else "", ": " + note.splitlines()[0] if note else ""))
         if status == "needs_agent":
             self.say("stopped for an agent: %s" % record["request"])
@@ -757,7 +759,7 @@ class Make:
                  "| stage | status | runs | seconds (all runs) | spend USD (all runs) | result |", "|---|---|---|---|---|---|"]
         for stage in STAGES:
             record = self.state["stages"].get(stage) or {}
-            status = "done" if stage == "final" else record.get("status", "not run")
+            status = record.get("status", "not run")
             lines.append("| %s | %s | %s | %s | %.4f | %s |" % (stage, status, record.get("runs", 0), record.get("seconds_total", 0.0),
                                                               float(record.get("spend_usd_total", 0.0)), str(record.get("note") or "").splitlines()[0][:200] if record.get("note") else ""))
         total_seconds = sum(float((self.state["stages"].get(stage) or {}).get("seconds_total", 0.0)) for stage in STAGES)

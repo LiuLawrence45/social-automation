@@ -160,7 +160,8 @@ def test_sample_stops_on_the_defaults_then_finishes(tmp_path):
     state = state_of(job)
     assert [state["stages"][stage]["status"] for stage in make.STAGES] == ["done"] * len(make.STAGES)
     assert not (job / "REQUEST-checks.md").exists() and (job / "requests_done").is_dir()
-    assert (job / "final.mp4").is_file() and "| render | done |" in (job / "MAKE.md").read_text(encoding="utf-8")
+    table = (job / "MAKE.md").read_text(encoding="utf-8")
+    assert (job / "final.mp4").is_file() and "| render | done |" in table and "| final | done | 1 |" in table
     assert state["stages"]["camera"]["spend_usd"] == pytest.approx(0.05) and state["stages"]["quality"]["spend_usd"] == pytest.approx(0.1)
     assert make.ledger_total(job) == pytest.approx(0.30)
     assert state["stages"]["voice"]["inputs"] and state["stages"]["render"]["outputs"] == ["video.mp4", "shots.json"]
