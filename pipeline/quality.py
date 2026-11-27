@@ -214,14 +214,15 @@ def label_png(text: str, path: Path, scale: int = 3) -> Path:
 def build_sheet(tiles: Sequence[Dict[str, Any]], out: Path, height: int, columns: int) -> None:
     """Cut one frame per tile ({"video", "time", "label"}) and stack them into one labelled JPEG.
 
-    FFmpeg returns the first frame at or after the seek time, so a tile's time is half a frame before its frame.
+    A tile's time is its frame number over the frame rate: FFmpeg rounds the seek to the stream's clock, so
+    half a frame either way can land on a neighbour.
     """
     width = int(round(height * 9 / 16 / 2.0)) * 2
     work = Path(tempfile.mkdtemp(prefix="quality-"))
     try:
         cmd = [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error"]
         for tile in tiles:
-            cmd += ["-ss", "%.4f" % tile["time"], "-i", str(tile["video"])]
+            cmd += ["-ss", "%.6f" % tile["time"], "-i", str(tile["video"])]
         graph = []
         for index, tile in enumerate(tiles):
             cmd += ["-i", str(label_png(tile["label"], work / ("label%d.png" % index), max(2, height // 240)))]
@@ -290,7 +291,7 @@ def plan_sheet(spec: Dict[str, Any], index: int, shots: Sequence[Dict[str, Any]]
     shift = float(meta.get("content_start", 0.0)) if kind == "captioned" else 0.0
 
     def tile(target: Dict[str, Any], frame: int, role: str = "") -> Dict[str, Any]:
-        return {"video": videos[kind], "time": max(0.0, (frame - 0.5) / fps - shift), "frame": frame, "shot": target["id"], "role": role,
+        return {"video": videos[kind], "time": max(0.0, frame / fps - shift), "frame": frame, "shot": target["id"], "role": role,
                 "label": ("%s %s F%d" % (role, target["id"], frame)).strip()}
 
     def middle(target: Dict[str, Any]) -> int:
@@ -429,7 +430,7 @@ def judge_video(settings: Dict[str, Any], story: Dict[str, Any], shots: Sequence
     keys = [c["key"] for c in spec["criteria"]]
     try:
         for number, start in enumerate(range(0, len(shots), per), 1):
-            tiles = [{"video": video, "time": max(0.0, (frame_numbers(s, fps, 1)[0] - 0.5) / fps), "label": s["id"]} for s in shots[start:start + per]]
+            tiles = [{"video": video, "time": frame_numbers(s, fps, 1)[0] / fps, "label": s["id"]} for s in shots[start:start + per]]
             path = sheets_dir / ("video_%02d.jpg" % number)
             build_sheet(tiles, path, int(spec.get("tile_height", 400)), int(spec.get("columns", 6)))
             paths.append(path)
@@ -454,8 +455,14 @@ def judge_video(settings: Dict[str, Any], story: Dict[str, Any], shots: Sequence
         except (TypeError, ValueError):
             scores[name] = None
     known = {s["id"] for s in shots}
-    weakest = [{"shot": str(w.get("shot", w.get("id"))), "reason": str(w.get("reason", ""))} for w in reply.get("weakest") or []
-               if isinstance(w, dict) and str(w.get("shot", w.get("id"))) in known]
+    weakest = []
+    for item in reply.get("weakest") or []:
+        if isinstance(item, dict):
+            shot_id, why = str(item.get("shot", item.get("id", item.get("shot_id", "")))), str(item.get("reason", ""))
+        else:
+            shot_id, _, why = str(item).partition(":")
+        if shot_id.strip() in known:
+            weakest.append({"shot": shot_id.strip(), "reason": why.strip()})
     threshold = float(spec.get("threshold", 6))
     failed = [name for name in keys if scores[name] is None or scores[name] < threshold]
     return {"status": "fail" if failed else "pass", "scores": scores, "threshold": threshold, "failed": failed, "weakest": weakest,
