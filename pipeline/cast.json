@@ -1,0 +1,137 @@
+{
+ "version": 1,
+ "about": "The recurring cast: one avatar and one voice per character, the same in every video. A story names a member by its lowercase id as a speaker; story.json casting says who plays the narrator and any role, and defines extras for one job. Read by pipeline/cast.py. Change a member only on purpose: every later video changes with it.",
+ "voice_defaults": {
+  "provider": "auto",
+  "model": "eleven_v4",
+  "target_wpm": 215,
+  "speed": 1.2,
+  "segment_gap": 0.18
+ },
+ "narrator_voice": {
+  "settings": {
+   "speed": 1.1
+  }
+ },
+ "characters": {
+  "lawrence": {
+   "name": "Lawrence",
+   "look": "young man, dark hair, striped shirt, jeans (bundle Denny)",
+   "avatar": {
+    "rig": "avatar",
+    "bundle": 722
+   },
+   "voice": {
+    "voice_id": "nPczCjzI2devNBz1zQrb",
+    "voice_name": "Brian",
+    "settings": {
+     "speed": 1.1
+    }
+   },
+   "source": "the-door: cast id me, the narrator voice"
+  },
+  "jesslyn": {
+   "name": "Jesslyn",
+   "look": "young woman, light hair in a ponytail, blue top (bundle Linlin)",
+   "avatar": {
+    "rig": "avatar",
+    "bundle": 741
+   },
+   "voice": {
+    "voice_id": "EXAVITQu4vr4xnSDxMaL",
+    "voice_name": "Sarah",
+    "settings": {
+     "speed": 1,
+     "stability": 0.7
+    }
+   },
+   "source": "the-door: cast id jesslyn with the dispatcher costume"
+  },
+  "allan": {
+   "name": "Allan",
+   "look": "man, dark hair, dark jacket, legs painted as dark trousers (bundle Oliver)",
+   "avatar": {
+    "rig": "avatar",
+    "bundle": 573,
+    "legs": "#141926"
+   },
+   "voice": {
+    "voice_id": "pNInz6obpgDQGcFmaJgB",
+    "voice_name": "Adam",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   "source": "the-door: cast id allan with the officer costume"
+  },
+  "sharath": {
+   "name": "Sharath",
+   "look": "man, dark hair, blue jacket, red trousers (bundle Mike Kerr)",
+   "avatar": {
+    "rig": "avatar",
+    "bundle": 749
+   },
+   "voice": {
+    "voice_id": "iP95p4xoKVk53GoZ742B",
+    "voice_name": "Chris",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   "source": "the-door: cast id sharath with the officer costume; he had no lines there, so the voice was chosen for the registry"
+  },
+  "willow": {
+   "name": "Willow",
+   "look": "woman, short blonde hair, green top, dark jeans, boots (bundle City Life Woman, skin set to a natural tone)",
+   "avatar": {
+    "rig": "avatar",
+    "bundle": 337,
+    "skin": "#e8c2a4"
+   },
+   "voice": {
+    "voice_id": "cgSgspJ2msm6clMCkdW9",
+    "voice_name": "Jessica",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   "source": "chosen for the registry"
+  }
+ },
+ "costumes": {
+  "officer": {
+   "about": "a dark vest with POLICE across it, a badge and a belt",
+   "avatar": {
+    "vest": {
+     "text": "POLICE"
+    }
+   }
+  },
+  "dispatcher": {
+   "about": "a call-taker's headset, and the voice heard down a phone line",
+   "avatar": {
+    "headset": {
+     "side": "L"
+    }
+   },
+   "voice": {
+    "process": {
+     "filter": "highpass=f=380,lowpass=f=3100,acompressor=threshold=-18dB:ratio=4:makeup=3",
+     "gain_db": -1
+    }
+   }
+  },
+  "phone_line": {
+   "about": "the voice heard down a phone line, no change to the avatar",
+   "voice": {
+    "process": {
+     "filter": "highpass=f=380,lowpass=f=3100,acompressor=threshold=-18dB:ratio=4:makeup=3",
+     "gain_db": -1
+    }
+   }
+  }
+ }
+}

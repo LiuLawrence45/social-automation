@@ -100,6 +100,7 @@ def validate_story(story: Any) -> Dict[str, Any]:
     _require(isinstance(story.get("display_overrides", {}), dict), "story.json: display_overrides must be an object")
     _require(isinstance(story.get("voice", {}), dict), "story.json: voice must be an object")
     _require(isinstance(story.get("voice", {}).get("speakers", {}), dict), "story.json: voice.speakers must be an object")
+    _require(isinstance(story.get("casting", {}), dict), "story.json: casting must be an object of speaker or actor id -> who plays it (python -m pipeline.cast)")
     _require(len(tokenize(story["script"])) > 0, "story.json: script has no words")
     display_words(story)
     return story
