@@ -9,7 +9,8 @@ One judge per concern (posture, expression, clipping, framing, lighting, story, 
 labelled sheets of frames cut from the rendered video, and one more judges the video as a whole. Rubrics,
 thresholds and frames per shot live in pipeline/quality_rubric.json; story.json "quality" and --set override
 them. Model calls go through pipeline.vision and run in a thread pool under one spend ceiling that also counts
-earlier runs against the same job (quality/ledger.json). Geometric results in <job>/posture.json (or --posture) are merged:
+earlier runs against the same job (quality/ledger.json). Geometric results in <job>/posture.json (or --posture) are merged
+for the shots judged in the run:
 a geometric fail fails the shot even when the picture passes, and the reverse. A shot fails when any judge
 fails it; a judge that could not answer leaves the shot incomplete, never passed. The stage writes
 <job>/quality.json, <job>/QUALITY.md and the sheets every judge saw under <job>/quality/sheets/.
@@ -534,13 +535,15 @@ def geometry_results(posture: Optional[Dict[str, Any]]) -> Tuple[Dict[str, Dict[
     return results, stale
 
 
-def merge_geometry(entries: Dict[str, Dict[str, Any]], posture: Optional[Dict[str, Any]]) -> List[str]:
-    """Fold posture.json into the posture and clipping judges; returns the shots skipped as stale.
+def merge_geometry(entries: Dict[str, Dict[str, Any]], posture: Optional[Dict[str, Any]], source: str) -> List[str]:
+    """Fold posture.json into the posture and clipping judges of the given shots; returns those skipped as stale.
 
     A shot the geometry failed fails the judge its issues belong to, whatever the picture says; issues marked
-    out of frame count only when no issue is in frame. The picture's own verdict is kept as picture_status.
+    out of frame count only when no issue is in frame. The picture's own verdict is kept as picture_status, and
+    each result names the file it came from, since one report can hold shots from different renders.
     """
     results, stale = geometry_results(posture)
+    stale = [shot_id for shot_id in stale if shot_id in entries]
     for shot_id, result in results.items():
         entry = entries.get(shot_id)
         if entry is None:
@@ -559,7 +562,7 @@ def merge_geometry(entries: Dict[str, Dict[str, Any]], posture: Optional[Dict[st
             reason = "" if reason.startswith("geometry: ") else reason
             if issues:
                 reason = "; ".join(part for part in (reason, "geometry: %s" % "; ".join(issues[:3])) if part)
-            record.update(picture_status=picture, geometry={"status": "fail" if issues else "pass", "issues": issues},
+            record.update(picture_status=picture, geometry={"status": "fail" if issues else "pass", "issues": issues, "source": source},
                           status="fail" if issues else picture, reason=reason)
     return stale
 
@@ -585,6 +588,11 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
                           "failing": [shot_id for shot_id, r in records if r.get("status") == "fail"],
                           "geometry_only": [shot_id for shot_id, r in records
                                             if r.get("status") == "fail" and r.get("picture_status", "fail") != "fail"]}
+    sources: Dict[str, int] = {}
+    for shot in shots:
+        source = ((shot["judges"].get("posture") or {}).get("geometry") or {}).get("source")
+        if source:
+            sources[source] = sources.get(source, 0) + 1
     by_set: Dict[str, List[str]] = {}
     for shot in shots:
         if shot["status"] == "fail":
@@ -601,7 +609,7 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
     return {"shots": len(shots), "pass": sum(1 for s in shots if s["status"] == "pass"), "weakest": weakest,
             "fail": sum(1 for s in shots if s["status"] == "fail"),
             "incomplete": sum(1 for s in shots if s["status"] == "incomplete"),
-            "judges": per_judge, "failing_by_set": by_set, "frames_sampled": len(frames),
+            "judges": per_judge, "failing_by_set": by_set, "frames_sampled": len(frames), "geometry_sources": sources,
             "provider": doc["config"]["provider"], "model": doc["config"]["model"], "spend": doc.get("usage") or {}}
 
 
@@ -669,9 +677,9 @@ def markdown(doc: Dict[str, Any]) -> str:
                                                       "-" if row["mean_score"] is None else "%.1f" % row["mean_score"], " ".join(row["failing"])))
     alone = ["%s: %s" % (key, " ".join(summary["judges"][key]["geometry_only"])) for key in SHOT_JUDGES
              if summary["judges"][key].get("geometry_only")]
-    if doc.get("geometry_source"):
-        out += ["", "Geometry merged from @@%s@@. Failing on geometry alone, where the picture judge passed or did not run: %s.%s"
-                % (doc["geometry_source"], "; ".join(alone) or "none",
+    if summary.get("geometry_sources"):
+        out += ["", "Geometry merged from %s. Failing on geometry alone, where the picture judge passed or did not run: %s.%s"
+                % (", ".join("@@%s@@ (%d shots)" % item for item in summary["geometry_sources"].items()), "; ".join(alone) or "none",
                    " Not merged, because the file marks them stale: %s." % " ".join(doc["geometry_stale"]) if doc.get("geometry_stale") else "")]
     video = doc.get("video_judge")
     if video:
@@ -761,9 +769,9 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
     if report_only:
         if not existing.get("shots"):
             raise QualityError("%s has no results to report" % out)
-        if geometry:
-            existing["geometry_stale"] = merge_geometry({s["id"]: s for s in existing["shots"]}, geometry)
-            existing["geometry_source"] = geometry_source
+        if posture:
+            existing["geometry_stale"] = merge_geometry({s["id"]: s for s in existing["shots"] if shots is None or s["id"] in shots},
+                                                        geometry, geometry_source)
         finish(job, existing, out, human, baseline, against)
         return existing
     story = read_json(job / "story.json", required=False) or {}
@@ -852,7 +860,9 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
             entry["measures"] = measures[shot["id"]]
     for index, key, record in results:
         entries[all_shots[index]["id"]]["judges"][key] = record
-    stale = merge_geometry(entries, geometry) if geometry else existing.get("geometry_stale", [])
+    stale = [shot_id for shot_id in existing.get("geometry_stale", []) if geometry and shot_id not in selected]
+    if geometry:
+        stale += merge_geometry({shot_id: entry for shot_id, entry in entries.items() if shot_id in selected}, geometry, geometry_source)
     doc = dict(existing)
     if VIDEO_JUDGE in wanted_judges:
         doc["video_judge"] = judge_video(settings, story, all_shots, meta, videos["clean"], sheets_dir, job, budget)
@@ -871,7 +881,7 @@ def run_quality(job: Path, video: Optional[Path] = None, final: Optional[Path] =
                 "config": {"provider": settings["provider"], "model": settings["model"], "judges": judged, "workers": workers,
                            "prices": settings["prices"], "rubric": settings["judges"], "video": settings[VIDEO_JUDGE]},
                 "shots": [entries[i] for i in known], "runs": runs, "usage": total,
-                "geometry_source": geometry_source or existing.get("geometry_source", ""), "geometry_stale": stale})
+                "geometry_stale": stale if geometry else existing.get("geometry_stale", [])})
     finish(job, doc, out, human, baseline, against)
     return doc
 

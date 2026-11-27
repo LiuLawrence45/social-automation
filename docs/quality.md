@@ -35,14 +35,14 @@ Motion is judged on a dense frame strip, not on the clip itself: `pipeline.visio
 
 ## Geometry
 
-`<job>/posture.json`, or the file given with `--posture`, is merged on every run, including `--report-only`. Two shapes are read:
+`<job>/posture.json`, or the file given with `--posture`, is merged for the shots judged in a run: all of them, or the ones named with `--shots`, so a report that mixes re-rendered shots with older ones keeps each shot's geometry from the file that measured it. `--report-only` judges nothing and merges only a file named with `--posture`. Two shapes are read:
 
 - current: `{"version":1,"describes":{"label":...},"shots":{"<id>":{"status":"pass"|"fail","current":true,"frames":[{"frame":123,"issues":[{"kind":...,"actor":...,"detail":...,"in_frame":true}]}]}}}`
 - earlier (the posture report of the camera judge): `{"posture":{"shots":[{"id":...,"reasons":[...],"geometry":[{"code":...,"who":...,"detail":...,"seen":true,"at":[0,0.5],"depth":0.3}]}]}}`. Its status and its `vision_*` reasons come partly from a model and are ignored; the shot counts as a geometric fail only when a measured reason is listed.
 
 `joint_limit`, `stiff_arms`, `idle`, `reach_miss`, `arm_out`, `arms_out`, `arms_splayed`, `stance_wide`, `no_action` and `hand_off_target` fail the posture judge; `intersect`, `floating`, `sunk`, `prop_missing` and any unknown kind (the `clip_*` codes among them) fail the clipping judge. Issues marked out of frame (`in_frame` or `seen` false) count only when the failed shot has no issue in frame. A shot marked `"current": false` was restaged after it was measured: it is not merged and the report lists it.
 
-A geometric fail fails the judge even when the picture passed, and a picture fail stands when geometry passed. Each judge's entry keeps the geometric result under `geometry` and the picture's own verdict under `picture_status`; the summary lists per judge the shots failing on geometry alone (`geometry_only`), and `geometry_source` records the file, its time and its `describes.label`. The file must describe the render being judged: the report of one pass merged with the geometry of another compares unlike things.
+A geometric fail fails the judge even when the picture passed, and a picture fail stands when geometry passed. Each judge's entry keeps the geometric result under `geometry` and the picture's own verdict under `picture_status`; the summary lists per judge the shots failing on geometry alone (`geometry_only`), and each `geometry` result names its `source`: the file, its time and its `describes.label`. The file must describe the render being judged: the report of one pass merged with the geometry of another compares unlike things.
 
 ## Settings
 

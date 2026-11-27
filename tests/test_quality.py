@@ -163,7 +163,20 @@ def test_geometry_and_picture_each_fail_on_their_own(job, monkeypatch):
     shots = by_id(quality.run_quality(job, report_only=True, posture=other))
     assert shots["s01"]["judges"]["clipping"]["status"] == "pass" and shots["s01"]["judges"]["clipping"]["reason"] == "clean"
     assert shots["s04"]["failed"] == ["posture"] and shots["s04"]["judges"]["clipping"]["status"] == "pass"
-    assert "Geometry merged from @@later.json@" in (job / "QUALITY.md").read_text().replace(chr(96), "@@")
+    report = (job / "QUALITY.md").read_text()
+    assert "Geometry merged from" in report and chr(96) + "later.json@" in report and chr(96) + "posture.json@" in report
+
+
+def test_geometry_is_merged_only_for_the_shots_judged(job):
+    quality.run_quality(job, judges=["posture", "clipping"])
+    (job / "posture.json").write_text(json.dumps({"version": 1, "describes": {"label": "next pass"}, "shots": {
+        shot: {"status": "fail", "frames": [{"frame": 1, "issues": [{"kind": "idle", "actor": "me"}]}]} for shot in ("s01", "s02")}}))
+    doc = quality.run_quality(job, shots=["s02"], judges=["posture"])
+    shots = by_id(doc)
+    assert "geometry" not in shots["s01"]["judges"]["posture"] and shots["s02"]["judges"]["posture"]["status"] == "fail"
+    assert shots["s02"]["judges"]["posture"]["geometry"]["source"].endswith("(next pass)")
+    assert list(doc["summary"]["geometry_sources"].values()) == [1]
+    assert "geometry" not in by_id(quality.run_quality(job, report_only=True))["s01"]["judges"]["posture"]
 
 
 def test_geometry_in_the_earlier_shape_counts_measured_reasons_only(job):
@@ -180,7 +193,7 @@ def test_geometry_in_the_earlier_shape_counts_measured_reasons_only(job):
         {"id": "s04", "status": "fail", "current": False, "reasons": ["no_action"], "geometry": []}]}}))
     doc = quality.run_quality(job, report_only=True, posture=earlier)
     shots = by_id(doc)
-    assert shots["s01"]["failed"] == [] and shots["s01"]["judges"]["clipping"]["geometry"] == {"status": "pass", "issues": []}
+    assert shots["s01"]["failed"] == [] and shots["s01"]["judges"]["clipping"]["geometry"]["issues"] == []
     assert shots["s02"]["failed"] == ["posture", "clipping"]
     assert shots["s02"]["judges"]["posture"]["geometry"]["issues"] == ["mom arm_out: L arm held out (at 0 of the shot)"]
     assert shots["s02"]["judges"]["clipping"]["geometry"]["issues"] == ["mom clip_scenery: LeftFoot->Part by 0.38 studs (at 0, 0.25 of the shot)"]
