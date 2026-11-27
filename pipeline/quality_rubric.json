@@ -46,7 +46,8 @@
           "text": "the body does the opposite of the words (standing upright when the words say asleep, cowering or crying; calm when the words say terrified)"
         }
       ],
-      "not_applicable": "no character and no part of a character (such as a hand) is visible in any frame"
+      "not_applicable": "no character and no part of a character (such as a hand) is visible in any frame",
+      "defect_pass_score": 8
     },
     "clipping": {
       "title": "Clipping and floating",
@@ -86,7 +87,8 @@
           "text": "two characters pass through each other"
         }
       ],
-      "not_applicable": "no character and no held prop is visible in any frame"
+      "not_applicable": "no character and no held prop is visible in any frame",
+      "defect_pass_score": 8
     },
     "framing": {
       "title": "Framing and composition",
@@ -98,7 +100,7 @@
       "fail_if": [
         {
           "key": "subject_cut_off",
-          "text": "the subject's head or the thing the shot is about is cut by the frame edge in a way that looks accidental"
+          "text": "the subject's head or the thing the shot is about is cut by the frame edge in a way that looks accidental, including a character shown mostly as a back, torso or legs with the head out of frame"
         },
         {
           "key": "dead_space",
@@ -116,7 +118,8 @@
           "key": "blocked",
           "text": "something in the foreground blocks the subject by accident"
         }
-      ]
+      ],
+      "defect_pass_score": 8
     },
     "lighting": {
       "title": "Lighting and readability",
@@ -134,13 +137,14 @@
         },
         {
           "key": "subject_lost",
-          "text": "the subject (face, figure, hand, prop, text) merges into the background so its shape cannot be read; a dark figure whose lit eyes and outline read at once is fine"
+          "text": "the subject (face, figure, hand, prop, text) merges into the background so its shape cannot be read, for example a person who is only a black shape in a dark room so a viewer cannot tell who it is or what they are doing; a dark figure whose lit eyes and outline read at once is fine"
         },
         {
           "key": "blown_out",
           "text": "highlights clipped to white so detail on the subject is lost, or a glowing blob or glare artefact hangs in the frame; a place that is simply bright, such as a lit hospital, is not a defect"
         }
-      ]
+      ],
+      "defect_pass_score": 8
     },
     "story": {
       "title": "Story match",
@@ -171,7 +175,8 @@
           "key": "text_wrong",
           "text": "on-screen text the words depend on (a phone message, a sign) is missing, unreadable or says something else"
         }
-      ]
+      ],
+      "defect_pass_score": 8
     },
     "continuity": {
       "title": "Continuity",
@@ -203,7 +208,8 @@
           "key": "set_changed",
           "text": "the same room looks like a different room"
         }
-      ]
+      ],
+      "defect_pass_score": 8
     },
     "motion": {
       "title": "Motion",
@@ -236,7 +242,8 @@
           "key": "camera_nowhere",
           "text": "the camera move starts or ends on nothing (an empty wall, floor or blur) or drifts off the subject"
         }
-      ]
+      ],
+      "defect_pass_score": 8
     }
   },
   "video": {
@@ -246,7 +253,7 @@
     "tiles_per_sheet": 18,
     "threshold": 6,
     "weakest": 8,
-    "max_output_tokens": 3000,
+    "max_output_tokens": 6000,
     "question": "The sheets show one middle frame per shot in story order, labelled with the shot id. Judge the video as a whole.",
     "criteria": [
       {

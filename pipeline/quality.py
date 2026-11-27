@@ -212,7 +212,10 @@ def label_png(text: str, path: Path, scale: int = 3) -> Path:
 
 
 def build_sheet(tiles: Sequence[Dict[str, Any]], out: Path, height: int, columns: int) -> None:
-    """Cut one frame per tile ({"video", "time", "label"}) and stack them into one labelled JPEG."""
+    """Cut one frame per tile ({"video", "time", "label"}) and stack them into one labelled JPEG.
+
+    FFmpeg returns the first frame at or after the seek time, so a tile's time is half a frame before its frame.
+    """
     width = int(round(height * 9 / 16 / 2.0)) * 2
     work = Path(tempfile.mkdtemp(prefix="quality-"))
     try:
@@ -287,7 +290,7 @@ def plan_sheet(spec: Dict[str, Any], index: int, shots: Sequence[Dict[str, Any]]
     shift = float(meta.get("content_start", 0.0)) if kind == "captioned" else 0.0
 
     def tile(target: Dict[str, Any], frame: int, role: str = "") -> Dict[str, Any]:
-        return {"video": videos[kind], "time": max(0.0, (frame + 0.5) / fps - shift), "frame": frame, "shot": target["id"], "role": role,
+        return {"video": videos[kind], "time": max(0.0, (frame - 0.5) / fps - shift), "frame": frame, "shot": target["id"], "role": role,
                 "label": ("%s %s F%d" % (role, target["id"], frame)).strip()}
 
     def middle(target: Dict[str, Any]) -> int:
@@ -324,7 +327,8 @@ def build_prompt(key: str, spec: Dict[str, Any], settings: Dict[str, Any], story
     if index + 1 < len(shots):
         lines.append("Shot after (%s, set \"%s\"): %s" % (shots[index + 1]["id"], shots[index + 1]["set"], shots[index + 1]["line"] or "silent"))
     lines.append("The image is a sheet of %d frames from the rendered video, each labelled in its top-left corner with the shot id and "
-                 "frame number, in reading order: %s." % (len(plan["tiles"]), describe_tiles(plan["tiles"])))
+                 "frame number, in reading order: %s. The label boxes are added for this review and are not part of the picture."
+                 % (len(plan["tiles"]), describe_tiles(plan["tiles"])))
     if spec.get("measures") and measured:
         lines.append("Measured from the video for this shot: mean brightness %.1f of 255, %.1f%% of pixels lit; change between "
                      "neighbouring video frames mean %.2f, median %.2f, peak %.2f at frame %d (0 to 255 scale), %.0f%% of frames unchanged."
@@ -344,7 +348,8 @@ def build_prompt(key: str, spec: Dict[str, Any], settings: Dict[str, Any], story
 
 
 def verdict(spec: Dict[str, Any], reply: Dict[str, Any]) -> Dict[str, Any]:
-    """Pass or fail from a model reply: any listed defect or a score under the threshold fails."""
+    """Pass or fail from a model reply: a score under the threshold fails, and so does any listed defect
+    unless the score is at or above defect_pass_score (the model itself calls it a small imperfection)."""
     known = {d["key"] for d in spec["fail_if"]}
     defects = []
     for item in reply.get("defects") or []:
@@ -360,7 +365,7 @@ def verdict(spec: Dict[str, Any], reply: Dict[str, Any]) -> Dict[str, Any]:
              "defects": defects, "reason": str(reply.get("reason") or ""), "visible": str(reply.get("visible") or "")}
     if not entry["applicable"]:
         entry.update(score=None, defects=[], reason=entry["reason"] or "nothing to judge in this shot")
-    elif defects or score is None or score < threshold:
+    elif score is None or score < threshold or (defects and score < float(spec.get("defect_pass_score", 8))):
         entry["status"] = "fail"
     return entry
 
@@ -424,7 +429,7 @@ def judge_video(settings: Dict[str, Any], story: Dict[str, Any], shots: Sequence
     keys = [c["key"] for c in spec["criteria"]]
     try:
         for number, start in enumerate(range(0, len(shots), per), 1):
-            tiles = [{"video": video, "time": (frame_numbers(s, fps, 1)[0] + 0.5) / fps, "label": s["id"]} for s in shots[start:start + per]]
+            tiles = [{"video": video, "time": max(0.0, (frame_numbers(s, fps, 1)[0] - 0.5) / fps), "label": s["id"]} for s in shots[start:start + per]]
             path = sheets_dir / ("video_%02d.jpg" % number)
             build_sheet(tiles, path, int(spec.get("tile_height", 400)), int(spec.get("columns", 6)))
             paths.append(path)
@@ -433,7 +438,8 @@ def judge_video(settings: Dict[str, Any], story: Dict[str, Any], shots: Sequence
         lines += ["%s  %.1f-%.1f  %s  %s" % (s["id"], s["start"], s["end"], s["set"], s["line"] or "(silent)") for s in shots]
         lines += ["", spec["question"], "Score each from 0 to 10:"]
         lines += ["- %s: %s" % (c["key"], c["text"]) for c in spec["criteria"]]
-        lines.append("Then name up to %d weakest shots, worst first, each with the one thing wrong with it." % int(spec.get("weakest", 8)))
+        lines.append("Then name the %d weakest shots, worst first, by the shot id on their label, each with the one thing wrong with it."
+                     % int(spec.get("weakest", 8)))
         lines.append('Reply with JSON only: {"scores": {%s}, "weakest": [{"shot": "id", "reason": "one line"}], "reason": "one line on the whole video"}'
                      % ", ".join('"%s": 0' % k for k in keys))
         reply = ask(settings, budget, "\n".join(lines), paths, int(spec.get("max_output_tokens", 3000)), job / "quality" / "manual",
@@ -448,8 +454,8 @@ def judge_video(settings: Dict[str, Any], story: Dict[str, Any], shots: Sequence
         except (TypeError, ValueError):
             scores[name] = None
     known = {s["id"] for s in shots}
-    weakest = [{"shot": str(w.get("shot")), "reason": str(w.get("reason", ""))} for w in reply.get("weakest") or []
-               if isinstance(w, dict) and str(w.get("shot")) in known]
+    weakest = [{"shot": str(w.get("shot", w.get("id"))), "reason": str(w.get("reason", ""))} for w in reply.get("weakest") or []
+               if isinstance(w, dict) and str(w.get("shot", w.get("id"))) in known]
     threshold = float(spec.get("threshold", 6))
     failed = [name for name in keys if scores[name] is None or scores[name] < threshold]
     return {"status": "fail" if failed else "pass", "scores": scores, "threshold": threshold, "failed": failed, "weakest": weakest,
