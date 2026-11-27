@@ -15,6 +15,7 @@ Every stage reads and writes one job folder and can be re-run on its own.
 | Sound | `python -m pipeline.sound --job J [--dry-run]` | sound.json, timeline.json, words.json | bed.wav, sound_report.json, sfx/ |
 | Render | `python -m pipeline.render sheet|video --job J` | timeline.json, judge.json, Studio | video.mp4, shots.json, render_report.json |
 | Edit | `python -m pipeline.edit --job J --music J/bed.wav` | video.mp4, narration.wav, words.json, shots.json | final.mp4, edit_report.json |
+| Quality | `python -m pipeline.quality --job J [--shots a,b] [--judges posture,motion]` | video.mp4, final.mp4, shots.json, words.json, story.json, posture.json | quality.json, QUALITY.md, quality/ ([docs/quality.md](docs/quality.md)) |
 
 Order for a new video: write story.json and shotlist.json, voice, `story timeline`, `studio build-sets`, `judge shots`, sound, `render video`, edit, `judge video`. `examples/found-box` holds a sample story and shot list. Stories, adapted scripts and renders are job data and never belong in this repository.
 
