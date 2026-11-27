@@ -45,7 +45,7 @@
         },
         {
           "key": "hand_misses",
-          "text": "a handle, lever, knob, switch, door or prop is being worked and no hand is on it: it is turned, pressed down, opening or moving while the hands of the character at it are somewhere else, or a wrist or forearm lies across it or reaches past it where the fingers should close round it. A handle worked from the other side of a door, with no character at it in the frame, is not this"
+          "text": "a handle, lever, knob, switch, door or prop is being worked and no hand is on it: it is turned, pressed down, opening or moving while the hands of the character at it are somewhere else, or a wrist or forearm lies on or across it with the hand beyond it, on the door or the plate behind it, or the fingers take a lever at its pivot against the plate while the forearm lies along its length, where a hand would close round its free end. A door or handle worked from the other side, with no character within arm's reach of it in the frame, is not this"
         },
         {
           "key": "bad_joint",
@@ -57,7 +57,13 @@
         }
       ],
       "not_applicable": "no character and no part of a character (such as a hand) is visible in any frame",
-      "defect_pass_score": 8
+      "defect_pass_score": 8,
+      "flags": {
+        "handle_without_grip": {
+          "defect": "hand_misses",
+          "text": "a character reaches for or works a handle, lever, knob, switch or prop and, in any frame where the arm has arrived at it, the hand is not what holds it. Follow the handle from its free end to where it joins the door and say for yourself where the fingers are in each frame. True when the forearm or wrist lies on or across the handle and the hand is beyond it, on the door or on the plate behind it; when the fingers sit on a lever at its pivot, against the plate, with the forearm lying along the lever's length; or when the handle is turned, pressed down or the door is opening and the character at it has no hand on it. False when the fingers are closed round the free end or the middle of the handle, false for a hand still in the air on its way to it, and false when no character is within arm's reach of it."
+        }
+      }
     },
     "expression": {
       "title": "Expression",
@@ -285,7 +291,7 @@
         },
         {
           "key": "no_cause",
-          "text": "a door, handle, lever, lid, drawer or prop moves, or is held turned or pressed down, while a character stands at it with no hand on the part that moves; a hand flat on a door does not turn its handle. An insert with no character at the object, where the words say what moves it (someone on the other side of the door, a phone that buzzes), is not this"
+          "text": "a door, handle, lever, lid, drawer or prop moves, or is held turned or pressed down, while a character stands at it, within arm's reach, with no hand on the part that moves; a hand flat on a door does not turn its handle. A door, handle or prop with no character within arm's reach of it (an insert of it alone, or a character standing clear of a door that opens), where the story says what moves it (someone on the other side of the door, a phone that buzzes), is not this"
         },
         {
           "key": "camera_nowhere",
@@ -304,7 +310,7 @@
         },
         "moved_by_nothing": {
           "defect": "no_cause",
-          "text": "something a hand should be moving moves without one. List for yourself each door, handle, lever, lid or prop that changes position across the frames or is held turned or pressed down, from the first frame on, and find the hand on it. True when a character is at it, within reach, and no hand of theirs is on the part that moves: a lever pressed down while the hands are up at the chest, a door swinging open while the arms hang. False when a hand is on it. False when no character is at it in the frame and the words give the cause, such as someone on the other side of the door."
+          "text": "something a hand should be moving moves without one. List for yourself each door, handle, lever, lid or prop that changes position across the frames or is held turned or pressed down, from the first frame on, and find the hand on it. True when a character is at it, within arm's reach, and no hand of theirs is on the part that moves: a lever pressed down while the hands are up at the chest, a door swinging open while the arms hang. False when a hand is on it. False when no character is within arm's reach of it (it is alone in the frame, or the character stands clear of it) and the story gives the cause, in this shot's words or the lines before it, such as someone on the other side of the door."
         }
       },
       "script": true
