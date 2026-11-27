@@ -11,6 +11,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest"]
+writer = ["faster-whisper", "yt-dlp"]
 
 [tool.setuptools]
 packages = ["pipeline"]

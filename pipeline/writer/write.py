@@ -1,7 +1,7 @@
 """The writer: one command that turns a story into a narrated, voiced script in the style guide's form.
 
 Usage:
-  python -m pipeline.writer write --story STORY --out JOB [--id ID] [--names Willow,Allan] [--seconds 55] [--wpm 250]
+  python -m pipeline.writer write --story STORY --out JOB [--id ID] [--cast Willow,Allan|none] [--seconds 55] [--wpm 250]
                                   [--genre auto] [--retries 2] [--ceiling 0.5] [--no-judge] [--brief FILE]
                                   [--provider anthropic --model M --judge-model M --effort medium] [--style FILE]
 
@@ -12,7 +12,9 @@ attribution, brief; or a list of such records with --id naming one.
 Writes into JOB: story.json (title, lines with a speaker on every line, names, cast with a voice
 description for every speaker, sound cues, source), script.md (the same to read), source.json (the
 story as given) and script_judge.json (checks, rubric scores and every draft). The model key is read
-from the environment; --ceiling is the most this one run may spend, in dollars.
+from the environment; --ceiling is the most this one run may spend, in dollars. --cast is the pool of
+recurring character names the story's people are named from (default: cast_pool in the style file;
+"none" keeps the source's own names). No script has to use them all or say any of them aloud.
 """
 from __future__ import annotations
 
@@ -29,6 +31,7 @@ from . import judge as judge_mod, llm, style as style_mod, textstats
 GENRES = ["scary", "rule_world", "wholesome", "comedy", "drama", "mystery"]
 MAX_SOURCE_WORDS = 3500
 TEXT_KEYS = ("text", "selftext", "body", "story", "content")
+CAST_KINDS = ("person", "role", "voice")
 
 SYSTEM = """You write scripts for 45 to 60 second narrated Roblox story shorts: a fast narrator, each speaking character in their own voice, a new staged shot about every second, one-word captions. You adapt a written story into that form. You follow the style guide exactly, because a judge will measure the script against it.
 
@@ -41,7 +44,7 @@ Return one JSON object and nothing else:
  "title": "video title, 2 to 6 words, title case",
  "genre": "one of {genres}",
  "lines": [{{"speaker": "narrator", "text": "..."}}, {{"speaker": "mom", "text": "..."}}],
- "cast": [{{"speaker": "mom", "name": "Mom", "role": "who they are in one phrase", "voice": {{"age": "...", "gender": "...", "tone": "...", "processing": "none"}}}}],
+ "cast": [{{"speaker": "mom", "name": "Mom", "kind": "role", "role": "who they are in one phrase", "voice": {{"age": "...", "gender": "...", "tone": "...", "processing": "none"}}}}],
  "names": ["every proper name spoken in the script"],
  "sound_cues": [{{"line": 0, "at": "start", "kind": "sfx", "prompt": "what to generate, one plain sentence", "seconds": 1.0}}],
  "music": "one sentence describing the music bed"
@@ -49,6 +52,7 @@ Return one JSON object and nothing else:
 
 FORM RULES
 - "lines" is the whole spoken script in order. "narrator" speaks the narration. Every other speaker is a character, with an id in lowercase letters, digits and underscores, and exactly one "cast" entry. Include a cast entry for the narrator too.
+- cast "kind" is "person" for someone with a personal name (the name comes from the cast pool and the speaker id is that name in lowercase), "role" for a person known only by what they are (mom, the teacher, a stranger), or "voice" for anything that is not a person (a machine, a creature, something unseen). The narrator's cast name is the pool name of the person telling the story, or "Narrator" when nobody in the story tells it.
 - A character whose voice changes (for example the same voice heard up close at the end) may have a second id such as "thing_close" with its own cast entry.
 - Text is only the words to be spoken: no quotation marks, no stage directions, no speaker names, no emoji, no dashes used as punctuation. Write numbers as words.
 - voice.processing is "none" or an audible treatment such as {processing}.
@@ -64,7 +68,7 @@ Author: {author}
 SETTINGS
 - Length: {words} words ({low} to {high}). Count them.
 - Genre: {genre}
-- Names to include: {names}
+- Cast pool: {cast}
 
 Write the script now."""
 
@@ -83,7 +87,7 @@ Title: {title}
 
 SETTINGS
 - Genre: {genre}
-- Names to include: {names}
+- Cast pool: {cast}
 
 Return the same JSON object as before, complete."""
 
@@ -93,14 +97,17 @@ class WriterError(ValueError):
 
 
 class Settings(object):
-    """Everything a run can be told: length, pace, names, genre, retries, spend and models."""
+    """Everything a run can be told: length, pace, cast pool, genre, retries, spend and models.
 
-    def __init__(self, seconds: Optional[float] = None, wpm: Optional[float] = None, names: Optional[List[str]] = None, genre: Optional[str] = None,
+    cast is the pool of names the story's people are named from; None takes the style file's cast_pool and an empty list means no pool.
+    """
+
+    def __init__(self, seconds: Optional[float] = None, wpm: Optional[float] = None, cast: Optional[List[str]] = None, genre: Optional[str] = None,
                  retries: int = 2, ceiling: float = 0.5, provider: Optional[str] = None, model: Optional[str] = None, judge_model: Optional[str] = None,
                  style_path: Optional[str] = None, use_judge: bool = True, brief: Optional[str] = None, effort: Optional[str] = "medium") -> None:
         self.seconds = seconds
         self.wpm = wpm
-        self.names = list(names or [])
+        self.cast = None if cast is None else list(cast)
         self.genre = genre if genre and genre != "auto" else None
         self.retries = retries
         self.ceiling = ceiling
@@ -111,6 +118,13 @@ class Settings(object):
         self.use_judge = use_judge
         self.brief = brief
         self.effort = effort
+
+
+def parse_cast(text: Optional[str]) -> Optional[List[str]]:
+    """--cast as a list: None when it was not given, an empty list for "none"."""
+    if text is None:
+        return None
+    return [] if text.strip().lower() == "none" else [name.strip() for name in text.split(",") if name.strip()]
 
 
 def slugify(text: str, limit: int = 40) -> str:
@@ -235,7 +249,8 @@ def normalise(data: Any) -> Dict[str, Any]:
     for speaker in speakers:
         entry = given.get(speaker, {})
         voice = entry.get("voice") if isinstance(entry.get("voice"), dict) else {}
-        cast.append({"speaker": speaker, "name": str(entry.get("name") or speaker.replace("_", " ").title()), "role": str(entry.get("role") or ""),
+        kind = entry.get("kind") if entry.get("kind") in CAST_KINDS else "person"
+        cast.append({"speaker": speaker, "name": str(entry.get("name") or speaker.replace("_", " ").title()), "kind": kind, "role": str(entry.get("role") or ""),
                      "voice": {"age": str(voice.get("age") or ""), "gender": str(voice.get("gender") or ""), "tone": str(voice.get("tone") or ""),
                                "processing": str(voice.get("processing") or "none")}})
     cues = []
@@ -270,11 +285,18 @@ def _source_text(record: Dict[str, Any]) -> str:
     return " ".join(words[:head]) + "\n[... middle omitted for length ...]\n" + " ".join(words[-(MAX_SOURCE_WORDS - head):])
 
 
-def _names_line(names: List[str]) -> str:
-    if not names:
-        return "none required"
-    return ("%s. Use every one, spelled exactly. Give up to three of them to characters who speak; the rest are names that are seen or called out "
-            "(a name tag, a locker, a roll call, a place). The narrator is named only if another character says the name." % ", ".join(names))
+def cast_pool(settings: Settings, style: Dict[str, Any]) -> List[str]:
+    """The names this run casts from: the setting when it is given, else the style file's pool."""
+    return list(style.get("cast_pool") or []) if settings.cast is None else list(settings.cast)
+
+
+def _cast_line(pool: List[str]) -> str:
+    if not pool:
+        return "none; keep the source's names, or leave people unnamed"
+    return ("%s. These are the channel's recurring characters. Every person in the script who has a personal name takes one from this pool, as speaker id "
+            "(the name in lowercase) and cast name; nobody carries a name from outside it. Use only as many as the story has roles for, and never add a "
+            "person, a mention or a prop to use a name. Say a name aloud only where a person naturally would; a script in which no name is spoken is fine."
+            % ", ".join(pool))
 
 
 def _system(style: Dict[str, Any], genre: str, targets: Dict[str, Any]) -> str:
@@ -297,7 +319,7 @@ def draft(record: Dict[str, Any], settings: Settings, style: Dict[str, Any], cli
         brief = json.dumps(brief, ensure_ascii=False)
     prompt = DRAFT.format(title=record.get("title") or "Untitled", author=record.get("author") or "unknown", text=_source_text(record),
                           brief="\nBRIEF (follow it)\n%s\n" % brief if brief else "",
-                          genre=settings.genre or "pick the one that fits; a creepy or horror story is scary", names=_names_line(settings.names), **_bounds(targets))
+                          genre=settings.genre or "pick the one that fits; a creepy or horror story is scary", cast=_cast_line(cast_pool(settings, style)), **_bounds(targets))
     reply = client(prompt, system=_system(style, genre, targets), tier="strong", max_tokens=8000, purpose="script draft",
                    provider=settings.provider, model=settings.model, ledger=ledger, effort=settings.effort)
     return normalise(llm.extract_json(reply["text"]))
@@ -309,7 +331,7 @@ def revise(script: Dict[str, Any], report: Dict[str, Any], record: Dict[str, Any
     targets = style_mod.targets_for(style, genre, {"seconds": settings.seconds, "wpm": settings.wpm})
     prompt = REVISE.format(count=report["measures"]["words"], script=judge_mod.format_script(script["lines"]),
                            fixes="\n".join("- " + fix for fix in report["fixes"]) or "- Tighten it.", title=record.get("title") or "Untitled",
-                           text=_source_text(record) if record.get("text") else "(not available)", genre=genre, names=_names_line(settings.names), **_bounds(targets))
+                           text=_source_text(record) if record.get("text") else "(not available)", genre=genre, cast=_cast_line(cast_pool(settings, style)), **_bounds(targets))
     reply = client(prompt, system=_system(style, genre, targets), tier="strong", max_tokens=8000, purpose="script rewrite",
                    provider=settings.provider, model=settings.model, ledger=ledger, effort=settings.effort)
     revised = normalise(llm.extract_json(reply["text"]))
@@ -320,7 +342,7 @@ def revise(script: Dict[str, Any], report: Dict[str, Any], record: Dict[str, Any
 def _judge(script: Dict[str, Any], record: Dict[str, Any], settings: Settings, style: Dict[str, Any], genre: str, client: Optional[llm.Client],
            ledger: llm.Ledger, previous: Optional[List[str]] = None) -> Dict[str, Any]:
     targets = style_mod.targets_for(style, genre, {"seconds": settings.seconds, "wpm": settings.wpm})
-    return judge_mod.judge_story(script, targets, genre, settings.names, record.get("text"), client if settings.use_judge else None, previous or [],
+    return judge_mod.judge_story(script, targets, genre, cast_pool(settings, style), record.get("text"), client if settings.use_judge else None, previous or [],
                                  provider=settings.provider, model=settings.judge_model, ledger=ledger)
 
 
@@ -350,7 +372,7 @@ def improve(script: Dict[str, Any], record: Dict[str, Any], settings: Settings, 
     except llm.BudgetError:
         stopped = "spend ceiling reached"
         if not history:
-            report = _judge(script, record, Settings(seconds=settings.seconds, wpm=settings.wpm, names=settings.names, use_judge=False), style, genre, None, ledger)
+            report = _judge(script, record, Settings(seconds=settings.seconds, wpm=settings.wpm, cast=settings.cast, use_judge=False), style, genre, None, ledger)
             history.append({"attempt": 0, "script": script, "report": report})
     best = max(history, key=lambda item: _rank(item["report"]))
     return {"script": best["script"], "report": best["report"], "history": history, "genre": genre, "stopped": stopped, "chosen": best["attempt"],
@@ -389,7 +411,7 @@ def build_story(result: Dict[str, Any], record: Dict[str, Any], existing: Option
         "sound_cues": script["sound_cues"],
         "music": script["music"],
         "writer": {"genre": result["genre"], "seconds": targets["seconds"], "wpm": targets["wpm"], "target_words": targets["words"],
-                   "names_required": settings.names, "words": result["report"]["measures"]["words"], "score": result["report"]["summary"]["score"],
+                   "cast_pool": cast_pool(settings, style), "words": result["report"]["measures"]["words"], "score": result["report"]["summary"]["score"],
                    "passed": result["report"]["summary"]["passed"], "drafts": len(result["history"]), "spent_usd": result["spent_usd"]},
     })
     story["script"] = textstats.script_text(script["lines"])
@@ -448,7 +470,7 @@ def save(job: Path, result: Dict[str, Any], record: Optional[Dict[str, Any]]) ->
     settings = result["settings"]
     with open(job / "script_judge.json", "w", encoding="utf-8") as handle:
         json.dump({"version": 1, "genre": result["genre"], "stopped": result["stopped"], "chosen": result["chosen"], "spent_usd": result["spent_usd"],
-                   "settings": {"seconds": story["writer"]["seconds"], "wpm": story["writer"]["wpm"], "names": settings.names, "retries": settings.retries,
+                   "settings": {"seconds": story["writer"]["seconds"], "wpm": story["writer"]["wpm"], "cast_pool": story["writer"]["cast_pool"], "retries": settings.retries,
                                 "ceiling_usd": settings.ceiling},
                    "final": result["report"],
                    "drafts": [{"attempt": item["attempt"], "title": item["script"]["title"], "lines": item["script"]["lines"],
@@ -463,7 +485,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--story", required=True)
     parser.add_argument("--id")
     parser.add_argument("--out", required=True)
-    parser.add_argument("--names", default="")
+    parser.add_argument("--cast", help="comma-separated pool of character names, or \"none\"; default: the style file's cast_pool")
     parser.add_argument("--seconds", type=float)
     parser.add_argument("--wpm", type=float)
     parser.add_argument("--genre", default="auto", choices=["auto"] + GENRES)
@@ -480,7 +502,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         record = load_record(Path(args.story), args.id)
         brief = Path(args.brief).read_text(encoding="utf-8") if args.brief else None
-        settings = Settings(seconds=args.seconds, wpm=args.wpm, names=[name.strip() for name in args.names.split(",") if name.strip()], genre=args.genre,
+        settings = Settings(seconds=args.seconds, wpm=args.wpm, cast=parse_cast(args.cast), genre=args.genre,
                             retries=args.retries, ceiling=args.ceiling, provider=args.provider, model=args.model, judge_model=args.judge_model,
                             style_path=args.style, use_judge=not args.no_judge, brief=brief, effort=args.effort)
         result = write_story(record, settings)

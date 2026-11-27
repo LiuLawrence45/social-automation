@@ -3,7 +3,7 @@
 Usage:
   python -m pipeline.writer corpus discover|fetch|rank|transcribe|annotate|voices --corpus DIR
   python -m pipeline.writer analyze --corpus DIR [--out stats.json]
-  python -m pipeline.writer write --story record.json --out JOB [--names A,B] [--seconds 55] [--wpm 250]
+  python -m pipeline.writer write --story record.json --out JOB [--cast A,B] [--seconds 55] [--wpm 250]
   python -m pipeline.writer judge --job JOB [--rewrite]
 """
 from __future__ import annotations

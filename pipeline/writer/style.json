@@ -30,6 +30,15 @@
   "rubric_pass": 4,
   "rubric_floor": 3
  },
+ "cast_pool_note": "The channel's recurring characters. The writer names a story's people from this list and the judge checks it; --cast replaces it for one run.",
+ "cast_pool": [
+  "Willow",
+  "Allan",
+  "Lawrence",
+  "Sharath",
+  "Jesslyn",
+  "Agni"
+ ],
  "genres": {
   "scary": {
    "dialogue_share": [
@@ -68,11 +77,11 @@
   "Wherever a character says, texts, writes or whispers something, make it a line of its own with that character as the speaker. The narrator never quotes.",
   "Dialogue is spoken, short and incomplete the way speech is: 2 to 12 words, contractions, a name or a pet name, no explaining. The first spoken line arrives in the first third.",
   "Lead into a spoken line with a short narrator beat that ends on a comma or a colon ('Then I heard my mother's voice.'), or let it stand alone. Never follow it with 'she said'.",
-  "The narrator never introduces themselves ('I'm Sam, the night clerk'). If the narrator needs a name, another character says it.",
+  "The narrator never introduces themselves ('I'm Sam, the night clerk'). A name is said only where a person would naturally say it, and one name at a time; a script in which no name is ever said aloud is fine.",
   "One thread only. Escalate it in steps: normal, one wrong detail, a worse one, a moment of relief, the turn. Three steps before the turn is enough for a minute; a second plot line or a second mystery is cut. The turn falls between 60% and 90% of the way through.",
   "The last line is 12 words or fewer and lands the turn: a twist, a cliffhanger, or a return to the first line. No moral, no summary, no 'subscribe'.",
   "Cut every word that does not move the picture: no 'suddenly', 'very', 'really', 'literally', 'little did I know', 'I couldn't believe my eyes'.",
-  "Keep the source's premise, its best image and its ending. Merge or drop side characters, travel, backstory and explanation. At most three characters besides the narrator speak; any other required name is seen or called out instead (a name on a locker, a roll call, a text on a screen).",
+  "Keep the source's premise, its best image and its ending. Merge or drop side characters, travel, backstory and explanation. At most three characters besides the narrator speak. Never add a person, a mention or a prop to fit a name in.",
   "Family-safe: no gore, no slurs, no sexual content, no self-harm, no real brands or real people."
  ],
  "voice_descriptions": {

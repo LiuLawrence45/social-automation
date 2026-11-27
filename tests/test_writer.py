@@ -40,10 +40,10 @@ def good_reply(lines=None, **extra):
         "genre": "scary",
         "lines": lines or good_lines(),
         "cast": [
-            {"speaker": "narrator", "name": "Mara", "role": "the rider", "voice": {"age": "20s", "gender": "female", "tone": "quiet, quick", "processing": "none"}},
-            {"speaker": "woman", "name": "The Woman", "role": "the passenger", "voice": {"age": "40s", "gender": "female", "tone": "soft", "processing": "slightly wrong: slower, flatter"}},
-            {"speaker": "mara", "name": "Mara", "role": "the rider, aloud", "voice": {"age": "20s", "gender": "female", "tone": "shaky", "processing": "none"}},
-            {"speaker": "driver", "name": "Driver", "role": "the new driver", "voice": {"age": "50s", "gender": "male", "tone": "flat", "processing": "none"}},
+            {"speaker": "narrator", "name": "Mara", "kind": "person", "role": "the rider", "voice": {"age": "20s", "gender": "female", "tone": "quiet, quick", "processing": "none"}},
+            {"speaker": "woman", "name": "The Woman", "kind": "voice", "role": "the passenger", "voice": {"age": "40s", "gender": "female", "tone": "soft", "processing": "slightly wrong: slower, flatter"}},
+            {"speaker": "mara", "name": "Mara", "kind": "person", "role": "the rider, aloud", "voice": {"age": "20s", "gender": "female", "tone": "shaky", "processing": "none"}},
+            {"speaker": "driver", "name": "Driver", "kind": "role", "role": "the new driver", "voice": {"age": "50s", "gender": "male", "tone": "flat", "processing": "none"}},
         ],
         "names": ["Mara"],
         "sound_cues": [{"line": 0, "at": "start", "kind": "ambience", "prompt": "An empty city bus idling at night.", "seconds": 6},
@@ -86,7 +86,7 @@ class FakeClient(object):
 
 
 def settings(**extra):
-    base = dict(seconds=28, wpm=250, genre="scary", retries=2, ceiling=1.0)
+    base = dict(seconds=28, wpm=250, genre="scary", retries=2, ceiling=1.0, cast=["Mara"])
     base.update(extra)
     return write.Settings(**base)
 
@@ -199,7 +199,7 @@ def test_normalise_builds_the_script_half():
     script = write.normalise(reply)
     assert script["lines"] == [{"speaker": "narrator", "text": "The bus was empty. Then a woman sat down."}, {"speaker": "the_woman", "text": "Mara."}]
     assert [entry["speaker"] for entry in script["cast"]] == ["narrator", "the_woman"]
-    assert script["cast"][1]["voice"] == {"age": "40s", "gender": "", "tone": "", "processing": "none"}
+    assert script["cast"][1]["voice"] == {"age": "40s", "gender": "", "tone": "", "processing": "none"} and script["cast"][1]["kind"] == "person"
     assert script["names"] == ["Mara"]
     assert script["sound_cues"][1]["line"] == 1 and script["sound_cues"][1]["kind"] == "silence"
     with pytest.raises(write.WriterError):
@@ -227,12 +227,25 @@ def test_checks_name_each_problem_and_its_fix():
     script = write.normalise(good_reply(lines=lines))
     quoted = [line for line in script["lines"] if line["text"].startswith("Suddenly")][0]
     quoted["text"] = "Suddenly I saw blood. \"Who are you?\" I asked."
-    checks = judge.check_script(script, targets(), ["Mara", "Willow"])
-    assert failed(checks) == ["filler", "gore", "names", "narrator_quotes", "sentence_max"]
+    checks = judge.check_script(script, targets(), ["Willow", "Allan"])
+    assert failed(checks) == ["cast_pool", "filler", "gore", "narrator_quotes", "sentence_max"]
     by_id = {check["id"]: check for check in checks}
-    assert by_id["names"]["value"] == ["Willow"] and "Willow" in by_id["names"]["fix"]
+    assert by_id["cast_pool"]["value"] == ["Mara", "Mara"] and "Willow, Allan" in by_id["cast_pool"]["fix"]
     assert "suddenly" in by_id["filler"]["fix"] and "very" in by_id["filler"]["fix"]
     assert by_id["sentence_max"]["fix"].startswith("Split this")
+
+
+def test_cast_pool_is_a_pool_and_not_a_list_of_words_to_say():
+    script = write.normalise(good_reply())
+    spoken = judge.textstats.script_text(script["lines"])
+    assert "Willow" not in spoken
+    assert failed(judge.check_script(script, targets(), ["Mara", "Willow", "Allan"])) == []
+    assert failed(judge.check_script(script, targets(), [])) == []
+    [entry for entry in script["cast"] if entry["speaker"] == "mara"][0]["speaker"] = "rider"
+    assert failed(judge.check_script(script, targets(), ["Mara"])) == ["cast", "cast_pool"]
+    assert write.parse_cast(None) is None and write.parse_cast("none") == [] and write.parse_cast("Willow, Allan") == ["Willow", "Allan"]
+    assert write.cast_pool(write.Settings(), style_mod.load()) == style_mod.load()["cast_pool"] and len(style_mod.load()["cast_pool"]) == 6
+    assert write.cast_pool(settings(cast=[]), style_mod.load()) == []
 
 
 def test_checks_catch_length_dialogue_and_cast():
@@ -262,7 +275,7 @@ def test_rubric_scores_and_summary():
     report = judge.judge_story(script, targets(), "scary", ["Mara"], SOURCE, client)
     assert report["summary"]["passed"] is False and report["summary"]["rubric_low"] == ["filmable"]
     assert any("Not filmable" in fix and "never seen her" in fix for fix in report["fixes"])
-    assert "REQUIRED NAMES" in client.calls[0]["prompt"] and "SOURCE STORY" in client.calls[0]["prompt"]
+    assert "CAST POOL: Mara" in client.calls[0]["prompt"] and "narrator = Mara (person)" in client.calls[0]["prompt"] and "SOURCE STORY" in client.calls[0]["prompt"]
     report = judge.judge_story(script, targets(), "scary", ["Mara"], SOURCE, client, ["Line 4: show it instead."])
     assert report["summary"]["passed"] is True and report["summary"]["rubric_mean"] == 4.0 and report["summary"]["score"] == 87.5
     assert "EARLIER FINDINGS" in client.calls[1]["prompt"]
@@ -279,10 +292,10 @@ def test_rubric_rejects_a_reply_without_scores():
 
 def test_write_story_passes_first_time():
     client = FakeClient(drafts=[good_reply()], rubrics=[RUBRIC_GOOD])
-    result = write.write_story(record(), settings(names=["Mara"]), client, llm.RunLedger(None, 1.0))
+    result = write.write_story(record(), settings(cast=["Mara"]), client, llm.RunLedger(None, 1.0))
     assert result["stopped"] == "passed" and len(result["history"]) == 1 and result["chosen"] == 0
     draft_call = client.calls[0]
-    assert "Names to include: Mara" in draft_call["prompt"] and "I take the last bus" in draft_call["prompt"]
+    assert "Cast pool: Mara." in draft_call["prompt"] and "I take the last bus" in draft_call["prompt"]
     assert "STYLE GUIDE" in draft_call["options"]["system"] and "117 words" in draft_call["options"]["system"]
 
 
@@ -312,7 +325,7 @@ def test_rewrite_loop_stops_at_the_spend_ceiling():
 
 def test_save_writes_a_story_the_story_stage_accepts(tmp_path):
     client = FakeClient(drafts=[good_reply()], rubrics=[RUBRIC_GOOD])
-    result = write.write_story(record(), settings(names=["Mara"]), client, llm.RunLedger(None, 1.0))
+    result = write.write_story(record(), settings(cast=["Mara"]), client, llm.RunLedger(None, 1.0))
     job = tmp_path / "job"
     story = write.save(job, result, record())
     on_disk = json.loads((job / "story.json").read_text(encoding="utf-8"))
@@ -323,7 +336,7 @@ def test_save_writes_a_story_the_story_stage_accepts(tmp_path):
     assert story["script"] == " ".join(line["text"] for line in story["lines"])
     assert story["voice"] == {"target_wpm": 250, "speakers": {}}
     assert {entry["speaker"] for entry in story["cast"]} == {line["speaker"] for line in story["lines"]}
-    assert story["writer"]["names_required"] == ["Mara"] and story["writer"]["passed"] is True
+    assert story["writer"]["cast_pool"] == ["Mara"] and story["writer"]["passed"] is True
     judged = json.loads((job / "script_judge.json").read_text(encoding="utf-8"))
     assert judged["drafts"][0]["lines"] == story["lines"] and judged["final"]["summary"]["passed"] is True
     assert json.loads((job / "source.json").read_text(encoding="utf-8"))["text"] == SOURCE
@@ -344,10 +357,11 @@ def test_save_keeps_production_fields_already_in_story_json(tmp_path):
 def test_judge_cli_checks_only(tmp_path, capsys):
     client = FakeClient(drafts=[good_reply()], rubrics=[RUBRIC_GOOD])
     job = tmp_path / "job"
-    write.save(job, write.write_story(record(), settings(names=["Mara"]), client, llm.RunLedger(None, 1.0)), record())
+    write.save(job, write.write_story(record(), settings(cast=["Mara"]), client, llm.RunLedger(None, 1.0)), record())
     assert judge.main(["--job", str(job), "--checks-only"]) == 0
     assert "PASS" in capsys.readouterr().out
-    assert judge.main(["--job", str(job), "--checks-only", "--names", "Willow"]) == 1
+    assert judge.main(["--job", str(job), "--checks-only", "--cast", "Willow"]) == 1
+    assert judge.main(["--job", str(job), "--checks-only", "--cast", "none"]) == 0
     assert judge.main(["--job", str(tmp_path / "missing"), "--checks-only"]) == 2
 
 

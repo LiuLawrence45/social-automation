@@ -2,7 +2,7 @@
 
 Usage:
   python -m pipeline.writer judge --job JOB [--checks-only] [--rewrite] [--retries 2] [--ceiling 0.5]
-                                  [--seconds 55] [--wpm 250] [--names A,B] [--provider P] [--model M]
+                                  [--seconds 55] [--wpm 250] [--cast A,B|none] [--provider P] [--model M]
 
 Reads JOB/story.json (and JOB/source.json when it is there, to judge faithfulness), prints the checks
 and scores, and writes JOB/script_judge.json. --checks-only runs the measurable checks alone and
@@ -24,7 +24,7 @@ NARRATOR = "narrator"
 SPEAKER = re.compile(r"^[a-z][a-z0-9_]*$")
 SAID_TAG = re.compile(r"^(?:he|she|they|it|i|we|mom|dad|mum|grandma|grandpa|the \w+|[A-Z][a-z]+) (?:said|says|whispered|whispers|asked|asks|replied|replies|yelled|shouted|screamed|answered|muttered)\b[^.!?]{0,20}[.!?,]")
 QUOTES = re.compile(r"[\"“”]")
-RUBRIC_KEYS = ["premise_clear", "filmable", "dialogue_spoken", "escalation", "ending_lands", "tone_safe", "faithful"]
+RUBRIC_KEYS = ["premise_clear", "filmable", "dialogue_spoken", "escalation", "ending_lands", "names_natural", "tone_safe", "faithful"]
 
 RUBRIC_PROMPT = """You are the script judge for 45 to 60 second narrated Roblox story shorts. A fast narrator reads the script, each named character's lines are spoken in that character's own voice, and a new staged shot appears about every second. Judge the script below strictly; a 5 is rare.
 
@@ -32,6 +32,8 @@ GENRE: {genre}
 {names_block}{source_block}
 SCRIPT (speaker: text), {words} words:
 {script}
+
+CAST: {cast}
 
 Score each item from 1 to 5. Use these anchors and do not drift from them:
 1 = broken, 2 = a clear fault a viewer would notice, 3 = works but has one fault you can name, 4 = ready to film as it is, 5 = as good as the best shorts in the genre.
@@ -41,12 +43,13 @@ Give a 4 unless you can quote the words that are at fault. Taste alone ("could b
 - "dialogue_spoken": do the spoken lines sound like people talking (short, contractions, no explaining for the viewer's sake), and does each one earn its place? List up to 4 stiff lines in "weak".
 - "escalation": does each beat raise the stakes, with the turn late and no slack in the middle?
 - "ending_lands": does the last line land a twist, a cliffhanger or a return to the opening, in few words, with no moral, summary or call to action?
+- "names_natural": {names_question}
 - "tone_safe": {tone_question}
 - "faithful": {faithful_question}
 
 Return one JSON object and nothing else:
-{{"premise_clear": {{"score": n, "by_word": n, "why": "..."}}, "filmable": {{"score": n, "weak": ["..."], "why": "..."}}, "dialogue_spoken": {{"score": n, "weak": ["..."], "why": "..."}}, "escalation": {{"score": n, "why": "..."}}, "ending_lands": {{"score": n, "why": "..."}}, "tone_safe": {{"score": n, "why": "..."}}, "faithful": {{"score": n, "why": "..."}}, "fixes": ["one concrete edit for each item scored under 4, most important first, naming the line number and the new wording; an empty list when every item is 4 or 5"]}}
-Keep every "why" under 25 words. Leave "weak" empty for an item you score 4 or 5. In "fixes", never ask for anything the script already does, never ask to undo a change listed under EARLIER FINDINGS, never ask for the source's names back when REQUIRED NAMES are given, and never ask for more words than the script has room for.
+{{"premise_clear": {{"score": n, "by_word": n, "why": "..."}}, "filmable": {{"score": n, "weak": ["..."], "why": "..."}}, "dialogue_spoken": {{"score": n, "weak": ["..."], "why": "..."}}, "escalation": {{"score": n, "why": "..."}}, "ending_lands": {{"score": n, "why": "..."}}, "names_natural": {{"score": n, "why": "..."}}, "tone_safe": {{"score": n, "why": "..."}}, "faithful": {{"score": n, "why": "..."}}, "fixes": ["one concrete edit for each item scored under 4, most important first, naming the line number and the new wording; an empty list when every item is 4 or 5"]}}
+Keep every "why" under 25 words. Leave "weak" empty for an item you score 4 or 5. In "fixes", never ask for anything the script already does, never ask to undo a change listed under EARLIER FINDINGS, never ask for the source's names back when a CAST POOL is given, never ask for a name to be added, and never ask for more words than the script has room for.
 {previous_block}"""
 
 
@@ -58,8 +61,12 @@ def _check(key: str, ok: bool, value: Any, target: Any, fix: str) -> Dict[str, A
     return {"id": key, "ok": bool(ok), "value": value, "target": target, "fix": "" if ok else fix}
 
 
-def check_script(story: Dict[str, Any], targets: Dict[str, Any], names: Sequence[str] = ()) -> List[Dict[str, Any]]:
-    """The measurable checks. Every entry has id, ok, value, target and, when it fails, a fix instruction."""
+def check_script(story: Dict[str, Any], targets: Dict[str, Any], pool: Sequence[str] = ()) -> List[Dict[str, Any]]:
+    """The measurable checks. Every entry has id, ok, value, target and, when it fails, a fix instruction.
+
+    pool is the cast pool: with one, every cast entry of kind "person" and the narrator must carry a name from it.
+    No name has to appear in the spoken text.
+    """
     lines = story.get("lines") or []
     if not lines or any(not isinstance(line, dict) or not str(line.get("speaker", "")).strip() or not str(line.get("text", "")).strip() for line in lines):
         raise JudgeError("story.json: lines must be a non-empty list of {speaker, text}")
@@ -109,11 +116,22 @@ def check_script(story: Dict[str, Any], targets: Dict[str, Any], names: Sequence
                          "The last sentence is %d words; land it in %d or fewer." % (stats["last_sentence_words"], targets["last_line_max_words"])))
     checks.append(_check("filler", not stats["filler"], stats["filler"], [], "Remove filler: %s." % ", ".join(sorted(set(stats["filler"])))))
     checks.append(_check("gore", not stats["gore"], stats["gore"], [], "Remove gore words (%s); imply the threat instead." % ", ".join(sorted(set(stats["gore"])))))
-    missing = [name for name in names if not re.search(r"\b%s\b" % re.escape(name), text, re.I)]
-    checks.append(_check("names", not missing, missing, [], "Work these names in as characters or places: %s." % ", ".join(missing)))
+    entries = [entry for entry in story.get("cast") or [] if isinstance(entry, dict)]
+    outside = []
+    if pool:
+        for entry in entries:
+            name = str(entry.get("name") or "")
+            if entry.get("speaker") == NARRATOR:
+                if name not in pool and name.lower() != NARRATOR:
+                    outside.append(name)
+            elif entry.get("kind", "person") == "person" and (name not in pool or entry.get("speaker") != name.lower()):
+                outside.append(name)
+    checks.append(_check("cast_pool", not outside, outside, list(pool),
+                         "Named people come from the cast pool (%s), with the name in lowercase as the speaker id. Rename or recast: %s. "
+                         "Someone known only by a role is kind \"role\"; a machine or creature is kind \"voice\"." % (", ".join(pool), ", ".join(outside))))
     checks.append(_check("grade", stats["grade"] <= targets["grade_max"], stats["grade"], targets["grade_max"],
                          "Reading grade is %.1f; use shorter words and sentences (target %.1f or lower)." % (stats["grade"], targets["grade_max"])))
-    cast = {entry.get("speaker") for entry in story.get("cast") or [] if isinstance(entry, dict)}
+    cast = {entry.get("speaker") for entry in entries}
     uncast = [name for name in speakers if name != NARRATOR and name not in cast]
     checks.append(_check("cast", not uncast, uncast, [], "Add a cast entry with a voice description for: %s." % ", ".join(uncast)))
     return checks
@@ -123,14 +141,19 @@ def format_script(lines: Sequence[Dict[str, Any]]) -> str:
     return "\n".join("%d. %s: %s" % (index, line["speaker"], line["text"]) for index, line in enumerate(lines))
 
 
-def rubric(story: Dict[str, Any], genre: str, source_text: Optional[str], client: llm.Client, names: Sequence[str] = (),
+def rubric(story: Dict[str, Any], genre: str, source_text: Optional[str], client: llm.Client, pool: Sequence[str] = (),
            previous: Sequence[str] = (), **options: Any) -> Dict[str, Any]:
-    """The model rubric: seven scores from 1 to 5 with reasons and up to five fixes."""
+    """The model rubric: eight scores from 1 to 5 with reasons and a fix for each item under 4."""
     scary = genre == "scary"
     names_block = ""
-    if names:
-        names_block = ("REQUIRED NAMES: the producer asked for these names to be used for characters or places: %s. Renaming the source's people and places "
-                       "to them is correct and is not a loss of faithfulness.\n" % ", ".join(names))
+    names_question = ("is every name there because the story needs it? Count against the script any person, mention or prop added only to use a name "
+                      "(a name on a locker, a list of coworkers) and two or more new names in one sentence. A script in which no name is said aloud can score 5.")
+    if pool:
+        names_block = ("CAST POOL: %s. These are the channel's recurring characters. People who need a name are named from this pool, so renaming the source's "
+                       "people to them is correct and is not a loss of faithfulness. No script has to use them all or say any of them aloud.\n" % ", ".join(pool))
+        names_question += " Score 2 or lower if a person carries a personal name that is not in the CAST POOL."
+    cast_line = "; ".join("%s = %s (%s)" % (entry.get("speaker"), entry.get("name"), entry.get("kind", "person"))
+                          for entry in story.get("cast") or [] if isinstance(entry, dict)) or "none given"
     previous_block = ""
     if previous:
         previous_block = "\nEARLIER FINDINGS (already acted on by the writer):\n%s\n" % "\n".join("- " + item for item in previous)
@@ -139,7 +162,7 @@ def rubric(story: Dict[str, Any], genre: str, source_text: Optional[str], client
         source_words = source_text.split()
         source_block = "\nSOURCE STORY (what the script adapts):\n%s\n" % " ".join(source_words[:1800])
     prompt = RUBRIC_PROMPT.format(
-        genre=genre, source_block=source_block, names_block=names_block, previous_block=previous_block, words=len(textstats.words(textstats.script_text(story["lines"]))),
+        genre=genre, source_block=source_block, names_block=names_block, names_question=names_question, cast=cast_line, previous_block=previous_block, words=len(textstats.words(textstats.script_text(story["lines"]))),
         script=format_script(story["lines"]),
         tone_question=("is it unsettling without gore: no blood, wounds, bodies or pain described, the threat implied through sound, voice and wrong details, safe for a young audience?"
                        if scary else "does it hold one clear tone, and is it safe for a young audience (no gore, slurs or sexual content)?"),
@@ -181,15 +204,15 @@ def summarise(checks: List[Dict[str, Any]], scores: Optional[Dict[str, Any]], ta
     return summary
 
 
-def judge_story(story: Dict[str, Any], targets: Dict[str, Any], genre: str, names: Sequence[str] = (), source_text: Optional[str] = None,
+def judge_story(story: Dict[str, Any], targets: Dict[str, Any], genre: str, pool: Sequence[str] = (), source_text: Optional[str] = None,
                 client: Optional[llm.Client] = None, previous: Sequence[str] = (), **options: Any) -> Dict[str, Any]:
     """Checks plus, when a client is given, the rubric. Returns {"measures", "checks", "rubric", "summary", "fixes"}.
 
     The script passes when every check is ok, the rubric mean reaches targets["rubric_pass"] and no rubric
     item is under targets["rubric_floor"]. previous is the list of fixes already asked for, so the rubric does not reverse itself.
     """
-    checks = check_script(story, targets, names)
-    scores = rubric(story, genre, source_text, client, names, previous, **options) if client is not None else None
+    checks = check_script(story, targets, pool)
+    scores = rubric(story, genre, source_text, client, pool, previous, **options) if client is not None else None
     fixes = [check["fix"] for check in checks if not check["ok"]]
     if scores is not None:
         fixes += scores["fixes"]
@@ -223,7 +246,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--ceiling", type=float, default=0.5)
     parser.add_argument("--seconds", type=float)
     parser.add_argument("--wpm", type=float)
-    parser.add_argument("--names", default="")
+    parser.add_argument("--cast")
     parser.add_argument("--genre")
     parser.add_argument("--provider")
     parser.add_argument("--model")
@@ -243,13 +266,15 @@ def main(argv: Optional[List[str]] = None) -> int:
             source = json.load(handle)
     writer_meta = story.get("writer") or {}
     genre = args.genre or writer_meta.get("genre") or "scary"
-    names = [name.strip() for name in args.names.split(",") if name.strip()] or writer_meta.get("names_required") or []
     style = style_mod.load(args.style)
+    from . import write
+    pool = write.parse_cast(args.cast)
+    if pool is None:
+        pool = writer_meta.get("cast_pool") if writer_meta.get("cast_pool") is not None else list(style.get("cast_pool") or [])
     targets = style_mod.targets_for(style, genre, {"seconds": args.seconds or writer_meta.get("seconds"), "wpm": args.wpm or writer_meta.get("wpm")})
     try:
         if args.rewrite:
-            from . import write
-            settings = write.Settings(seconds=targets["seconds"], wpm=targets["wpm"], names=names, genre=genre, retries=args.retries, ceiling=args.ceiling,
+            settings = write.Settings(seconds=targets["seconds"], wpm=targets["wpm"], cast=pool, genre=genre, retries=args.retries, ceiling=args.ceiling,
                                       provider=args.provider, model=args.model, judge_model=args.judge_model, style_path=args.style)
             result = write.improve(story, source or {}, settings)
             write.save(job, result, source)
@@ -257,7 +282,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             ledger = llm.run_ledger(args.ceiling)
             client = None if args.checks_only else llm.complete
-            report = judge_story(story, targets, genre, names, (source or {}).get("text"), client, provider=args.provider, model=args.judge_model, ledger=ledger)
+            report = judge_story(story, targets, genre, pool, (source or {}).get("text"), client, provider=args.provider, model=args.judge_model, ledger=ledger)
             with open(job / "script_judge.json", "w", encoding="utf-8") as handle:
                 json.dump({"version": 1, "genre": genre, "targets": targets, "final": report}, handle, ensure_ascii=False, indent=1)
         print_report(report)

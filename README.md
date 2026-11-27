@@ -8,6 +8,7 @@ Every stage reads and writes one job folder and can be re-run on its own.
 
 | Stage | Command | Reads | Writes |
 |---|---|---|---|
+| Writer | `python -m pipeline.writer write --story S --out J` | a story as text or JSON | story.json, script.md, source.json, script_judge.json |
 | Story | `python -m pipeline.story check|timeline --job J` | story.json, shotlist.json, words.json | timeline.json |
 | Voice | `python -m pipeline.voice --job J [--reuse-raw]` | story.json | narration.wav, words.json, voice_report.json |
 | Studio | `python -m pipeline.studio prepare|build-sets|load|info` | timeline.json | sets and cast in the open place |
@@ -19,6 +20,64 @@ Every stage reads and writes one job folder and can be re-run on its own.
 Order for a new video: write story.json and shotlist.json, voice, `story timeline`, `studio build-sets`, `judge shots`, sound, `render video`, edit, `judge video`. `examples/found-box` holds a sample story and shot list. Stories, adapted scripts and renders are job data and never belong in this repository.
 
 API keys are read from the environment at call time and never written anywhere: `ELEVENLABS_API_KEY` (voice, sound), `GEMINI_API_KEY` or `ANTHROPIC_API_KEY` (judge).
+
+## Writer
+
+`python -m pipeline.writer` is the stage before the story stage. It keeps a backlog of Roblox story shorts with their transcripts and view counts, measures how they are written, and turns a story into the script half of `story.json` in that style. Model keys are read from the environment at call time (`ANTHROPIC_API_KEY`, or `OPENROUTER_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`); set `WRITER_LEDGER=path/spend.jsonl` and every model call is appended to that file with its tokens and cost. Prices in `pipeline/writer/llm.py` are estimates to edit when they change.
+
+### One command: story in, script out
+
+```
+python -m pipeline.writer write --story STORY --out JOB [--id ID] [--names Willow,Allan] [--seconds 55] [--wpm 250]
+                                [--genre auto|scary|rule_world|wholesome|comedy|drama|mystery] [--retries 2] [--ceiling 0.5]
+                                [--no-judge] [--brief FILE] [--provider P --model M --judge-model M --effort medium]
+```
+
+`STORY` is a plain text file (a short first line followed by a blank line is taken as the title) or a JSON file with `text` and optionally `title`, `author`, `url`; a JSON list of such records works with `--id`. Whatever provenance the record carries (`url`, `author`, `subreddit`, `retrieved`, `retrieved_via`, `license`) is copied to `story.json`'s `source`. The command drafts a script, judges it, rewrites it against the judge's findings until it passes, the retries run out or `--ceiling` dollars are spent, and keeps the best draft. It writes into `JOB`:
+
+| File | What it holds |
+|---|---|
+| `story.json` | `title`, `slug`, `source`, `names`, `lines` with a speaker on every line, `script`, `voice.target_wpm`, and the writer's extra keys `cast` (a voice description for every speaker: age, gender, tone, processing), `sound_cues`, `music`, `writer` |
+| `script.md` | the same script to read, with cues, voices and the judge table |
+| `source.json` | the story as given |
+| `script_judge.json` | every draft with its checks, rubric scores and fixes, and why the loop stopped |
+
+An existing `story.json` in the job keeps its production fields (`voice`, `display_overrides`); only the script half is replaced. `--names` lists names that must appear: up to three go to speaking characters and the rest are seen or called out. The story stage ignores the extra keys; `voice.speakers` is left for the voice stage to fill.
+
+### Script judge
+
+```
+python -m pipeline.writer judge --job JOB [--checks-only] [--rewrite] [--retries 2] [--ceiling 0.5] [--seconds 55] [--wpm 250] [--names A,B]
+```
+
+Eighteen measurable checks (length for the target seconds, hook length, sentence length, share and count of spoken lines, first spoken line, speakers, narrator quoting speech, speech tags, last line, filler and gore words, required names, reading grade, a cast entry per speaker) plus a model rubric of seven items scored 1 to 5 (premise clear in five seconds, filmable, dialogue sounds spoken, escalation, ending lands, tone safe, faithful to the source). A script passes when every check is ok, the rubric mean is at least `rubric_pass` and no item is under `rubric_floor`. `--checks-only` calls no model; `--rewrite` runs the same loop as `write` on a script that already exists. Exit status is 0 on a pass, 1 on a fail, 2 on an error.
+
+The targets and rules live in `pipeline/writer/style.json`, which both the writer and the judge load (`--style FILE` swaps it). Its numbers come from the corpus study; `pipeline/writer/style_stats.json` holds the measured values behind them.
+
+### Shorts backlog
+
+```
+python -m pipeline.writer corpus update     --corpus DIR [--route yt-dlp] [--no-discover] [--pause 1.0]
+python -m pipeline.writer corpus discover   --corpus DIR [--sources FILE] [--per-channel 45] [--per-tag 40]
+python -m pipeline.writer corpus fetch      --corpus DIR [--workers 4] [--pause 0] [--limit N]
+python -m pipeline.writer corpus refresh    --corpus DIR [--workers 4]
+python -m pipeline.writer corpus rank       --corpus DIR
+python -m pipeline.writer corpus transcribe --corpus DIR [--model large-v3-turbo] [--workers 2] [--threads 4]
+python -m pipeline.writer corpus annotate   --corpus DIR [--ceiling 1.0] [--workers 4]
+python -m pipeline.writer corpus voices     --corpus DIR [--ceiling 1.0] [--workers 4]
+python -m pipeline.writer corpus index      --corpus DIR
+python -m pipeline.writer corpus search     --corpus DIR [WORDS] [--channel C] [--genre scary] [--stories] [--min-views N] [--sort views_over_median] [--text]
+python -m pipeline.writer corpus export     --corpus DIR --out FILE.jsonl|FILE.csv [--stories] [--no-transcripts]
+python -m pipeline.writer analyze           --corpus DIR [--out stats.json] [--features features.jsonl] [--examples examples.md]
+```
+
+`DIR` is job data outside the repository. `update` is the standing run: it lists the channels, hashtags and searches in `pipeline/writer/sources.json`, fetches audio and counts for new shorts, re-reads every short's counts into a new dated snapshot, ranks each short within its channel, and rebuilds `DIR/corpus.sqlite`. After new shorts arrive, `transcribe`, `annotate`, `voices` and `index` fill in the rest; each skips what is already done. `annotate` sends the transcript to a cheap text model for genre, hook, beats and who speaks which words; `voices` sends the audio to a cheap Gemini model that counts distinct voices.
+
+`corpus.sqlite` has one row per short in `shorts` (counts, `views_per_day`, `views_per_follower`, `views_over_median`, `channel_pct`, genre, hook, ending, word and dialogue measures), one row per short per collection date in `snapshots`, the timed text in `transcripts`, the raw model passes in `annotations` and `voices`, and a full-text index. `analyze` writes derived statistics only (no transcript text) and compares genres and each channel's top quarter against the rest.
+
+Collection goes through a `Collector` in `pipeline/writer/collectors.py`; `yt-dlp` is the one route today and a second is a subclass registered in `ROUTES` and picked with `--route`. YouTube refuses audio downloads from data-centre addresses after a few hundred requests, so fetch from a home connection with `--workers 2 --pause 1.0`; `fetch` stops after eight refusals in a row.
+
+The writer and the judge need only the standard library. The backlog needs `yt-dlp`, `ffmpeg` and, for `transcribe`, `faster-whisper`: `python -m pip install -e '.[writer]'`. Transcripts, collected stories and adapted scripts are job data and never belong in this repository.
 
 ## Voice
 
