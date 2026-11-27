@@ -7,7 +7,7 @@
 
 A fixer never writes into the main job's files. send copies the named shots (taken from the working copy's
 shotlist.json), the copy's poses.json and its sets/<set>.luau into a new folder under <main job>/submissions/,
-written elsewhere first and moved into place whole. merge applies pending submissions in order: each shot
+written elsewhere first and moved into place whole (a set file the copy did not change is left out). merge applies pending submissions in order: each shot
 replaces the shot of the same id (its id, set and words may not change), poses are added to <main job>/poses.json,
 set files to <main job>/sets/. <main job>/submissions/groups.json says which group may send which shots and
 which set files; a pose may not redefine one that another group or the library already defines differently.
@@ -86,8 +86,14 @@ def command_send(args: argparse.Namespace) -> Dict[str, Any]:
                 problems.append("%s changes '%s', which is tied to the narration and may not change" % (shot_id, key))
         if allowed is not None and shot_id not in allowed.get("shots", []):
             problems.append("%s is not one of group %s's shots" % (shot_id, args.group))
-    sets = sorted((source / "sets").glob("*.luau")) if (source / "sets").is_dir() else []
-    for path in sets:
+    sets = []
+    for path in sorted((source / "sets").glob("*.luau")) if (source / "sets").is_dir() else []:
+        current = main / "sets" / path.name
+        if not current.is_file():
+            current = studio.DIRECTOR_DIR / "sets" / path.name
+        if current.is_file() and current.read_bytes() == path.read_bytes():
+            continue
+        sets.append(path)
         if allowed is not None and path.stem not in allowed.get("sets", []):
             problems.append("set file %s does not belong to group %s" % (path.name, args.group))
     if problems:
