@@ -16,13 +16,17 @@ carry "casting", an object keyed by speaker or actor id:
     "jesslyn": {"costume": "dispatcher", "avatar": {"headset": {"side": "R"}}},   any key overridden for this job; null removes one
     "thing": {"avatar": {"rig": "avatar", "bundle": 572, "size": 1.28}, "voice": {"voice_id": "...", "process": {...}}},   an extra, defined here only
     "machine": {"voice": {"voice_id": "..."}},           a voice with no avatar
+    "kiosk": {"stock": "female", "effect": "machine"},   an extra with a stock voice and a voice effect from the registry
+    "dark_close": {"voice": "dark", "effect": "close"},  the same voice as another speaker, with its own effect
     "crowd": {"voice": "narrator"}                       an extra that speaks in the narrator's voice
   }
 
 A member who narrates takes the registry's narrator_voice settings over its own, so every voice narrates
 at one pace. --narrator ID says who narrates without editing the story (it is written into casting.narrator).
 A story written by pipeline.writer carries "cast" as a list; its entries of kind "person" whose name is in
-the pool are cast without a casting entry. The writer names the narrator only when the story names its
+the pool are cast without a casting entry, and its roles and voices (a machine, a creature, a stranger)
+get a stock voice by the gender it describes and an effect by its processing note, unless casting says
+otherwise; cast.json marks those "auto". The writer names the narrator only when the story names its
 teller, so say who narrates with --narrator or casting.narrator. --write sets story.json voice (the
 narrator's voice, voice.speakers), adds the names for the captions, sets the avatars in shotlist.json cast
 when that file exists, and records the result in <job>/cast.json.
@@ -44,7 +48,8 @@ REGISTRY = Path(__file__).with_name("cast.json")
 NARRATOR = "narrator"
 ID = re.compile(r"^[a-z][a-z0-9_]*$")
 SPEAKER_KEYS = ("voice_id", "voice_name", "settings", "process")
-CASTING_KEYS = ("is", "as", "costume", "avatar", "voice")
+CASTING_KEYS = ("is", "as", "costume", "effect", "stock", "avatar", "voice")
+MACHINE_WORDS = ("machine", "kiosk", "screen reader", "computer", "automated", "system", "speaker", "announcement", "terminal", "robot", "assistant")
 
 
 class CastError(ValueError):
@@ -95,6 +100,14 @@ def load_registry(path: Optional[Path] = None) -> Dict[str, Any]:
     for name, costume in (registry.get("costumes") or {}).items():
         _require(isinstance(costume, dict) and isinstance(costume.get("avatar", {}), dict) and isinstance(costume.get("voice", {}), dict),
                  "cast registry: costumes.%s must be an object with avatar and voice objects" % name)
+    for name, effect in (registry.get("effects") or {}).items():
+        _require(isinstance(effect, dict) and isinstance(effect.get("settings", {}), dict) and isinstance(effect.get("process", {}), dict),
+                 "cast registry: effects.%s must be an object with settings and process objects" % name)
+    for group, choices in (registry.get("stock_voices") or {}).items():
+        _require(isinstance(choices, list) and bool(choices), "cast registry: stock_voices.%s must be a non-empty list" % group)
+        for choice in choices:
+            _require(isinstance(choice, dict) and isinstance(choice.get("voice_id"), str), "cast registry: stock_voices.%s entries need a voice_id" % group)
+            _require(choice["voice_id"] not in voices, "cast registry: stock voice %s is %s's voice; stock voices are not pool voices" % (choice.get("voice_name"), voices.get(choice["voice_id"])))
     return registry
 
 
@@ -149,11 +162,55 @@ def _speaker_entry(voice: Dict[str, Any], where: str) -> Dict[str, Any]:
     return voice
 
 
+def effect_for(entry: Dict[str, Any]) -> Optional[str]:
+    """The registry effect a pipeline.writer cast entry asks for, read from its role and processing note."""
+    described = entry.get("voice") if isinstance(entry.get("voice"), dict) else {}
+    note = str(described.get("processing") or "").lower()
+    role = ("%s %s" % (entry.get("role") or "", entry.get("name") or "")).lower()
+    if "intercom" in note or "tannoy" in note or "loudspeaker" in note:
+        return "intercom"
+    if "phone" in note or "radio" in note:
+        return "phone_line"
+    if entry.get("kind") == "voice" and any(word in role for word in MACHINE_WORDS):
+        return "machine"
+    if "close" in note or "whisper" in note:
+        return "close"
+    if "wrong" in note or "pitched" in note or "echo" in note or "slow" in note:
+        return "wrong"
+    return None
+
+
+def auto_extras(story: Dict[str, Any], registry: Dict[str, Any], taken: List[str]) -> Dict[str, Dict[str, Any]]:
+    """Casting for the roles and voices a pipeline.writer story lists and nobody cast: a stock voice by gender, an effect by its note."""
+    entries = story.get("cast")
+    if not isinstance(entries, list):
+        return {}
+    listed = {entry["speaker"]: entry for entry in entries if isinstance(entry, dict) and isinstance(entry.get("speaker"), str)}
+    stock = registry.get("stock_voices") or {}
+    out = {}  # type: Dict[str, Dict[str, Any]]
+    for speaker, entry in listed.items():
+        if speaker == NARRATOR or speaker in taken:
+            continue
+        described = entry.get("voice") if isinstance(entry.get("voice"), dict) else {}
+        if speaker.endswith("_close") and speaker[:-6] in listed:
+            out[speaker] = {"voice": speaker[:-6], "effect": "close"}
+            continue
+        gender = str(described.get("gender") or "").lower()
+        spec = {"stock": gender if gender in stock else "neutral"}  # type: Dict[str, Any]
+        effect = effect_for(entry)
+        if effect in (registry.get("effects") or {}):
+            spec["effect"] = effect
+        out[speaker] = spec
+    return out
+
+
 def expand(story: Dict[str, Any], registry: Optional[Dict[str, Any]] = None, narrator: Optional[str] = None) -> Dict[str, Any]:
     """Turn the story's speakers and casting into voice.speakers entries and shot-list cast entries."""
     registry = registry or load_registry()
     characters = registry["characters"]
     costumes = registry.get("costumes") or {}
+    effects = registry.get("effects") or {}
+    stock = registry.get("stock_voices") or {}
     casting = casting_of(story)
     if narrator:
         casting[NARRATOR] = dict(casting.get(NARRATOR, {}), **{"is": narrator})
@@ -161,44 +218,79 @@ def expand(story: Dict[str, Any], registry: Optional[Dict[str, Any]] = None, nar
     speakers = speakers_of(story)
     for speaker in speakers:
         _require(ID.match(speaker) is not None, "story.json: speaker %r must be a lowercase id (letters, digits, underscores)" % speaker)
+    auto = auto_extras(story, registry, list(casting) + list(characters) + list(people))
     order = list(speakers)
     for name in list(casting) + [NARRATOR]:
         if name not in order:
             order.append(name)
+    specs = {name: dict(casting.get(name) or auto.get(name) or {}) for name in order}
+    members = {name: specs[name].get("is") or (name if name in characters else people.get(name)) for name in order}
     result = {"version": 1, "registry": registry_hash(registry), "narrator": None, "voice": {}, "speakers": {}, "avatars": {}, "members": {}, "names": [], "unvoiced": []}  # type: Dict[str, Any]
     problems = []  # type: List[str]
+    used = {characters[member]["voice"]["voice_id"] for member in members.values() if member in characters}
+    base = {}  # type: Dict[str, Dict[str, Any]]
     for name in order:
-        spec = casting.get(name, {})
-        where = "story.json: casting.%s" % name
-        member = spec.get("is") or (name if name in characters else people.get(name))
-        costume = spec.get("costume")
-        if costume is not None and costume not in costumes:
-            problems.append("%s.costume %r is not in the registry (costumes: %s)" % (where, costume, ", ".join(sorted(costumes)) or "none"))
-            continue
-        dressed = costumes.get(costume, {})
+        spec, member, where = specs[name], members[name], "story.json: casting.%s" % name
         if member is not None:
             if member not in characters:
                 problems.append("%s.is %r is not a pool member (pool: %s)" % (where, member, ", ".join(sorted(characters))))
+            else:
+                base[name] = copy.deepcopy(characters[member]["voice"])
+        elif spec.get("stock") is not None:
+            choices = stock.get(spec["stock"])
+            if not choices:
+                problems.append("%s.stock %r is not in the registry (stock voices: %s)" % (where, spec["stock"], ", ".join(sorted(stock)) or "none"))
                 continue
-            avatar = merge(merge(characters[member]["avatar"], dressed.get("avatar", {})), spec.get("avatar", {})) if spec.get("avatar") is not False else None
-            voice = merge(characters[member]["voice"], dressed.get("voice", {}))
-            if name == NARRATOR:
+            pick = next((choice for choice in choices if choice["voice_id"] not in used), choices[0])
+            used.add(pick["voice_id"])
+            base[name] = copy.deepcopy(pick)
+        elif isinstance(spec.get("voice"), dict):
+            base[name] = {}
+    for name in order:
+        borrowed = specs[name].get("voice")
+        if isinstance(borrowed, str) and borrowed != NARRATOR and name not in base:
+            if borrowed in base and base[borrowed]:
+                base[name] = {key: copy.deepcopy(base[borrowed][key]) for key in ("voice_id", "voice_name", "settings") if key in base[borrowed]}
+            else:
+                problems.append("story.json: casting.%s.voice names %r, which has no voice of its own to borrow" % (name, borrowed))
+    for name in order:
+        spec, member, where = specs[name], members[name], "story.json: casting.%s" % name
+        if member is not None and member not in characters:
+            continue
+        costume, effect = spec.get("costume"), spec.get("effect")
+        if costume is not None and costume not in costumes:
+            problems.append("%s.costume %r is not in the registry (costumes: %s)" % (where, costume, ", ".join(sorted(costumes)) or "none"))
+            continue
+        if effect is not None and effect not in effects:
+            problems.append("%s.effect %r is not in the registry (effects: %s)" % (where, effect, ", ".join(sorted(effects)) or "none"))
+            continue
+        dressed = costumes.get(costume, {})
+        voice = None  # type: Any
+        if name in base:
+            voice = merge(base[name], dressed.get("voice", {}))
+            if name == NARRATOR and member is not None:
                 voice = merge(voice, registry.get("narrator_voice") or {})
-            voice = merge(voice, spec.get("voice", {}))
+            if effect is not None:
+                voice = merge(voice, {key: effects[effect][key] for key in ("settings", "process") if key in effects[effect]})
+            if isinstance(spec.get("voice"), dict):
+                voice = merge(voice, spec["voice"])
+        elif spec.get("voice") == NARRATOR:
+            voice = NARRATOR
+        if member is not None:
+            avatar = merge(merge(characters[member]["avatar"], dressed.get("avatar", {})), spec.get("avatar", {})) if spec.get("avatar") is not False else None
             if characters[member]["name"] not in result["names"]:
                 result["names"].append(characters[member]["name"])
         else:
             avatar = merge(dressed.get("avatar", {}), spec["avatar"]) if isinstance(spec.get("avatar"), dict) else None
-            voice = spec.get("voice")
-            if isinstance(voice, dict):
-                voice = merge(dressed.get("voice", {}), voice)
             if name == NARRATOR:
                 if voice is None and avatar is None:
                     continue
             elif name in speakers and voice is None:
-                problems.append("speaker %r is not a pool member and has no voice: add %s as a pool id (%s) or as an extra "
-                                "{\"voice\": {\"voice_id\": ...}, \"avatar\": {...}} (\"voice\": \"narrator\" borrows the narrator's voice)"
-                                % (name, where, ", ".join(sorted(characters))))
+                if name in base or isinstance(spec.get("voice"), str):
+                    continue
+                problems.append("speaker %r is not a pool member and has no voice: add %s as a pool id (%s), as a stock voice {\"stock\": \"%s\"}, "
+                                "or as an extra {\"voice\": {\"voice_id\": ...}, \"avatar\": {...}} (\"voice\": \"narrator\" borrows the narrator's voice)"
+                                % (name, where, ", ".join(sorted(characters)), "|".join(sorted(stock)) or "..."))
                 continue
             elif name not in speakers and avatar is None:
                 problems.append("%s is not a speaker and defines no avatar; give it an avatar or remove it" % where)
@@ -228,8 +320,8 @@ def expand(story: Dict[str, Any], registry: Optional[Dict[str, Any]] = None, nar
                 problems.append("actor id %r would get two different avatars; give one of them another \"as\"" % actor)
                 continue
             result["avatars"][actor] = avatar
-        result["members"][name] = {"is": member, "costume": costume, "actor": actor if avatar else None,
-                                   "voice_name": voice.get("voice_name") if isinstance(voice, dict) else None}
+        result["members"][name] = {"is": member, "costume": costume, "effect": effect, "stock": spec.get("stock"), "auto": name in auto and name not in casting,
+                                   "actor": actor if avatar else None, "voice_name": voice.get("voice_name") if isinstance(voice, dict) else None}
     _require(not problems, "cast: " + "; ".join(problems))
     return result
 
@@ -350,6 +442,10 @@ def main(argv: Optional[List[str]] = None) -> int:
                 print("%-9s %-9s voice %-8s avatar %s  %s" % (name, entry["name"], entry["voice"].get("voice_name"), json.dumps(entry["avatar"]), entry.get("look", "")))
             for name, costume in (registry.get("costumes") or {}).items():
                 print("costume %-11s %s" % (name, costume.get("about", "")))
+            for name, effect in (registry.get("effects") or {}).items():
+                print("effect  %-11s %s" % (name, effect.get("about", "")))
+            for group, choices in (registry.get("stock_voices") or {}).items():
+                print("stock   %-11s %s" % (group, ", ".join(str(choice.get("voice_name")) for choice in choices)))
             return 0
         if args.command == "sheet":
             ids = sheet_job(args.out.expanduser(), [piece.strip() for piece in args.ids.split(",") if piece.strip()] if args.ids else None, registry)

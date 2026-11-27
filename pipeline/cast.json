@@ -14,38 +14,23 @@
   }
  },
  "characters": {
-  "lawrence": {
-   "name": "Lawrence",
-   "look": "young man, dark hair, striped shirt, jeans (bundle Denny)",
+  "willow": {
+   "name": "Willow",
+   "look": "woman, short blonde hair, green top, dark jeans, boots (bundle City Life Woman, skin set to a natural tone)",
    "avatar": {
     "rig": "avatar",
-    "bundle": 722
+    "bundle": 337,
+    "skin": "#e8c2a4"
    },
    "voice": {
-    "voice_id": "nPczCjzI2devNBz1zQrb",
-    "voice_name": "Brian",
-    "settings": {
-     "speed": 1.1
-    }
-   },
-   "source": "the-door: cast id me, the narrator voice"
-  },
-  "jesslyn": {
-   "name": "Jesslyn",
-   "look": "young woman, light hair in a ponytail, blue top (bundle Linlin)",
-   "avatar": {
-    "rig": "avatar",
-    "bundle": 741
-   },
-   "voice": {
-    "voice_id": "EXAVITQu4vr4xnSDxMaL",
-    "voice_name": "Sarah",
+    "voice_id": "cgSgspJ2msm6clMCkdW9",
+    "voice_name": "Jessica",
     "settings": {
      "speed": 1,
-     "stability": 0.7
+     "stability": 0.6
     }
    },
-   "source": "the-door: cast id jesslyn with the dispatcher costume"
+   "source": "chosen for the registry"
   },
   "allan": {
    "name": "Allan",
@@ -65,6 +50,22 @@
    },
    "source": "the-door: cast id allan with the officer costume"
   },
+  "lawrence": {
+   "name": "Lawrence",
+   "look": "young man, dark hair, striped shirt, jeans (bundle Denny)",
+   "avatar": {
+    "rig": "avatar",
+    "bundle": 722
+   },
+   "voice": {
+    "voice_id": "nPczCjzI2devNBz1zQrb",
+    "voice_name": "Brian",
+    "settings": {
+     "speed": 1.1
+    }
+   },
+   "source": "the-door: cast id me, the narrator voice"
+  },
   "sharath": {
    "name": "Sharath",
    "look": "man, dark hair, blue jacket, red trousers (bundle Mike Kerr)",
@@ -82,17 +83,49 @@
    },
    "source": "the-door: cast id sharath with the officer costume; he had no lines there, so the voice was chosen for the registry"
   },
-  "willow": {
-   "name": "Willow",
-   "look": "woman, short blonde hair, green top, dark jeans, boots (bundle City Life Woman, skin set to a natural tone)",
+  "jesslyn": {
+   "name": "Jesslyn",
+   "look": "young woman, light hair in a ponytail, blue top (bundle Linlin)",
    "avatar": {
     "rig": "avatar",
-    "bundle": 337,
-    "skin": "#e8c2a4"
+    "bundle": 741
    },
    "voice": {
-    "voice_id": "cgSgspJ2msm6clMCkdW9",
-    "voice_name": "Jessica",
+    "voice_id": "EXAVITQu4vr4xnSDxMaL",
+    "voice_name": "Sarah",
+    "settings": {
+     "speed": 1,
+     "stability": 0.7
+    }
+   },
+   "source": "the-door: cast id jesslyn with the dispatcher costume"
+  },
+  "agni": {
+   "name": "Agni",
+   "look": "man, brown skin, black side-parted hair, beige knit sweater, dark trousers (bundle Base Body Harper, dressed from free catalog items)",
+   "avatar": {
+    "rig": "avatar",
+    "bundle": 989,
+    "skin": "#a9714b",
+    "wear": [
+     {
+      "type": "hair",
+      "id": 9244021842
+     },
+     {
+      "type": "sweater",
+      "id": 6984769289
+     },
+     {
+      "type": "pants",
+      "id": 6984740059
+     }
+    ],
+    "legs": "#17181c"
+   },
+   "voice": {
+    "voice_id": "bIHbv24MWmeRgasZH58o",
+    "voice_name": "Will",
     "settings": {
      "speed": 1,
      "stability": 0.6
@@ -123,15 +156,187 @@
      "gain_db": -1
     }
    }
-  },
+  }
+ },
+ "effects": {
   "phone_line": {
-   "about": "the voice heard down a phone line, no change to the avatar",
-   "voice": {
-    "process": {
-     "filter": "highpass=f=380,lowpass=f=3100,acompressor=threshold=-18dB:ratio=4:makeup=3",
-     "gain_db": -1
-    }
+   "about": "heard down a phone line (the-door's dispatcher)",
+   "process": {
+    "filter": "highpass=f=380,lowpass=f=3100,acompressor=threshold=-18dB:ratio=4:makeup=3",
+    "gain_db": -1
+   }
+  },
+  "intercom": {
+   "about": "a public-address speaker: narrow, compressed, a short slap of echo (not yet tuned by ear)",
+   "settings": {
+    "stability": 0.9,
+    "style": 0
+   },
+   "process": {
+    "filter": "highpass=f=450,lowpass=f=2800,acompressor=threshold=-20dB:ratio=6:makeup=4,aecho=0.8:0.4:25:0.25",
+    "gain_db": -1
+   }
+  },
+  "machine": {
+   "about": "a talking machine: flat delivery, slightly low, small speaker (not yet tuned by ear)",
+   "settings": {
+    "speed": 0.95,
+    "stability": 0.95,
+    "style": 0
+   },
+   "process": {
+    "pitch": 0.97,
+    "filter": "highpass=f=250,lowpass=f=3600,acompressor=threshold=-18dB:ratio=4:makeup=3",
+    "gain_db": -1
+   }
+  },
+  "wrong": {
+   "about": "something imitating a person: slower, flatter, pitched down, a little echo (the-door's thing)",
+   "settings": {
+    "speed": 0.9,
+    "stability": 0.95,
+    "style": 0
+   },
+   "process": {
+    "pitch": 0.92,
+    "tempo": 0.96,
+    "filter": "lowpass=f=2600,aecho=0.8:0.5:45:0.3",
+    "gain_db": -1
+   }
+  },
+  "close": {
+   "about": "the same thing heard right at the ear: slower and lower again, a double echo (the-door's thing_close)",
+   "settings": {
+    "speed": 0.85,
+    "stability": 0.95,
+    "style": 0
+   },
+   "process": {
+    "pitch": 0.88,
+    "tempo": 0.86,
+    "filter": "aecho=0.8:0.6:60|130:0.35|0.2",
+    "gain_db": 1
    }
   }
+ },
+ "stock_voices": {
+  "female": [
+   {
+    "voice_id": "hpp4J3VqNfWAUOO0d1Us",
+    "voice_name": "Bella",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "voice_name": "Matilda",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "Xb7hH8MSUJpSbSDYk0k2",
+    "voice_name": "Alice",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "pFZP5JQG7iQjIQuC4Bku",
+    "voice_name": "Lily",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "FGY2WhTYpPnrIDTdsKH5",
+    "voice_name": "Laura",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   }
+  ],
+  "male": [
+   {
+    "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+    "voice_name": "George",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "cjVigY5qzO86Huf0OWal",
+    "voice_name": "Eric",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+    "voice_name": "Roger",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "onwK4e9ZLuTAKqWW03F9",
+    "voice_name": "Daniel",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "pqHfZKP75CvOlQylNhV4",
+    "voice_name": "Bill",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   }
+  ],
+  "neutral": [
+   {
+    "voice_id": "SAz9YHcvj6GT2YYXdXww",
+    "voice_name": "River",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "N2lVS1w4EtoT3dr4eOWO",
+    "voice_name": "Callum",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "pFZP5JQG7iQjIQuC4Bku",
+    "voice_name": "Lily",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   },
+   {
+    "voice_id": "onwK4e9ZLuTAKqWW03F9",
+    "voice_name": "Daniel",
+    "settings": {
+     "speed": 1,
+     "stability": 0.6
+    }
+   }
+  ]
  }
 }

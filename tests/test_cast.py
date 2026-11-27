@@ -13,7 +13,7 @@ def make_story(lines, **extra):
 
 def test_registry_is_valid_and_holds_the_pool():
     registry = cast.load_registry()
-    assert {"lawrence", "jesslyn", "allan", "sharath"} <= set(registry["characters"])
+    assert list(registry["characters"]) == ["willow", "allan", "lawrence", "sharath", "jesslyn", "agni"]
     voices = [entry["voice"]["voice_id"] for entry in registry["characters"].values()]
     assert len(voices) == len(set(voices))
 
@@ -140,3 +140,42 @@ def test_sheet_job_is_a_valid_job(tmp_path):
     ids = cast.sheet_job(tmp_path)
     loaded = story_mod.load_story(tmp_path)
     assert [shot["id"] for shot in loaded["shotlist"]["shots"]] == ids
+
+
+def test_writer_roles_and_voices_get_stock_voices_and_effects():
+    registry = cast.load_registry()
+    story = make_story([{"speaker": "narrator", "text": "I scanned it."}, {"speaker": "kiosk", "text": "Unexpected item."}, {"speaker": "dark", "text": "Come in."},
+                        {"speaker": "dark_close", "text": "Closer."}, {"speaker": "attendant", "text": "Ticket."}, {"speaker": "guard", "text": "Stop."},
+                        {"speaker": "intercom", "text": "Next stop."}],
+                       cast=[{"speaker": "narrator", "name": "Narrator", "kind": "role"},
+                             {"speaker": "kiosk", "name": "Kiosk", "kind": "voice", "role": "the self-checkout machine", "voice": {"gender": "female", "processing": "slightly wrong: slower"}},
+                             {"speaker": "dark", "name": "The Dark", "kind": "voice", "role": "the darkness", "voice": {"gender": "neutral", "processing": "slightly wrong: slower, flatter"}},
+                             {"speaker": "dark_close", "name": "The Dark", "kind": "voice", "role": "the same, close", "voice": {"gender": "neutral", "processing": "whisper, close"}},
+                             {"speaker": "attendant", "name": "Attendant", "kind": "role", "role": "a man on the train", "voice": {"gender": "male", "processing": "none"}},
+                             {"speaker": "guard", "name": "Guard", "kind": "role", "role": "a guard", "voice": {"gender": "male", "processing": "none"}},
+                             {"speaker": "intercom", "name": "Intercom", "kind": "voice", "role": "the train's intercom", "voice": {"gender": "male", "processing": "intercom"}}])
+    out = cast.expand(story, registry, narrator="allan")
+    pool = {entry["voice"]["voice_id"] for entry in registry["characters"].values()}
+    spoken = out["speakers"]
+    assert not pool & {entry["voice_id"] for entry in spoken.values()}
+    assert spoken["kiosk"]["voice_name"] == registry["stock_voices"]["female"][0]["voice_name"]
+    assert spoken["kiosk"]["process"] == registry["effects"]["machine"]["process"]
+    assert spoken["dark"]["process"] == registry["effects"]["wrong"]["process"]
+    assert spoken["dark_close"]["voice_id"] == spoken["dark"]["voice_id"]
+    assert spoken["dark_close"]["process"] == registry["effects"]["close"]["process"]
+    assert len({spoken[name]["voice_id"] for name in ("attendant", "guard", "intercom")}) == 3
+    assert "process" not in spoken["attendant"]
+    assert spoken["intercom"]["process"] == registry["effects"]["intercom"]["process"]
+    assert out["members"]["kiosk"]["auto"] and not out["members"]["narrator"]["auto"]
+    assert out["avatars"] == {"allan": registry["characters"]["allan"]["avatar"]}
+
+
+def test_casting_overrides_the_automatic_extra():
+    registry = cast.load_registry()
+    story = make_story([{"speaker": "narrator", "text": "I scanned it."}, {"speaker": "kiosk", "text": "Unexpected item."}],
+                       cast=[{"speaker": "kiosk", "name": "Kiosk", "kind": "voice", "role": "the machine", "voice": {"gender": "female", "processing": "none"}}],
+                       casting={"kiosk": {"stock": "male", "effect": "intercom", "voice": {"settings": {"stability": 1}}}})
+    out = cast.expand(story, registry)
+    assert out["speakers"]["kiosk"]["voice_name"] == registry["stock_voices"]["male"][0]["voice_name"]
+    assert out["speakers"]["kiosk"]["settings"]["stability"] == 1
+    assert out["members"]["kiosk"]["auto"] is False
