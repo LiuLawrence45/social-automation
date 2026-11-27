@@ -176,6 +176,7 @@ def test_geometry_is_merged_only_for_the_shots_judged(job):
     assert "geometry" not in shots["s01"]["judges"]["posture"] and shots["s02"]["judges"]["posture"]["status"] == "fail"
     assert shots["s02"]["judges"]["posture"]["geometry"]["source"].endswith("(next pass)")
     assert list(doc["summary"]["geometry_sources"].values()) == [1]
+    assert quality.verdict_pairs(doc)[("s02", "posture")] == "pass"
     assert "geometry" not in by_id(quality.run_quality(job, report_only=True))["s01"]["judges"]["posture"]
 
 

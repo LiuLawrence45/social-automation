@@ -56,7 +56,7 @@ Model calls go through `pipeline.vision.ask` in a thread pool (`workers`, defaul
 
 ## Calibration against a person
 
-`--human FILE` takes a person's verdicts, `{"reader": "...", "notes": [...], "verdicts": {"a2": {"posture": "fail", "clipping": "pass"}}}`, and reports how many of them the judges match, which fails the judges passed and which passes they failed. `--baseline OLD.json` measures the same verdicts against an earlier report, which gives agreement before and after a rubric change. Read the same sheets the judges saw (`quality/sheets/`) and include shots the judges passed.
+`--human FILE` takes a person's verdicts, `{"reader": "...", "notes": [...], "verdicts": {"a2": {"posture": "fail", "clipping": "pass"}}}`, and reports how many of them the judges match, which fails the judges passed and which passes they failed. `--baseline OLD.json` measures the same verdicts against an earlier report, which gives agreement before and after a rubric change. The comparison is with what each judge said of the picture (`picture_status`), not with a fail that came from merged geometry, which a reader of frames cannot see. Read the same sheets the judges saw (`quality/sheets/`) and include shots the judges passed.
 
 ## Tests
 

@@ -614,7 +614,9 @@ def summarise(doc: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def verdict_pairs(doc: Dict[str, Any]) -> Dict[Tuple[str, str], str]:
-    return {(s["id"], k): r["status"] for s in doc.get("shots", []) for k, r in s["judges"].items() if r.get("status") in ("pass", "fail")}
+    """What each judge said of the picture; a reader of the sheets is compared with that, not with merged geometry."""
+    pairs = {(s["id"], k): r.get("picture_status", r.get("status")) for s in doc.get("shots", []) for k, r in s["judges"].items()}
+    return {pair: said for pair, said in pairs.items() if said in ("pass", "fail")}
 
 
 def agreement(doc: Dict[str, Any], human: Dict[str, Any]) -> Dict[str, Any]:
