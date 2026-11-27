@@ -58,7 +58,7 @@
       "defect_pass_score": 8,
       "script": true,
       "question": "Look at every face you can read in every frame. Does each expression fit the moment: what that character feels as these words are spoken?",
-      "notes": "Work out the moment from the script: who is afraid, who is asleep, who is calm at work, who is worried, who is pretending. Judge the face only: eyes, brows and mouth. A dark silhouette with only lit eyes has no expression to judge, and a face turned away, hidden, or too small or dark to read does not count.",
+      "notes": "Work out the moment from the script: who is afraid, who is asleep, who is calm at work, who is worried, who is pretending. Judge the face only: eyes, brows and mouth. A dark silhouette with only lit eyes has no expression to judge, and a face turned away, hidden, or too small or dark to read does not count. A smile, smirk or pleased look in any one frame of a moment of fear, danger or a scare fails the shot, even when other frames show fear. Before a character knows of the danger, and for people calmly doing a job (a nurse, a dispatcher, an officer), a calm or neutral face is right. A look of fear held through a short shot is not a frozen face.",
       "fail_if": [
         {
           "key": "wrong_emotion",
@@ -70,7 +70,7 @@
         },
         {
           "key": "frozen_face",
-          "text": "eyes or mouth stuck in an unnatural state: a fixed doll stare through the whole shot, a mouth hanging open in every frame, eyes wide open while the words say the character is asleep"
+          "text": "eyes or mouth stuck in a state the moment contradicts: eyes wide open while the words say the character is asleep, a mouth hanging open on a calm line, a fixed doll stare where the character should be looking at something"
         }
       ],
       "not_applicable": "no face can be read in any frame (no character, only silhouettes, or faces turned away or hidden)"
@@ -258,7 +258,7 @@
         },
         {
           "key": "pop",
-          "text": "a character, limb, prop, light or the camera jumps between two neighbouring frames in a way smooth motion cannot explain"
+          "text": "a character, limb, prop, light or the camera jumps between two neighbouring frames in a way smooth motion cannot explain; a light that flickers or pulses as a visible effect is not a pop"
         },
         {
           "key": "limb_snap",
@@ -266,7 +266,7 @@
         },
         {
           "key": "statue",
-          "text": "a character who should be acting or reacting (speaking, walking, reaching, crying, recoiling, working) holds exactly the same pose in every frame like a statue, or is frozen in mid-stride; a moving camera does not count as the character moving, and a sleeping or hiding character may be still"
+          "text": "a character who should be acting or reacting (speaking, walking, reaching, opening a door, crying, recoiling, working, facing a threat) holds the same pose in every frame like a statue, or is frozen in mid-stride; a moving camera does not count as the character moving, nor does breathing or a slight drift of the head; a character who is asleep, hiding, or quietly reading, sitting or waiting under plain narration may be still"
         },
         {
           "key": "camera_nowhere",
@@ -281,7 +281,7 @@
       "flags": {
         "frozen_character": {
           "defect": "statue",
-          "text": "a visible character whose words or moment call for action, speech or a reaction shows no change of pose at all between the first and the last frame of the shot: same limbs, same hands, same head angle, same mouth. Ignore camera movement, zoom, lighting changes and eye blinks; compare the body against itself, using the larger second image. A character who is asleep, hiding or deliberately still is not frozen."
+          "text": "a visible character whose words or moment call for action, speech or a reaction keeps one pose from the first frame of the shot to the last: same limbs, same hands, same stance, same mouth. Breathing, a slight sway or drift of the head, an eye blink, camera movement, zoom and lighting changes are not acting and do not count; compare the body against itself, using the larger second image. Facing a threat, a reveal or a shock calls for a reaction (a flinch, a step back, a turn of the head, hands coming up): standing through it in one held pose is frozen, and tense stillness does not excuse it. A character who is opening a door, speaking, texting or working while the arms never move is frozen. A character who is asleep, hiding, or quietly reading, sitting or waiting under plain narration is not."
         }
       }
     }

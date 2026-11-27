@@ -8,32 +8,41 @@ python -m pipeline.quality --job J --shots a2,d2,f1                 # re-judge r
 python -m pipeline.quality --job J --judges posture,motion           # some judges only
 python -m pipeline.quality --job J --report-only --human J/quality/human.json --baseline J/quality/first.json
 python -m pipeline.quality --job J --report-only --compare J/quality.pass6.json
+python -m pipeline.quality --job J --report-only --posture J/pass6/posture_pass6.json   # merge another geometry file
 ```
 
-Reads `video.mp4` (no captions; `--video` overrides), `final.mp4` (captions, for the framing judge; `--final`), `shots.json`, `words.json`, `story.json`, the set of a shot from `timeline.json` or `shotlist.json` when shots.json lacks it, and `posture.json` when present. Writes `quality.json`, `QUALITY.md`, every sheet a judge saw under `quality/sheets/` and a spend ledger `quality/ledger.json`. With `--out other.json` the Markdown goes beside it as `other.md`. Python standard library and FFmpeg only; FFmpeg needs no drawtext, labels are drawn from a built-in 5x7 font.
+Reads `video.mp4` (no captions; `--video` overrides), `final.mp4` (captions, for the framing judge; `--final`), `shots.json`, `words.json`, `story.json`, the set of a shot from `timeline.json` or `shotlist.json` when shots.json lacks it, and `posture.json` when present (`--posture` names another file). Writes `quality.json`, `QUALITY.md`, every sheet a judge saw under `quality/sheets/` and a spend ledger `quality/ledger.json`. With `--out other.json` the Markdown goes beside it as `other.md`. Python standard library and FFmpeg only; FFmpeg needs no drawtext, labels are drawn from a built-in 5x7 font.
 
 ## Judges
 
-Each judge asks one question per shot about one labelled sheet of frames and returns a score from 0 to 10, the fail conditions it saw and a one-line reason.
+Each judge asks one question per shot about one labelled sheet of frames (motion gets two) and returns a score from 0 to 10, the fail conditions it saw and a one-line reason.
 
 | judge | frames it sees | fails on |
 |---|---|---|
 | posture | 3 across the shot, no captions | idle or default stance, A-pose or T-pose leftovers, arms held out, splayed or frozen limbs, bad joints, a body that does the opposite of the words |
+| expression | the same 3, with the script | a face that shows the opposite of the moment (smiling during a scare), a blank default face on fear, crying, pain or urgency, eyes or mouth stuck in one state; not applicable when no face can be read |
 | clipping | the same 3 | limbs through the body, hands through props, bodies through the set, floating, sunk feet, props not in the hand |
 | framing | 2 from the captioned video | subject cut off, dead space, the caption on a face or on what the shot is about, no subject, blocked subject |
 | lighting | 2 at phone size, plus measured brightness | unreadable in one second, subject lost in the dark, blown-out or glare artefacts; also fails by measurement when under `min_lit_fraction` of the pixels are lit |
-| story | 3, with the shot's words and the script | wrong subject, the action in the words not shown, contradiction, wrong place, wrong on-screen text |
+| story | 3, with the shot's words and the script | wrong subject, the action in the words not shown, contradiction, wrong place, wrong on-screen text, light that contradicts the time of day the script has reached (night after "the next morning") |
 | continuity | 2 of this shot, the middle of the previous shot and of the last earlier shot in the same set | avatar or outfit changed, a blocky classic avatar beside detailed ones, position or prop jumps, time-of-day jumps, a set that changed |
-| motion | 8 evenly spaced frames as a 4x2 flip-book, plus measured frame-to-frame change | sliding, pops, limb snaps, a character frozen like a statue, a camera move that starts or ends on nothing |
+| motion | 8 evenly spaced frames as a 4x2 flip-book, a second sheet with the first, middle and last frame at full size, plus measured frame-to-frame change | sliding, pops, limb snaps, a character frozen like a statue, a camera move that starts or ends on nothing |
 | video | one middle frame per shot on sheets of 18, asked three times, median score | pacing, repetition, the ending, consistency under the threshold |
 
-A judge fails a shot when its score is under the threshold (6), or when it lists a fail condition and scores under `defect_pass_score` (8). A shot fails when any judge fails it. A judge that could not answer (model error, unusable reply, spend ceiling) leaves the shot `incomplete`; it is never counted as a pass. A judge may say a shot is not applicable (no character in an insert); that is a pass with no score.
+A judge fails a shot when its score is under the threshold (6), or when it lists a fail condition and scores under `defect_pass_score` (8). A rubric may also name `flags`: yes-or-no questions the model must answer in its reply, each tied to a fail condition; a flag answered true fails the judge whatever the score. Motion has one, `frozen_character`: a visible character whose words or moment call for action, speech or a reaction keeps one pose from the first frame to the last. Breathing, a slight drift of the head, blinks and a moving camera do not count as acting. A shot fails when any judge fails it. A judge that could not answer (model error, unusable reply, spend ceiling) leaves the shot `incomplete`; it is never counted as a pass. A judge may say a shot is not applicable (no character in an insert); that is a pass with no score.
 
-Motion is judged on a dense frame strip, not on the clip itself: `pipeline.vision` sends images to both providers, a strip can be kept and read by a person as evidence, and the measured change between video frames is passed to the judge so a jump or a still shot does not depend on the eye alone. A model that takes video would see timing better; that needs a video path in `pipeline/vision.py`, which this stage does not touch.
+Motion is judged on a dense frame strip, not on the clip itself: `pipeline.vision` sends images to both providers, a strip can be kept and read by a person as evidence, and the measured change between video frames is passed to the judge so a jump or a still shot does not depend on the eye alone. The measured change is for the whole picture, so it cannot tell a still character from a still shot once the camera moves, which it does in most shots; that is why the frozen-character question is put to the judge on larger frames and not decided by the number. A model that takes video would see timing better; that needs a video path in `pipeline/vision.py`, which this stage does not touch.
 
 ## Geometry
 
-`<job>/posture.json` (`{"version":1,"shots":{"<id>":{"status":"pass"|"fail","frames":[{"frame":123,"issues":[{"kind":...,"actor":...,"detail":...}]}]}}}`) is merged on every run, including `--report-only`. `intersect`, `floating` and `sunk` fail the clipping judge; `joint_limit`, `stiff_arms` and `idle` fail the posture judge; unknown kinds go to clipping. A geometric fail fails the judge even when the picture passed, and a picture fail stands when geometry passed. Each judge's entry keeps both under `geometry`.
+`<job>/posture.json`, or the file given with `--posture`, is merged on every run, including `--report-only`. Two shapes are read:
+
+- current: `{"version":1,"describes":{"label":...},"shots":{"<id>":{"status":"pass"|"fail","current":true,"frames":[{"frame":123,"issues":[{"kind":...,"actor":...,"detail":...,"in_frame":true}]}]}}}`
+- earlier (the posture report of the camera judge): `{"posture":{"shots":[{"id":...,"reasons":[...],"geometry":[{"code":...,"who":...,"detail":...,"seen":true,"at":[0,0.5],"depth":0.3}]}]}}`. Its status and its `vision_*` reasons come partly from a model and are ignored; the shot counts as a geometric fail only when a measured reason is listed.
+
+`joint_limit`, `stiff_arms`, `idle`, `reach_miss`, `arm_out`, `arms_out`, `arms_splayed`, `stance_wide`, `no_action` and `hand_off_target` fail the posture judge; `intersect`, `floating`, `sunk`, `prop_missing` and any unknown kind (the `clip_*` codes among them) fail the clipping judge. Issues marked out of frame (`in_frame` or `seen` false) count only when the failed shot has no issue in frame. A shot marked `"current": false` was restaged after it was measured: it is not merged and the report lists it.
+
+A geometric fail fails the judge even when the picture passed, and a picture fail stands when geometry passed. Each judge's entry keeps the geometric result under `geometry` and the picture's own verdict under `picture_status`; the summary lists per judge the shots failing on geometry alone (`geometry_only`), and `geometry_source` records the file, its time and its `describes.label`. The file must describe the render being judged: the report of one pass merged with the geometry of another compares unlike things.
 
 ## Settings
 
