@@ -222,7 +222,7 @@ def test_checks_pass_on_a_script_in_the_style():
 
 def test_checks_name_each_problem_and_its_fix():
     lines = good_lines()
-    lines[6] = {"speaker": "narrator", "text": "A new driver took my coins and he never looked up at me, not even once, while the engine made a very low sound that I could feel in my teeth."}
+    lines[3] = {"speaker": "narrator", "text": "A new driver took my coins and he never looked up at me, not even once, while the engine made a very low sound that I could feel in my teeth."}
     lines[5] = {"speaker": "narrator", "text": "Suddenly I saw blood. \"Who are you?\" I asked."}
     script = write.normalise(good_reply(lines=lines))
     quoted = [line for line in script["lines"] if line["text"].startswith("Suddenly")][0]
