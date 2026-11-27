@@ -1,6 +1,7 @@
 local Util = __require("util")
 local Rig = __require("rig")
 local Avatar = __require("avatar")
+local Pose = __require("pose")
 local Faces = __require("faces")
 local Motion = __require("motion")
 local Camera = __require("camera")
@@ -148,49 +149,6 @@ local BLINK = {
 	{ t = 3.5, face = { LeftEyeClosed = 0, RightEyeClosed = 0 } },
 }
 
-local function poseJoints(lib, pose)
-	if type(pose) == "string" then
-		local found = lib.avatar_poses[pose]
-		if not found then
-			error("unknown avatar pose '" .. pose .. "'")
-		end
-		return found
-	end
-	return pose or {}
-end
-
-local function blendJoints(a, b, u)
-	local out = {}
-	for _, source in ipairs({ a, b }) do
-		for name in pairs(source) do
-			if not out[name] then
-				local from, to = a[name] or {}, b[name] or {}
-				local values = {}
-				for index = 1, 6 do
-					values[index] = Util.lerp(from[index] or 0, to[index] or 0, u)
-				end
-				out[name] = values
-			end
-		end
-	end
-	return out
-end
-
-local function jointsAt(lib, keys, u)
-	if u <= keys[1].t then
-		return blendJoints(poseJoints(lib, keys[1].pose), {}, 0)
-	end
-	for index = 2, #keys do
-		local previous, current = keys[index - 1], keys[index]
-		if u <= current.t then
-			local span = current.t - previous.t
-			local k = span > 0 and (u - previous.t) / span or 1
-			return blendJoints(poseJoints(lib, previous.pose), poseJoints(lib, current.pose), Util.ease(current.ease or "inout", k))
-		end
-	end
-	return blendJoints(poseJoints(lib, keys[#keys].pose), {}, 0)
-end
-
 local function faceAt(lib, keys, u)
 	local chosen = keys[1][2]
 	for _, key in ipairs(keys) do
@@ -210,8 +168,9 @@ function M:planAvatar(entry, duration)
 	local layers = {}
 	local anim = spec.anim
 	local travel = (entry.to - entry.from).Magnitude
+	entry.moving = travel > 0.05
 	if anim == nil then
-		anim = travel > 0.05 and "walk" or "idle"
+		anim = false
 	end
 	if anim then
 		local options = type(anim) == "table" and anim or { name = anim }
@@ -220,7 +179,7 @@ function M:planAvatar(entry, duration)
 			error("unknown animation '" .. tostring(options.name) .. "'")
 		end
 		local speed = options.speed or found.speed or 1
-		if travel > 0.05 and not options.speed and found.stride then
+		if entry.moving and not options.speed and found.stride then
 			speed = Util.clamp(travel / math.max(duration, 0.1) / (found.stride * entry.scale), 0.3, 1.8)
 		end
 		table.insert(layers, {
@@ -228,27 +187,40 @@ function M:planAvatar(entry, duration)
 			loop = found.loop ~= false, hold = options.hold, priority = Enum.AnimationPriority.Core,
 		})
 	end
+	entry.based = anim and true or false
+	entry.duration = duration
+	entry.stock = layers
 	entry.layers = layers
 	entry.rootCF = CFrame.new(entry.from) * Util.yaw(entry.yaw)
 	Avatar.stage(entry.model, layers)
+	Avatar.rest(entry.model)
 	entry.head = Avatar.apply(entry.model, entry.rootCF, 0, 0)
 	entry.position = entry.from
 	entry.facing = Util.yaw(entry.yaw)
 end
 
+-- The pose layer: every joint keyed from the pose library (see pose.luau), plus the face and the blink.
 function M:overlayAvatar(entry, state)
 	local spec = entry.spec
-	local poseKeys = spec.pose
-	if type(poseKeys) == "string" then
-		poseKeys = { { t = 0, pose = poseKeys } }
-	end
+	local info = Pose.describe(self.lib, spec, entry.moving)
+	info.look_strength = spec.look_strength
+	info.seed = Util.hash(tostring(spec.who) .. tostring(state.shot.id))
+	entry.action = info.action or false
+	entry.action_known = true
+	entry.wants_prop = info.holds
 	local faceKeys = spec.face
 	if type(faceKeys) == "string" then
 		faceKeys = { { 0, faceKeys } }
 	end
 	local times = { 0, 1 }
-	for _, key in ipairs(poseKeys or {}) do
+	for _, key in ipairs(info.keys) do
 		table.insert(times, key.t)
+	end
+	if info.dense then
+		local steps = math.clamp(math.ceil(entry.duration * 14), 4, 48)
+		for step = 1, steps - 1 do
+			table.insert(times, step / steps)
+		end
 	end
 	for _, key in ipairs(faceKeys or {}) do
 		if key[1] > 0.03 then
@@ -257,52 +229,73 @@ function M:overlayAvatar(entry, state)
 		table.insert(times, key[1])
 	end
 	table.sort(times)
+	local lift = Pose.restLift(entry.model)
 	local lookAt = spec.look_at
-	local layers = table.clone(entry.layers)
+	local ctx = {
+		duration = entry.duration,
+		base = entry.based,
+		root = function(u)
+			local position = entry.from:Lerp(entry.to, Util.ease(spec.move_ease or "linear", u))
+			return CFrame.new(position) * Util.yaw(entry.yaw) * CFrame.new(0, lift, 0)
+		end,
+		place = function(target)
+			local ok, found = pcall(function()
+				return self:place(target)
+			end)
+			return ok and found.Position or nil
+		end,
+		look = lookAt and function(u)
+			if lookAt == "camera" then
+				return state.camera.from.pos:Lerp(state.camera.to.pos, u)
+			elseif state.actors[lookAt] then
+				local other = state.actors[lookAt]
+				return other.head + (other.to - other.from) * u
+			end
+			return self:place(lookAt).Position
+		end or nil,
+	}
+	Pose.prime(self.lib, entry.model, info, ctx)
+	entry.poseAt = function(u)
+		return Pose.jointsAt(self.lib, entry.model, info, ctx, u)
+	end
+	local layers = table.clone(entry.stock)
 	local closesEyes = false
-	if poseKeys or faceKeys or lookAt then
-		local keys = {}
-		local last = -1
-		for _, time in ipairs(times) do
-			if time - last > 0.004 then
-				last = time
-				local key = { t = time }
-				local joints = poseKeys and jointsAt(self.lib, poseKeys, time) or {}
-				if lookAt then
-					local target
-					if lookAt == "camera" then
-						target = state.camera.from.pos:Lerp(state.camera.to.pos, time)
-					elseif state.actors[lookAt] then
-						local other = state.actors[lookAt]
-						target = other.head + (other.to - other.from) * time
-					else
-						target = self:place(lookAt).Position
-					end
-					local position = entry.from:Lerp(entry.to, Util.ease(spec.move_ease or "linear", time))
-					local head = entry.head + (position - entry.from)
-					local direction = (CFrame.new(position) * Util.yaw(entry.yaw)):VectorToObjectSpace(target - head)
-					if direction.Magnitude > 0.01 then
-						local strength = spec.look_strength or 1
-						local yaw = Util.clamp(math.deg(math.atan2(-direction.X, -direction.Z)), -75, 75) * strength
-						local pitch = Util.clamp(math.deg(math.atan2(direction.Y, math.sqrt(direction.X * direction.X + direction.Z * direction.Z))), -40, 40) * strength
-						local neck = joints.Head or { 0, 0, 0, 0, 0, 0 }
-						joints.Head = { (neck[1] or 0) + pitch, (neck[2] or 0) + yaw, neck[3] or 0, neck[4] or 0, neck[5] or 0, neck[6] or 0 }
-					end
+	local keys = {}
+	local last = -1
+	for _, time in ipairs(times) do
+		if time - last > 0.004 then
+			last = time
+			local key = { t = time }
+			local joints = Pose.jointsAt(self.lib, entry.model, info, ctx, time)
+			if next(joints) then
+				key.joints = joints
+			end
+			if faceKeys then
+				key.face = faceAt(self.lib, faceKeys, time)
+				if (key.face.LeftEyeClosed or 0) > 0 then
+					closesEyes = true
 				end
-				if next(joints) then
-					key.joints = joints
+			end
+			table.insert(keys, key)
+		end
+	end
+	-- Every shot states the whole face: a control this shot's faces leave alone is set to rest, or the smile or
+	-- the shut eyes of the shot before would stay on. The eyelids are left to the blink where there is one.
+	local controls = {}
+	if not entry.model:GetAttribute("Faceless") then
+		local blinks = spec.blink ~= false and not closesEyes
+		local seen = {}
+		for _, face in pairs(self.lib.expressions) do
+			for control, value in pairs(face) do
+				if type(value) == "number" and not seen[control] and not (blinks and (control == "LeftEyeClosed" or control == "RightEyeClosed")) then
+					seen[control] = true
+					table.insert(controls, control)
 				end
-				if faceKeys then
-					key.face = faceAt(self.lib, faceKeys, time)
-					if (key.face.LeftEyeClosed or 0) > 0 then
-						closesEyes = true
-					end
-				end
-				table.insert(keys, key)
 			end
 		end
-		table.insert(layers, { content = Avatar.clip(keys), normalized = true, priority = Enum.AnimationPriority.Action4 })
+		table.sort(controls)
 	end
+	table.insert(layers, { content = Avatar.clip(keys, { full = not (info.upper and entry.based), linear = info.dense, model = entry.model, controls = controls }), normalized = true, priority = Enum.AnimationPriority.Action4 })
 	if spec.blink ~= false and not closesEyes and not entry.model:GetAttribute("Faceless") then
 		table.insert(layers, { content = Avatar.clip(BLINK), speed = 1, phase = Util.hash(spec.who .. "blink"), priority = Enum.AnimationPriority.Action3 })
 	end
@@ -391,21 +384,37 @@ function M:prepare(index)
 		end
 	end
 	self:pose(0, 0)
-	for _, entry in ipairs(state.order) do
-		entry.origin = entry.position
-	end
 	local override = self.cameras and self.cameras[shot.id]
 	state.cameraSpec = override or shot.camera
-	state.camera = Camera.plan(state.cameraSpec, {
-		set = set,
-		actors = state.actors,
-		place = function(spec)
-			return self:place(spec)
-		end,
-	})
+	local function planCamera()
+		for _, entry in ipairs(state.order) do
+			entry.origin = entry.position
+		end
+		state.camera = Camera.plan(state.cameraSpec, {
+			set = set,
+			actors = state.actors,
+			place = function(spec)
+				return self:place(spec)
+			end,
+		})
+	end
+	planCamera()
+	-- A camera on a character frames the head where this shot's own pose puts it, at the shot's start (or at
+	-- the camera's frame_at, 0 to 1). The pose can turn the head to the camera, so pose and camera are settled
+	-- in two rounds from the rest pose. Nothing here may depend on what the avatar was doing in the shot staged
+	-- before: that once made the same shot frame differently in a preview and in a render.
+	local at = Util.clamp(tonumber(type(state.cameraSpec) == "table" and state.cameraSpec.frame_at) or 0, 0, 1)
+	for _ = 1, 2 do
+		for _, entry in ipairs(state.order) do
+			if entry.avatar then
+				self:overlayAvatar(entry, state)
+			end
+		end
+		self:pose(at * duration, at)
+		planCamera()
+	end
 	for _, entry in ipairs(state.order) do
 		if entry.avatar then
-			self:overlayAvatar(entry, state)
 			entry.hidden = state.camera.hide == entry.spec.who
 		end
 	end
@@ -481,9 +490,30 @@ function M:pose(t, u, cameraPos)
 				entry.head = entry.rootCF.Position + Vector3.new(0, 4.6 * entry.scale, 0)
 			end
 			entry.facing = Util.yaw(entry.yaw)
+			if entry.poseAt and not entry.hidden then
+				local _, points = entry.poseAt(u)
+				entry.reach = points
+			end
 			for _, hold in ipairs(entry.holds) do
 				local hand = Avatar.hand(entry.model, hold.hand)
-				hold.model:PivotTo(hold.spec.follow_arm == false and (CFrame.new(hand.Position) * entry.facing * hold.grip) or (hand * hold.grip))
+				local turn = hold.spec.turn
+				if turn == "eyes" then
+					local head = entry.model.Head
+					hold.model:PivotTo(CFrame.lookAt(hand.Position, head.CFrame * Vector3.new(0, head.Size.Y * 0.1, -head.Size.Z * 0.3)) * hold.grip)
+				elseif turn == "ear" then
+					-- A phone on a call: flat against the side of the head, running from the ear down to the mouth, screen to the cheek.
+					local head = entry.model.Head
+					local side = hold.hand == "L" and -1 or 1
+					local at = head.CFrame * Vector3.new(side * head.Size.X * 0.56, -head.Size.Y * 0.12, -head.Size.Z * 0.12)
+					local along = head.CFrame:VectorToWorldSpace(Vector3.new(0, 0.82, 0.57)).Unit
+					local out = head.CFrame:VectorToWorldSpace(Vector3.new(side, 0, 0))
+					hold.model:PivotTo(CFrame.fromMatrix(at, along:Cross(out), along, out) * hold.grip)
+				elseif turn == "forward" then
+					local chest = entry.model.UpperTorso.CFrame
+					hold.model:PivotTo(CFrame.lookAt(hand.Position, hand.Position + chest.LookVector) * hold.grip)
+				else
+					hold.model:PivotTo(hold.spec.follow_arm == false and (CFrame.new(hand.Position) * entry.facing * hold.grip) or (hand * hold.grip))
+				end
 			end
 			continue
 		end

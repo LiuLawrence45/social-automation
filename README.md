@@ -8,7 +8,10 @@ Every stage reads and writes one job folder and can be re-run on its own.
 
 | Stage | Command | Reads | Writes |
 |---|---|---|---|
+| Make | `python -m pipeline.make --story FILE --out J [--narrator ID]` | a story.json, or a story text for the writer | every stage below in order, resumable; stops with REQUEST-*.md where an agent decides; make.json, MAKE.md ([RUNBOOK.md](RUNBOOK.md)) |
 | Writer | `python -m pipeline.writer write --story S --out J` | a story as text or JSON | story.json, script.md, source.json, script_judge.json |
+| Cast | `python -m pipeline.cast list|expand|sheet|faces --job J` | story.json, pipeline/cast.json | voices in story.json, avatars in shotlist.json, cast.json |
+| Checks | `python -m pipeline.checks --job J` | story.json, shotlist.json, timeline.json | the defaults before Studio; exit 1 on a failing rule |
 | Story | `python -m pipeline.story check|timeline --job J` | story.json, shotlist.json, words.json | timeline.json |
 | Voice | `python -m pipeline.voice --job J [--reuse-raw]` | story.json | narration.wav, words.json, voice_report.json |
 | Studio | `python -m pipeline.studio prepare|build-sets|load|info` | timeline.json | sets and cast in the open place |
@@ -16,6 +19,7 @@ Every stage reads and writes one job folder and can be re-run on its own.
 | Sound | `python -m pipeline.sound --job J [--dry-run]` | sound.json, timeline.json, words.json | bed.wav, sound_report.json, sfx/ |
 | Render | `python -m pipeline.render sheet|video --job J` | timeline.json, judge.json, Studio | video.mp4, shots.json, render_report.json |
 | Edit | `python -m pipeline.edit --job J --music J/bed.wav` | video.mp4, narration.wav, words.json, shots.json | final.mp4, edit_report.json |
+| Quality | `python -m pipeline.quality --job J [--shots a,b] [--judges posture,motion]` | video.mp4, final.mp4, shots.json, words.json, story.json, posture.json | quality.json, QUALITY.md, quality/ ([docs/quality.md](docs/quality.md)) |
 
 Order for a new video: write story.json and shotlist.json, voice, `story timeline`, `studio build-sets`, `judge shots`, sound, `render video`, edit, `judge video`. `examples/found-box` holds a sample story and shot list. Stories, adapted scripts and renders are job data and never belong in this repository.
 

@@ -585,3 +585,13 @@ def test_a_shot_list_that_breaks_the_rules_is_refused_before_any_camera_is_tried
     assert judge.main(["variety", "--job", str(job), "--authored"]) == 1
     out = capsys.readouterr().out
     assert "types: close 67%, wide 33%" in out and "problem: s04 and s05 are both wide" in out
+
+
+def test_a_shot_locked_after_it_was_judged_keeps_its_own_camera(tmp_path):
+    job = tmp_path / "job"
+    job.mkdir()
+    (job / "judge.json").write_text(json.dumps({"shots": [{"id": "a1", "chosen": {"camera": {"on": "me", "yaw": -62}}},
+                                                           {"id": "a2", "chosen": {"camera": {"on": "me", "yaw": 10}}}]}))
+    (job / "timeline.json").write_text(json.dumps({"shots": [{"id": "a1", "cast": [{"who": "me"}], "camera": {"on": "me", "yaw": 28, "locked": True}},
+                                                               {"id": "a2", "cast": [{"who": "me"}], "camera": {"on": "me", "yaw": 0}}]}))
+    assert judge.chosen_cameras(job) == {"a1": {"on": "me", "yaw": 28, "locked": True}, "a2": {"on": "me", "yaw": 10}}

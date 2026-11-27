@@ -3,6 +3,7 @@ local AssetService = game:GetService("AssetService")
 local ClipProvider = game:GetService("AnimationClipProvider")
 local HttpService = game:GetService("HttpService")
 local Util = __require("util")
+local Pose = __require("pose")
 
 local M = {}
 
@@ -32,17 +33,17 @@ local PARK = CFrame.new(0, -2000, 0)
 local rigs = setmetatable({}, { __mode = "k" })
 local clips = {}
 
-local function describe(spec)
-	local description
-	if spec.bundle then
-		for _, item in ipairs(AssetService:GetBundleDetailsAsync(spec.bundle).Items) do
-			if item.Type == "UserOutfit" then
-				description = Players:GetHumanoidDescriptionFromOutfitId(item.Id)
-				break
-			end
+local function outfit(bundle)
+	for _, item in ipairs(AssetService:GetBundleDetailsAsync(bundle).Items) do
+		if item.Type == "UserOutfit" then
+			return Players:GetHumanoidDescriptionFromOutfitId(item.Id)
 		end
 	end
-	description = description or Instance.new("HumanoidDescription")
+	return nil
+end
+
+local function describe(spec)
+	local description = spec.bundle and outfit(spec.bundle) or Instance.new("HumanoidDescription")
 	if spec.wear then
 		local worn = {}
 		for index, item in ipairs(spec.wear) do
@@ -51,6 +52,27 @@ local function describe(spec)
 				error("unknown wear type '" .. tostring(item.type) .. "'")
 			end
 			table.insert(worn, { AssetId = item.id, AccessoryType = kind, Order = item.order or index })
+		end
+		description:SetAccessories(worn, true)
+	end
+	-- Some bundles ship a head with no face controls, and no face set on it can show. head_bundle takes the head
+	-- (with its brows and lashes) of another bundle and keeps this one's body, hair and clothes.
+	if spec.head_bundle then
+		local donor = outfit(spec.head_bundle)
+		if not donor then
+			error("head_bundle " .. tostring(spec.head_bundle) .. " has no outfit")
+		end
+		description.Head = donor.Head
+		local worn = {}
+		for _, item in ipairs(description:GetAccessories(true)) do
+			if item.AccessoryType ~= Enum.AccessoryType.Eyebrow and item.AccessoryType ~= Enum.AccessoryType.Eyelash then
+				table.insert(worn, item)
+			end
+		end
+		for _, item in ipairs(donor:GetAccessories(true)) do
+			if item.AccessoryType == Enum.AccessoryType.Eyebrow or item.AccessoryType == Enum.AccessoryType.Eyelash then
+				table.insert(worn, item)
+			end
 		end
 		description:SetAccessories(worn, true)
 	end
@@ -68,6 +90,11 @@ local function describe(spec)
 		for _, property in ipairs(SKIN) do
 			description[property] = Util.color(spec.skin)
 		end
+	end
+	-- Bare legs painted one colour read as long trousers under shorts or a skirt.
+	if spec.legs then
+		description.LeftLegColor = Util.color(spec.legs)
+		description.RightLegColor = Util.color(spec.legs)
 	end
 	return description
 end
@@ -110,6 +137,66 @@ local function eyes(model, spec)
 	end
 end
 
+local function fixed(model, to, name, size, offset, color, material)
+	local piece = Instance.new("Part")
+	piece.Name = name
+	piece.Size = size
+	piece.Color = color
+	piece.Material = material or Enum.Material.SmoothPlastic
+	piece.CanCollide = false
+	piece.CanQuery = false
+	piece.Massless = true
+	piece.CastShadow = false
+	piece.Parent = to
+	local weld = Instance.new("Weld")
+	weld.Part0 = to
+	weld.Part1 = piece
+	weld.C0 = offset
+	weld.Parent = piece
+	return piece
+end
+
+-- A dark vest over the chest with a word across it, a badge and a belt: what makes two people in ordinary clothes
+-- read as officers. Sized from the body it is put on.
+local function vest(model, spec)
+	local torso, hips = model.UpperTorso, model.LowerTorso
+	local color = Util.color(spec.color, Color3.fromRGB(20, 28, 51))
+	local size = Vector3.new(torso.Size.X * 0.74, torso.Size.Y * 0.8, torso.Size.Z * 0.84)
+	local shell = fixed(model, torso, "Vest", size, CFrame.new(0, -torso.Size.Y * 0.06, 0), color, Enum.Material.Fabric)
+	for _, face in ipairs({ Enum.NormalId.Front, Enum.NormalId.Back }) do
+		local gui = Util.surface(shell, face, 120)
+		local label = Instance.new("TextLabel")
+		label.BackgroundTransparency = 1
+		label.Size = face == Enum.NormalId.Back and UDim2.fromScale(0.86, 0.3) or UDim2.fromScale(0.4, 0.16)
+		label.Position = face == Enum.NormalId.Back and UDim2.fromScale(0.07, 0.12) or UDim2.fromScale(0.06, 0.14)
+		label.Text = spec.text or "POLICE"
+		label.TextScaled = true
+		label.Font = Enum.Font.GothamBold
+		label.TextColor3 = Color3.fromRGB(235, 238, 245)
+		label.Parent = gui
+	end
+	fixed(model, torso, "Badge", Vector3.new(size.X * 0.14, size.X * 0.16, 0.04), CFrame.new(-size.X * 0.26, size.Y * 0.2, -size.Z / 2 - 0.01), Color3.fromRGB(214, 176, 72), Enum.Material.Metal)
+	fixed(model, hips, "Belt", Vector3.new(hips.Size.X * 1.04, hips.Size.Y * 0.28, hips.Size.Z * 1.06), CFrame.new(0, hips.Size.Y * 0.3, 0), Color3.fromRGB(18, 18, 20), Enum.Material.Leather)
+	fixed(model, hips, "Buckle", Vector3.new(hips.Size.X * 0.16, hips.Size.Y * 0.24, 0.05), CFrame.new(0, hips.Size.Y * 0.3, -hips.Size.Z * 0.53 - 0.02), Color3.fromRGB(170, 172, 178), Enum.Material.Metal)
+end
+
+-- A call-taker's headset: a band over the head, a cup on one ear and a microphone boom to the mouth.
+local function headset(model, spec)
+	local head = model.Head
+	local w, h, d = head.Size.X, head.Size.Y, head.Size.Z
+	local dark = Color3.fromRGB(24, 24, 28)
+	local side = spec.side == "R" and 1 or -1
+	fixed(model, head, "HeadsetBand", Vector3.new(w * 1.12, h * 0.07, d * 0.16), CFrame.new(0, h * 0.56, d * 0.04), dark)
+	for _, s in ipairs({ -1, 1 }) do
+		fixed(model, head, "HeadsetArm", Vector3.new(w * 0.06, h * 0.5, d * 0.14), CFrame.new(s * w * 0.56, h * 0.3, d * 0.04), dark)
+	end
+	local cup = fixed(model, head, "HeadsetCup", Vector3.new(w * 0.12, h * 0.34, d * 0.4), CFrame.new(side * w * 0.58, h * 0.02, d * 0.04), dark)
+	cup.Shape = Enum.PartType.Block
+	fixed(model, head, "HeadsetPad", Vector3.new(w * 0.1, h * 0.2, d * 0.24), CFrame.new(-side * w * 0.57, h * 0.06, d * 0.04), dark)
+	local boom = fixed(model, head, "HeadsetBoom", Vector3.new(w * 0.05, h * 0.05, d * 0.62), CFrame.new(side * w * 0.56, -h * 0.2, -d * 0.3) * CFrame.Angles(0, math.rad(side * 18), 0), dark)
+	fixed(model, boom, "HeadsetMic", Vector3.new(w * 0.1, h * 0.09, d * 0.12), CFrame.new(0, 0, -d * 0.34), Color3.fromRGB(46, 46, 52))
+end
+
 function M.build(parent, name, spec)
 	local old = parent:FindFirstChild(name)
 	if old then
@@ -130,10 +217,15 @@ function M.build(parent, name, spec)
 	end
 	local root = model.HumanoidRootPart
 	root.Anchored = true
-	local foot = model.LeftFoot
 	model:SetAttribute("Rig", "avatar")
+	model:SetAttribute("FaceMoves", model.Head:FindFirstChildOfClass("FaceControls") ~= nil)
 	model:SetAttribute("Scale", spec.size or 1)
-	model:SetAttribute("Lift", root.Position.Y - (foot.Position.Y - foot.Size.Y / 2))
+	if spec.vest then
+		vest(model, type(spec.vest) == "table" and spec.vest or {})
+	end
+	if spec.headset then
+		headset(model, type(spec.headset) == "table" and spec.headset or {})
+	end
 	if spec.silhouette then
 		silhouette(model, Util.color(spec.silhouette))
 		model:SetAttribute("Silhouette", true)
@@ -182,19 +274,26 @@ local function trackFor(model, content)
 	return track
 end
 
-local function jointCFrame(values)
-	return CFrame.new(values[4] or 0, values[5] or 0, values[6] or 0)
-		* CFrame.Angles(0, math.rad(values[2] or 0), 0)
-		* CFrame.Angles(math.rad(values[1] or 0), 0, 0)
-		* CFrame.Angles(0, 0, math.rad(values[3] or 0))
-end
+local jointCFrame = Pose.jointCFrame
 
-function M.clip(keys)
-	local signature = HttpService:JSONEncode(keys)
+-- options.full: every joint is driven, so nothing of an animation underneath shows through.
+-- options.linear: keys are close together and are joined straight, not eased one by one.
+-- options.model: the avatar the clip is made for. The animator stretches a clip's movements by the model's
+-- scale, so distances measured on a resized body (how far the hips drop to sit) are written divided by it.
+function M.clip(keys, options)
+	options = options or {}
+	local scale = options.model and options.model:GetScale() or 1
+	scale = math.floor(scale * 1000 + 0.5) / 1000
+	local signature = HttpService:JSONEncode({ keys, options.full or false, options.linear or false, scale, options.controls or false })
 	if clips[signature] then
 		return clips[signature]
 	end
 	local joints, controls = {}, {}
+	if options.full then
+		for _, name in ipairs(ORDER) do
+			joints[name] = true
+		end
+	end
 	for _, key in ipairs(keys) do
 		for name in pairs(key.joints or {}) do
 			if not PARENT[name] then
@@ -205,6 +304,9 @@ function M.clip(keys)
 		for name in pairs(key.face or {}) do
 			controls[name] = true
 		end
+	end
+	for _, name in ipairs(options.controls or {}) do
+		controls[name] = true
 	end
 	local sequence = Instance.new("KeyframeSequence")
 	sequence.Loop = false
@@ -223,8 +325,9 @@ function M.clip(keys)
 			pose.Name = name
 			if joints[name] then
 				pose.Weight = 1
-				pose.CFrame = jointCFrame((key.joints or {})[name] or {})
-				pose.EasingStyle = Enum.PoseEasingStyle.Cubic
+				local turn = jointCFrame((key.joints or {})[name] or {})
+				pose.CFrame = CFrame.new(turn.Position / scale) * turn.Rotation
+				pose.EasingStyle = options.linear and Enum.PoseEasingStyle.Linear or Enum.PoseEasingStyle.Cubic
 				pose.EasingDirection = Enum.PoseEasingDirection.InOut
 			else
 				pose.Weight = 0
@@ -264,9 +367,19 @@ function M.stage(model, plan)
 	end
 end
 
+-- Stopping an animation leaves every joint where it last was. This puts the body back in its rest pose, so
+-- what a shot starts from never depends on the shot staged before it.
+function M.rest(model)
+	for _, item in ipairs(model:GetDescendants()) do
+		if item:IsA("Motor6D") or item:IsA("AnimationConstraint") then
+			item.Transform = CFrame.identity
+		end
+	end
+end
+
 function M.apply(model, rootCF, t, u)
 	local rig = rigOf(model)
-	model.HumanoidRootPart.CFrame = rootCF * CFrame.new(0, model:GetAttribute("Lift") or 3, 0)
+	model.HumanoidRootPart.CFrame = rootCF * CFrame.new(0, Pose.restLift(model), 0)
 	for _, item in ipairs(rig.playing) do
 		local layer, track = item.layer, item.track
 		if layer.normalized then

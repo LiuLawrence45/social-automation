@@ -15,8 +15,9 @@
   "LeftBrowLowerer": 0.8,
   "RightOuterBrowRaiser": 0.9,
   "RightInnerBrowRaiser": 0.5,
-  "LipPresser": 0.4,
-  "MouthLeft": 0.3
+  "LeftLipCornerDown": 0.6,
+  "RightLipCornerDown": 0.6,
+  "JawDrop": 0.08
  },
  "uneasy": {
   "LeftInnerBrowRaiser": 0.8,
@@ -31,7 +32,7 @@
   "RightEyeUpperLidRaiser": 1,
   "LeftInnerBrowRaiser": 1,
   "RightInnerBrowRaiser": 1,
-  "JawDrop": 0.25,
+  "JawDrop": 0.35,
   "LeftLipStretcher": 0,
   "RightLipStretcher": 0,
   "LeftLipCornerDown": 1,
@@ -57,10 +58,15 @@
  "frozen": {
   "LeftEyeUpperLidRaiser": 1,
   "RightEyeUpperLidRaiser": 1,
-  "LeftInnerBrowRaiser": 0.7,
-  "RightInnerBrowRaiser": 0.7,
-  "LipsTogether": 0.6,
-  "LipPresser": 0.5
+  "LeftInnerBrowRaiser": 0.8,
+  "RightInnerBrowRaiser": 0.8,
+  "LeftLipCornerDown": 0.9,
+  "RightLipCornerDown": 0.9,
+  "LeftLipCornerPuller": 0,
+  "RightLipCornerPuller": 0,
+  "JawDrop": 0.12,
+  "LeftLowerLipDepressor": 0.2,
+  "RightLowerLipDepressor": 0.2
  },
  "crying": {
   "LeftEyeClosed": 0.8,
@@ -88,7 +94,8 @@
  "serious": {
   "LeftBrowLowerer": 0.6,
   "RightBrowLowerer": 0.6,
-  "LipPresser": 0.5
+  "LeftLipCornerDown": 0.4,
+  "RightLipCornerDown": 0.4
  },
  "talk": {
   "JawDrop": 0.3,

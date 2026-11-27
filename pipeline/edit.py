@@ -318,6 +318,7 @@ def render(job: Path, out: Path, music: Optional[Path], tail: Optional[float] = 
             "ass=filename=%s:fontsdir=%s,format=yuv420p"
         ) % (first, last, "%d/%d" % (fps.numerator, fps.denominator), esc(ass_path), esc(FONTS_DIR))
         out.parent.mkdir(parents=True, exist_ok=True)
+        part = out.with_name(out.stem + ".part" + out.suffix)
         run([
             ffmpeg_bin(), "-y", "-hide_banner", "-i", str(video_path), "-i", str(audio["premaster"]),
             "-filter_complex", "[0:v]%s[v];[1:a]%s[a]" % (vf, loudnorm_apply_filter(measured)),
@@ -326,8 +327,9 @@ def render(job: Path, out: Path, music: Optional[Path], tail: Optional[float] = 
             "-pix_fmt", "yuv420p", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv",
             "-r", "%d/%d" % (fps.numerator, fps.denominator), "-fps_mode", "cfr",
             "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2", "-t", "%.6f" % total,
-            "-movflags", "+faststart", str(out),
+            "-movflags", "+faststart", str(part),
         ])
+        os.replace(str(part), str(out))
         result = measure_loudness(["-i", str(out)], "")
         out_info = probe(out)
         out_video = [s for s in out_info["streams"] if s["codec_type"] == "video"][0]
