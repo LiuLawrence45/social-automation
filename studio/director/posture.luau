@@ -293,15 +293,20 @@ function M.check(stage, index, camera, samples)
 			local raisedArms, splayed = {}, 0
 			metrics.arms = {}
 			if torso then
+				-- Measured between the joints themselves and against the same body at rest, so a broad-shouldered
+				-- body whose arms hang at an angle is not read as holding them out.
+				local skeleton, atRest = Pose.skeleton(entry.model), Pose.solve(entry.model, {})
 				for side, word in pairs(SIDES) do
 					local upper, lower, hand = parts[word .. "UpperArm"], parts[word .. "LowerArm"], parts[word .. "Hand"]
 					if upper and lower and hand then
 						local sign = side == "R" and 1 or -1
-						local shoulder = upper.cf.Position + upper.cf.UpVector * upper.size.Y / 2
-						local elbow = lower.cf.Position + lower.cf.UpVector * lower.size.Y / 2
+						local shoulderAt, elbowAt = skeleton[word .. "UpperArm"].c1.Position, skeleton[word .. "LowerArm"].c1.Position
+						local shoulder = upper.cf * shoulderAt
+						local elbow = lower.cf * elbowAt
 						local direction = torso.cf:VectorToObjectSpace(elbow - shoulder).Unit
+						local resting = atRest.UpperTorso:VectorToObjectSpace(atRest[word .. "LowerArm"] * elbowAt - atRest[word .. "UpperArm"] * shoulderAt).Unit
 						local raised = angle(direction, Vector3.new(0, -1, 0))
-						local sideways = math.deg(math.asin(math.clamp(direction.X * sign, -1, 1)))
+						local sideways = math.deg(math.asin(math.clamp(direction.X * sign, -1, 1))) - math.deg(math.asin(math.clamp(resting.X * sign, -1, 1)))
 						local bend = angle(elbow - shoulder, hand.cf.Position - elbow)
 						local near = math.huge
 						for _, name in ipairs({ "Head", "UpperTorso", "LowerTorso" }) do

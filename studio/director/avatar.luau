@@ -185,9 +185,13 @@ local jointCFrame = Pose.jointCFrame
 
 -- options.full: every joint is driven, so nothing of an animation underneath shows through.
 -- options.linear: keys are close together and are joined straight, not eased one by one.
+-- options.model: the avatar the clip is made for. The animator stretches a clip's movements by the model's
+-- scale, so distances measured on a resized body (how far the hips drop to sit) are written divided by it.
 function M.clip(keys, options)
 	options = options or {}
-	local signature = HttpService:JSONEncode({ keys, options.full or false, options.linear or false })
+	local scale = options.model and options.model:GetScale() or 1
+	scale = math.floor(scale * 1000 + 0.5) / 1000
+	local signature = HttpService:JSONEncode({ keys, options.full or false, options.linear or false, scale })
 	if clips[signature] then
 		return clips[signature]
 	end
@@ -225,7 +229,8 @@ function M.clip(keys, options)
 			pose.Name = name
 			if joints[name] then
 				pose.Weight = 1
-				pose.CFrame = jointCFrame((key.joints or {})[name] or {})
+				local turn = jointCFrame((key.joints or {})[name] or {})
+				pose.CFrame = CFrame.new(turn.Position / scale) * turn.Rotation
 				pose.EasingStyle = options.linear and Enum.PoseEasingStyle.Linear or Enum.PoseEasingStyle.Cubic
 				pose.EasingDirection = Enum.PoseEasingDirection.InOut
 			else

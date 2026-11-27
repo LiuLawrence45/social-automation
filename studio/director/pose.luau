@@ -26,7 +26,7 @@ local GROUND = {
 -- Places on the body a hand can go: part, position as a share of the part's size, and the way the surface faces.
 -- An "s" entry is mirrored for the left hand. The hand stops its own half thickness short of the surface.
 local POINTS = {
-	mouth = { "Head", { 0, -0.24, -0.5 }, { 0, 0, -1 } },
+	mouth = { "Head", { 0, -0.36, -0.5 }, { 0, 0, -1 } },
 	chin = { "Head", { 0, -0.46, -0.36 }, { 0, -0.4, -1 } },
 	eye = { "Head", { 0.3, 0.04, -0.5 }, { 0, 0, -1 }, s = true },
 	brow = { "Head", { 0.1, 0.3, -0.5 }, { 0, 0, -1 }, s = true },
@@ -226,6 +226,19 @@ function M.describe(lib, spec, moving)
 		action = "walking"
 	end
 	return { keys = keys, action = action, rest = rest and not moving, upper = upper, dense = dense, reach = reach, holds = holds }
+end
+
+-- An elbow is a hinge: a forearm blended between two poses keeps its bend and its turn about its own length and
+-- loses whatever sideways lean the blend gave it.
+local function hinged(values)
+	local turn = M.jointCFrame({ values[1], values[2], values[3] })
+	local along = turn.UpVector
+	local bend = math.clamp(math.atan2(along.Z, along.Y), 0, math.rad(150))
+	local rest = CFrame.Angles(bend, 0, 0):Inverse() * turn
+	local twist = math.clamp(math.atan2(-rest.RightVector.Z, rest.RightVector.X), math.rad(-75), math.rad(75))
+	local out = euler(CFrame.Angles(bend, 0, 0) * CFrame.Angles(0, twist, 0))
+	out[4], out[5], out[6] = values[4] or 0, values[5] or 0, values[6] or 0
+	return out
 end
 
 local function blend(a, b, k)
@@ -567,6 +580,11 @@ function M.jointsAt(lib, model, info, ctx, u)
 			for index, name in ipairs({ WORD[side] .. "UpperArm", WORD[side] .. "LowerArm", WORD[side] .. "Hand" }) do
 				joints[name] = amount >= 0.999 and mixed[index] or euler(M.jointCFrame(free[index]):Lerp(M.jointCFrame(mixed[index]), amount))
 			end
+		end
+	end
+	for _, name in ipairs({ "LeftLowerArm", "RightLowerArm" }) do
+		if joints[name] then
+			joints[name] = hinged(joints[name])
 		end
 	end
 	if previous.def.upper and current.def.upper and ctx.base then

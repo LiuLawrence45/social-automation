@@ -276,7 +276,7 @@ function M:overlayAvatar(entry, state)
 			table.insert(keys, key)
 		end
 	end
-	table.insert(layers, { content = Avatar.clip(keys, { full = not (info.upper and entry.based), linear = info.dense }), normalized = true, priority = Enum.AnimationPriority.Action4 })
+	table.insert(layers, { content = Avatar.clip(keys, { full = not (info.upper and entry.based), linear = info.dense, model = entry.model }), normalized = true, priority = Enum.AnimationPriority.Action4 })
 	if spec.blink ~= false and not closesEyes and not entry.model:GetAttribute("Faceless") then
 		table.insert(layers, { content = Avatar.clip(BLINK), speed = 1, phase = Util.hash(spec.who .. "blink"), priority = Enum.AnimationPriority.Action3 })
 	end
