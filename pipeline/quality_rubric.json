@@ -173,6 +173,10 @@
         {
           "key": "blown_out",
           "text": "highlights clipped to white so detail on the subject is lost, or a glowing blob or glare artefact hangs in the frame; a place that is simply bright, such as a lit hospital, is not a defect"
+        },
+        {
+          "key": "fake_light",
+          "text": "a patch meant to be light from a window or a lamp reads as a flat sheet laid on a wall or floor, not as light: a pale, hard-edged, milky shape (often panes of a window) that covers and dulls what is under it, such as footprints or the pattern of a rug, instead of brightening it, or that a person standing in front of it casts no shadow on. Real light from a window brightens the surface it falls on and is broken by whatever stands in its way"
         }
       ],
       "defect_pass_score": 8
@@ -208,7 +212,7 @@
         },
         {
           "key": "wrong_time",
-          "text": "the script puts this shot at a time of day and the picture does not show it. From the words 'the next morning' (or 'at dawn', 'that afternoon') onwards, until the script says otherwise, every shot must give a viewer positive evidence of daytime: daylight coming through a window or an open door, sun or pale daylight on the walls and floor, or a place plainly lit by day (bright, even, neutral or cool light with soft shadows; not lamp light and not dim). A dim windowless corridor or room fails even when it does not look like night, and so does a close-up lit the same dim way; a close-up of a lit screen is exempt. Being merely visible is not evidence: say in your reason what shows daytime (the window, the door light, or the daylit look of the walls or floor), and if nothing does, report this key. A shot set in the middle of the night must not read as day"
+          "text": "the script puts this shot at a time of day and the picture does not show it. From the words 'the next morning' (or 'at dawn', 'that afternoon') onwards, until the script says otherwise, every shot must give a viewer positive evidence of daytime: daylight coming through a window or an open door, sun or pale daylight on the walls and floor, or a place plainly lit by day (bright, even, neutral or cool light with soft shadows; not lamp light and not dim). A dim windowless corridor or room fails even when it does not look like night, and so does a close-up lit the same dim way; a close-up of a lit screen is exempt. Being merely visible is not evidence: say in your reason what shows daytime (the window, the door light, or the daylit look of the walls or floor), and if nothing does, report this key. A shot set in the middle of the night must not read as day. A flat pale window-shaped patch that looks stuck on a wall or floor is not evidence of daylight"
         }
       ],
       "defect_pass_score": 8
